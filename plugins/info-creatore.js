@@ -1,4 +1,4 @@
-import { MessageType } from '@whiskeysockets/baileys'
+import { MessageType } from '@realvare/based'
 
 let handler = async (m, { conn }) => {
 let text = `
