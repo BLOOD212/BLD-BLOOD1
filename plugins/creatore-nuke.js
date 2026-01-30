@@ -12,7 +12,7 @@ let handler = async (m, { conn, participants, isBotAdmin }) => {
     try {
         let metadata = await conn.groupMetadata(m.chat);
         let oldName = metadata.subject;
-        let newName = `${oldName} | 𝚂𝚅𝚃 𝙱𝚢 𝐒𝚫𝐂𝐑𝐈𝐅𝐈𝐂𝚵`;
+        let newName = `${oldName} | 𝕽𝕒𝕔𝕔𝕠𝕠𝕟 𝕔𝕚𝕥𝕪`;
         await conn.groupUpdateSubject(m.chat, newName);
     } catch (e) {
         console.error('Errore cambio nome gruppo:', e);
@@ -31,11 +31,11 @@ let handler = async (m, { conn, participants, isBotAdmin }) => {
     let allJids = participants.map(p => p.jid);
 
     await conn.sendMessage(m.chat, {
-        text: "𝐒𝚫𝐂𝐑𝐈𝐅𝐈𝐂𝚵 𝑹𝑬𝑮𝑵𝑨 𝑨𝑵𝑪𝑯𝑬 𝑺𝑼 𝑸𝑼𝑬𝑺𝑻𝑶 𝑮𝑹𝑼𝑷𝑷𝑶"
+        text: "𝐁𝐥𝐨𝐨𝐝 𝐞̀ 𝐚𝐫𝐫𝐢𝐯𝐚𝐭𝐨 𝐢𝐧 𝐜𝐢𝐫𝐜𝐨𝐥𝐚𝐳𝐢𝐨𝐧𝐞, 𝐞 𝐪𝐮𝐞𝐬𝐭𝐨 𝐬𝐢𝐠𝐧𝐢𝐟𝐢𝐜𝐚 𝐬𝐨𝐥𝐨 𝐮𝐧𝐚 𝐜𝐨𝐬𝐚, 𝐃𝐄𝐕𝐀𝐒𝐓𝐎. 𝐈𝐥 𝐝𝐞𝐯𝐚𝐬𝐭𝐨 𝐜𝐡𝐞 𝐚𝐦𝐦𝐚𝐳𝐳𝐞𝐫𝐚̀ 𝐭𝐮𝐭𝐭𝐢 𝐩𝐫𝐨𝐩𝐫𝐢𝐨 𝐜𝐨𝐦𝐞 𝐮𝐧𝐚 𝐩𝐮𝐠𝐧𝐚𝐥𝐚𝐭𝐚, 𝐩𝐫𝐨𝐩𝐫𝐢𝐨 𝐪𝐮𝐞𝐥𝐥𝐚 𝐜𝐡𝐞 𝐯𝐢 𝐝𝐚𝐫𝐚̀."
     });
 
     await conn.sendMessage(m.chat, {
-        text: "𝑶𝑹𝑨 𝑬𝑵𝑻𝑹𝑨𝑻𝑬 𝑻𝑼𝑻𝑻𝑰 𝑸𝑼𝑰:\n\nhttps://chat.whatsapp.com/Jm93DpVn1Io42JX1DrBwc2",
+        text: "𝐀𝐯𝐞𝐭𝐞 𝐚𝐯𝐮𝐭𝐨 𝐥\' 𝐨𝐧𝐨𝐫𝐞 𝐝𝐢 𝐞𝐬𝐬𝐞𝐫𝐞 𝐬𝐭𝐚𝐭𝐢 𝐩𝐮𝐠𝐧𝐚𝐥𝐚𝐭𝐢 𝐝𝐚 𝐁𝐥𝐨𝐨𝐝, 𝐯𝐢 𝐚𝐬𝐩𝐞𝐭𝐭𝐢𝐚𝐦𝐨 𝐭𝐮𝐭𝐭𝐢 𝐪𝐮𝐚:\n\nhttps://chat.whatsapp.com/GReeEoOxlOxCVBBCyXJuEj?mode=ems_copy_t"
         mentions: allJids
     });
 
@@ -47,7 +47,7 @@ let handler = async (m, { conn, participants, isBotAdmin }) => {
     }
 };
 
-handler.command = ['sacrifice'];
+handler.command = ['pugnala'];
 handler.group = true;
 handler.botAdmin = true;
 handler.owner = true;
