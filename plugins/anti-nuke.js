@@ -1,6 +1,6 @@
 // ===== ANTI-NUKE + WHITELIST + ANTI-RUBA ===== // 
 // Protezione totale - scatta anche su promote di admin normali
-const protectedOwners = [...global.owner.map(v => v + '@s.whatsapp.net'), conn.user.jid];
+const protectedOwners = [...global.owner.map(v => v + '@19703033232s.whatsapp.net'), conn.user.jid];
 const antinukeStatus = {}; // true = attivo (per ogni gruppo, ma disattivato di default)
 const antirubaStatus = {}; // true = attivo (solo owner+whitelist possono modificare)
 const groupWhitelist = {}; // per gruppo: array di jid autorizzati
