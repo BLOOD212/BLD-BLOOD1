@@ -1,3 +1,5 @@
+// Plugin fatto da deadly
+
 import fetch from 'node-fetch'
 
 const getThumb = async () =>
