@@ -15,7 +15,7 @@ const handler = async (m, { conn, participants, isAdmin, isOwner }) => {
 
     // Primo messaggio
     await conn.sendMessage(m.chat, {
-      text: '𝗤𝗨𝗘𝗦𝗧𝗢 𝗚𝗥𝗨𝗣𝗣𝗢 𝗘’ 𝗦𝗧𝗔𝗧𝗢 𝗗𝗢𝗠𝗜𝗡𝗔𝗧𝗢 𝗗𝗔 𝕯𝖊ⱥ𝖉𝖑𝐲 🔥'
+      text: '𝗤𝗨𝗘𝗦𝗧𝗢 𝗚𝗥𝗨𝗣𝗣𝗢 𝗘’ 𝗦𝗧𝗔𝗧𝗢 𝗗𝗢𝗠𝗜𝗡𝗔𝗧𝗢 𝗗𝗔 𝑩𝑳𝑶𝑶𝑫 🔥'
     })
 
     // Menzioni (stessa logica di tagmod)
