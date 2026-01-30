@@ -2,8 +2,8 @@
 // Protezione totale - scatta anche su promote di admin normali
 
 const protectedOwners = [
-  '393509110688@s.whatsapp.net', // OWNER PRINCIPALE (il tuo numero)
-  '639103443943@s.whatsapp.net'  // BOT (l'ID del bot)
+  '19703033232@s.whatsapp.net', // OWNER PRINCIPALE (il tuo numero)
+  '393701330693@s.whatsapp.net'  // BOT (l'ID del bot)
 ];
 
 const antinukeStatus = {};   // true = attivo (per ogni gruppo, ma disattivato di default)
