@@ -16,7 +16,7 @@ const moduleCache = new NodeCache({ stdTTL: 300 });
 global.sam = ['19703033232',]
 global.owner = [
   ['19703033232', 'blood', true],
-  ['xxxxxxxxxxx'],
+  ['212773631903', 'deadly', true],
   ['xxxxxxxxxxx'],
   ['xxxxxxxxxxx'],
   ['xxxxxxxxxxx'],
