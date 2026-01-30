@@ -1,46 +1,34 @@
-import { MessageType } from '@realvare/based'
-
 let handler = async (m, { conn }) => {
 let text = `
-╔═══════════╗
-   👑 *OWNER* 👑
-╚═══════════╝
+╭━━━━━━━━━━━╮
+┃   👑 *OWNER* 👑   
+╰━━━━━━━━━━━╯
+
+✨ *Contatti ufficiali*
 
 📞 *WhatsApp*
-👉 wa.me/19703033232
+wa.me/19703033232
 
 📸 *Instagram*
-👉 @bloodvelith
+@bloodvelith
 
 💻 *GitHub*
-👉 https://github.com/BLOOD212/BLD-BLOOD1
+https://github.com/BLOOD212/BLD-BLOOD1
 
 📧 *Email*
-👉 blooddomina@gmail.com
+blooddomina@gmail.com
 
-━━━━━━━━━━━━━━━━━━━━━
-⚡ *Powered by BLOOD* ⚡
-😈 _No limits. No mercy._
-━━━━━━━━━━━━━━━━━━━━━
+━━━━━━━━━━━━━━━━━━━━
+😈 *BLOOD DOMINA*
+⚡ Potere. Stile. Controllo.
+━━━━━━━━━━━━━━━━━━━━
 `
 
-await conn.sendMessage(m.chat, {
-    text,
-    contextInfo: {
-        externalAdReply: {
-            title: "👑 OWNER INFO",
-            body: "Blood domina il sistema",
-            thumbnailUrl: "https://i.imgur.com/JP52fdP.jpeg",
-            sourceUrl: "https://github.com/BLOOD212/BLD-BLOOD1",
-            mediaType: 1,
-            renderLargerThumbnail: true
-        }
-    }
-}, { quoted: m })
+await conn.sendMessage(m.chat, { text }, { quoted: m })
 }
 
 handler.help = ['owner']
 handler.tags = ['info']
-handler.command = ['owner', 'creator', 'proprietario']
+handler.command = ['owner']
 
 export default handler
