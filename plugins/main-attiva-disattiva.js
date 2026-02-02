@@ -55,7 +55,8 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   { key: 'antiLink', name: '🔗❌ Antilink', desc: 'Antilink whatsapp' },
   { key: 'antiLink2', name: '🌐❌ Antilinksocial', desc: 'Antilink social' },
   { key: 'reaction', name: '😎 Reazioni', desc: 'Reazioni automatiche' },
-  { key: 'autolevelup', name: '⬆️ Autolivello', desc: 'Messaggio di livello automatico' }
+  { key: 'autolevelup', name: '⬆️ Autolivello', desc: 'Messaggio di livello automatico' },
+{ key: 'antinuke', name: 'Antinuke', desc: 'Sicurezza del gruppo' }
 ];
 
 const ownerFeatures = [
@@ -530,6 +531,20 @@ const ownerFeatures = [
           break;
         }
         chat.rileva = isEnable;
+        result.status = `『 ✅ 』 ${isEnable ? 'Attivato' : 'Disattivato'}`;
+        result.success = true;
+        break;
+
+case 'antinuke':
+        if (!isOwner && !isROwner) {
+          result.status = '『 ❌ 』 Richiede privilegi di proprietario';
+          break;
+        }
+        if (chat.antinuke=== isEnable) {
+          result.status = `『 ⚠️ 』 Già ${isEnable ? 'attivo' : 'disattivato'}`;
+          break;
+        }
+        chat.antinuke = isEnable;
         result.status = `『 ✅ 』 ${isEnable ? 'Attivato' : 'Disattivato'}`;
         result.success = true;
         break;
