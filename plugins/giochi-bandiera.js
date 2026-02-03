@@ -143,7 +143,7 @@ let handler = async (m, { conn, args, participants, isAdmin, isBotAdmin, usedPre
         let msg = await conn.sendMessage(m.chat, {
             image: { url: scelta.url },
             caption: startCaption,
-            footer: 'vare ✧ bot'
+            footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙'
         }, { quoted: m });
         
         global.bandieraGame = global.bandieraGame || {};
@@ -295,7 +295,7 @@ handler.before = async (m, { conn, usedPrefix, command }) => {
         
         await conn.sendMessage(chat, {
             text: failText,
-            footer: 'vare ✧ bot',
+            footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙',
             interactiveButtons: playAgainButtons()
         }, { quoted: m });
         delete global.bandieraGame[chat];
