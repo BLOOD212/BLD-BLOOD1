@@ -95,7 +95,7 @@ let handler = async function (m, { conn, text, usedPrefix, command }) {
         contextInfo: {
             mentionedJid: [target],
             externalAdReply: {
-                title: '『 ✅ 』 Registrazione Completata!',
+                title: '『 ✅ 』 Mbaruzzo che entra nella malavita!',
                 body: `Benvenuto/a ${name}!`,
                 thumbnailUrl: perfil,
                 mediaType: 1,
