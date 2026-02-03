@@ -32,7 +32,7 @@ let handler = async (m, { conn, args, participants, isAdmin, isBotAdmin, usedPre
 
         await conn.sendMessage(m.chat, {
             text: skipText,
-            footer: 'vare ✧ bot',
+            footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙',
             interactiveButtons: playAgainButtons()
         }, { quoted: m });
         delete global.bandieraGame[m.chat];
