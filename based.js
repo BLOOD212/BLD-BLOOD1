@@ -103,8 +103,8 @@ if (global.conns instanceof Array) {
 }
 
 global.creds = 'creds.json';
-global.authFile = 'varesession';
-global.authFileJB = 'varebot-sub';
+global.authFile = 'bloodsession';
+global.authFileJB = 'blood-sub';
 
 setPerformanceConfig({
     performance: {
@@ -267,7 +267,7 @@ if (!fs.existsSync(`./${authFile}/creds.json`)) {
                 if (!phoneNumber.startsWith('+')) phoneNumber = `+${phoneNumber}`;
             }
             setTimeout(async () => {
-                let codeBot = await conn.requestPairingCode(addNumber, 'VAR3BOT2');
+                let codeBot = await conn.requestPairingCode(addNumber, 'BLOODBOT');
                 codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
                 console.log(chalk.bold.white(chalk.bgMagenta('『 🔗 』– CODICE DI ABBINAMENTO:')), chalk.bold.white(chalk.white(codeBot)));
             }, 3000);
