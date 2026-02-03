@@ -1,7 +1,7 @@
 // Comando creato da Sam aka Vare - github.com/realvare
 const playAgainButtons = () => [{
     name: 'quick_reply',
-    buttonParamsJson: JSON.stringify({ display_text: '🏳️ Gioca Ancora!', id: `.bandiera` })
+    buttonParamsJson: JSON.stringify({ display_text: 'Mbare dinuovo!', id: `.bandiera` })
 }];
 
 let handler = async (m, { conn, args, participants, isAdmin, isBotAdmin, usedPrefix, command }) => {
