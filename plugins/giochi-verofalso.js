@@ -12,7 +12,7 @@ const handler = async (m, { conn }) => {
     const res = await axios.get(randomVideo, {
       responseType: 'arraybuffer',
       headers: {
-        'User-Agent': 'varebot/2.5',
+        'User-Agent': '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙',
         'Accept': 'video/mp4'
       }
     })
