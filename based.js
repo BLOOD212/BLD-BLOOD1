@@ -138,8 +138,8 @@ if (!methodCodeQR && !methodCode && !fs.existsSync(`./${authFile}/creds.json`)) 
         const violet4 = chalk.hex('#5B2C6F');
         const softText = chalk.hex('#D7BDE2');
 
-        const a = violet1('╭━━━━━━━━━━━━━• ✧˚🩸 varebot 🕊️˚✧ •━━━━━━━━━━━━━');
-        const b = violet1('╰━━━━━━━━━━━━━• ☾⋆₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⋆☽ •━━━━━━━━━━━━━');
+        const a = violet1('╭━━━━━━━━━━━━━• ✧˚🩸 BLD boot 🕊️˚✧ •━━━━━━━━━━━━━');
+        const b = violet1('╰━━━━━━━━━━━━━• ☾⋆₊✧ blood bot ✧₊⋆☽ •━━━━━━━━━━━━━');
         const linea = violet2('   ✦━━━━━━✦✦━━━━━━༺༻━━━━━━༺༻━━━━━━✦✦━━━━━━✦');
         const sm = violet3('SELEZIONE METODO DI ACCESSO ✦');
         const qr = violet4(' ┌─⭓') + ' ' + chalk.bold.hex('#D2B4DE')('1. Scansione con QR Code');
@@ -315,16 +315,13 @@ async function connectionUpdate(update) {
                 '#3b0d70', '#3b0d65', '#3b0d60', '#3b0d55', '#3b0d50', '#3b0d45'
             ];
             const varebot = [
-                ` ██▒   █▓ ▄▄▄       ██▀███  ▓█████  ▄▄▄▄    ▒█████  ▄▄▄█████▓   `,
-                `▓██░   █▒▒████▄    ▓██ ▒ ██▒▓█   ▀ ▓█████▄ ▒██▒  ██▒▓  ██▒ ▓▒   `,
-                ` ▓██  █▒░▒██  ▀█▄  ▓██ ░▄█ ▒▒███   ▒██▒ ▄██▒██░  ██▒▒ ▓██░ ▒░   `,
-                `  ▒██ █░░░██▄▄▄▄██ ▒██▀▀█▄  ▒▓█  ▄ ▒██░█▀  ▒██   ██░░ ▓██▓ ░    `,
-                `   ▒▀█░   ▓█   ▓██▒░██▓ ▒██▒░▒████▒░▓█  ▀█▓░ ████▓▒░  ▒██▒ ░    `,
-                `   ░ ▐░   ▒▒   ▓▒█░░ ▒▓ ░▒▓░░░ ▒░ ░░▒▓███▀▒░ ▒░▒░▒░   ▒ ░░      `,
-                `   ░ ░░    ▒   ▒▒ ░  ░▒ ░ ▒░ ░ ░  ░▒░▒   ░   ░ ▒ ▒░     ░       `,
-                `     ░░    ░   ▒     ░░   ░    ░    ░    ░ ░ ░ ▒░    ░         `,
-                `      ░        ░  ░   ░        ░  ░ ░          ░ ░              `,
-                `     ░                                   ░                      `
+               ' ██████╗ ██╗      ██████╗  ██████╗ ██████╗ ██████╗  ██████╗ ████████╗ `,
+` ██╔══██╗██║     ██╔═══██╗██╔═══██╗██╔══██╗██╔══██╗██╔═══██╗╚══██╔══╝ `,
+` ██████╔╝██║     ██║   ██║██║   ██║██║  ██║██████╔╝██║   ██║   ██║    `,
+` ██╔══██╗██║     ██║   ██║██║   ██║██║  ██║██╔══██╗██║   ██║   ██║    `,
+` ██████╔╝███████╗╚██████╔╝╚██████╔╝██████╔╝██████╔╝╚██████╔╝   ██║    `,
+` ╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝    `
+
             ];
             varebot.forEach((line, i) => {
                 const color = finchevedotuttoviolaviola[i] || finchevedotuttoviolaviola[finchevedotuttoviolaviola.length - 1];
@@ -343,11 +340,11 @@ async function connectionUpdate(update) {
             global.connectionMessagesPrinted.badSession = true;
             await global.reloadHandler(true).catch(console.error);
         } else if (reason === DisconnectReason.connectionLost && !global.connectionMessagesPrinted.connectionLost) {
-            console.log(chalk.bold.blueBright(`\n╭⭑⭒━━━✦❘༻ ⚠️ CONNESSIONE PERSA COL SERVER ༺❘✦━━━⭒⭑\n┃ 🔄 RICONNESSIONE IN CORSO... \n╰⭑⭒━━━✦❘༻☾⋆₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+            console.log(chalk.bold.blueBright(`\n╭⭑⭒━━━✦❘༻ ⚠️ CONNESSIONE PERSA COL SERVER ༺❘✦━━━⭒⭑\n┃ 🔄 RICONNESSIONE IN CORSO... \n╰⭑⭒━━━✦❘༻☾⋆₊✧ BLDBLOODBOT ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
             global.connectionMessagesPrinted.connectionLost = true;
             await global.reloadHandler(true).catch(console.error);
         } else if (reason === DisconnectReason.connectionReplaced && !global.connectionMessagesPrinted.connectionReplaced) {
-            console.log(chalk.bold.yellowBright(`╭⭑⭒━━━✦❘༻ ⚠️ CONNESSIONE SOSTITUITA ༺❘✦━━━⭒⭑\n┃ È stata aperta un'altra sessione, \n┃ chiudi prima quella attuale.\n╰⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+            console.log(chalk.bold.yellowBright(`╭⭑⭒━━━✦❘༻ ⚠️ CONNESSIONE SOSTITUITA ༺❘✦━━━⭒⭑\n┃ È stata aperta un'altra sessione, \n┃ chiudi prima quella attuale.\n╰⭑⭒━━━✦❘༻☾⋆⁺₊✧ BLDBLOODBOT ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
             global.connectionMessagesPrinted.connectionReplaced = true;
         } else if (reason === DisconnectReason.loggedOut && !global.connectionMessagesPrinted.loggedOut) {
             console.log(chalk.bold.redBright(`\n⚠️ DISCONNESSO, CARTELLA ${global.authFile} ELIMINATA. RIAVVIA IL BOT E SCANSIONA IL CODICE QR ⚠️`));
@@ -365,7 +362,7 @@ async function connectionUpdate(update) {
             global.connectionMessagesPrinted.restartRequired = true;
             await global.reloadHandler(true).catch(console.error);
         } else if (reason === DisconnectReason.timedOut && !global.connectionMessagesPrinted.timedOut) {
-            console.log(chalk.bold.yellowBright(`\n╭⭑⭒━━━✦❘༻ ⌛ TIMEOUT CONNESSIONE ༺❘✦━━━⭒⭑\n┃ 🔄 RICONNESSIONE IN CORSO...\n╰⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+            console.log(chalk.bold.yellowBright(`\n╭⭑⭒━━━✦❘༻ ⌛ TIMEOUT CONNESSIONE ༺❘✦━━━⭒⭑\n┃ 🔄 RICONNESSIONE IN CORSO...\n╰⭑⭒━━━✦❘༻☾⋆⁺₊✧ BLDBLOODBOT ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
             global.connectionMessagesPrinted.timedOut = true;
             await global.reloadHandler(true).catch(console.error);
         } else if (reason === 401) {
@@ -628,14 +625,14 @@ function purgeSession(sessionDir, cleanPreKeys = false) {
         }
 
     } catch (dirErr) {
-        console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE DIRECTORY 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ Errore durante la lettura della directory ${sessionDir}\n┃  Errore: ${dirErr.message}\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝓿𝓪𝓻𝓮𝓱𝓸𝓽 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
+        console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE DIRECTORY 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ Errore durante la lettura della directory ${sessionDir}\n┃  Errore: ${dirErr.message}\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ bloodbot ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
     }
 };
 setInterval(async () => {
     if (stopped === 'close' || !conn || !conn.user) return;
     clearDirectory(join(__dirname, 'tmp'));
     clearDirectory(join(__dirname, 'temp'));
-    console.log(chalk.bold.greenBright(`\n╭⭑⭒━━━✦❘༻ 🟢 PULIZIA MULTIMEDIA 🟢 ༺❘✦━━━⭒⭑\n┃          CARTELLE TMP/TEMP\n┃          ELIMINATE CON SUCCESSO\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝓿𝓪𝓻𝓮𝓱𝓸𝓽 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
+    console.log(chalk.bold.greenBright(`\n╭⭑⭒━━━✦❘༻ 🟢 PULIZIA MULTIMEDIA 🟢 ༺❘✦━━━⭒⭑\n┃          CARTELLE TMP/TEMP\n┃          ELIMINATE CON SUCCESSO\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ bloodbot ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
 }, 1000 * 60 * 60);
 setInterval(async () => {
     if (stopped === 'close' || !conn || !conn.user) return;
@@ -648,7 +645,7 @@ setInterval(async () => {
 }, 1000 * 60 * 60 * 2);
 setInterval(async () => {
     if (stopped === 'close' || !conn || !conn.user) return;
-    console.log(chalk.bold.cyanBright(`\n╭⭑⭒━━━✦❘༻ 🔵 PULIZIA PRE-KEY 🔵 ༺❘✦━━━⭒⭑\n┃  🔄 Avvio pulizia pre-keys vecchie\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🧹 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
+    console.log(chalk.bold.cyanBright(`\n╭⭑⭒━━━✦❘༻ 🔵 PULIZIA PRE-KEY 🔵 ༺❘✦━━━⭒⭑\n┃  🔄 Avvio pulizia pre-keys vecchie\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🧹 bloodbot ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
     purgeSession(`./${global.authFile}`, true);
     const subBotDir = `./${global.authFileJB}`;
     if (existsSync(subBotDir)) {
