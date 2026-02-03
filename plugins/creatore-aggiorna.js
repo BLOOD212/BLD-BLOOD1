@@ -6,13 +6,13 @@ let handler = async (m, { conn, text }) => {
       let checkUpdates = execSync('git fetch && git status -uno', { encoding: 'utf-8' })
       
       if (checkUpdates.includes('Your branch is up to date') || checkUpdates.includes('nothing to commit')) {
-        await conn.reply(m.chat, '✅ Il bot è già aggiornato all\'ultima versione!', m)
+        await conn.reply(m.chat, '✅ il bot gia sta avvulanu', m)
         await m.react('✅')
         return
       }
       if (checkUpdates.includes('Your branch is behind')) {
         let hoodangels = execSync('git reset --hard && git pull' + (m.fromMe && text ? ' ' + text : ''), { encoding: 'utf-8' })
-        await conn.reply(m.chat, `🔄 Bot aggiornato con successo!\n\n${hoodangels}`, m)
+        await conn.reply(m.chat, `🔄 BLD BLOOD Bot aggiornato con successo!\n\n${hoodangels}`, m)
         await m.react('🍥')
       } else {
         await conn.reply(m.chat, '⚠️ Stato repository non chiaro. Forzando aggiornamento...', m)
