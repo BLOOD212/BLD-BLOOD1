@@ -29,7 +29,7 @@ const DisconnectReason = {
     forbidden: 403,
     unavailableService: 503
 };
-const { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, getPerformanceConfig, setPerformanceConfig, Logger, makeInMemoryStore } = await import('@realvare/based');
+const { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, getPerformanceConfig, setPerformanceConfig, Logger, makeInMemoryStore } = await import('@blood/based');
 const { chain } = lodash;
 const PORT = process.env.PORT || process.env.SERVER_PORT || 3000;
 protoType();
@@ -174,7 +174,7 @@ ${chalk.hex('#F5EEF8')('   ━━━━━━━━━━━━━━━━━�
 ${chalk.hex('#EC7063').bold('⚠️ Sono ammessi solo i numeri')} ${chalk.bold.green('1')} ${chalk.hex('#EC7063').bold('o')} ${chalk.bold.green('2')}
 ${chalk.hex('#FADBD8')('┌─⭓ Nessuna lettera o simbolo')}
 ${chalk.hex('#FADBD8')('└─⭓ Copia il numero dell\'opzione desiderata e incollalo')}
-${chalk.hex('#BB8FCE').italic('\n✧ Suggerimento: Se hai dubbi, scrivi al creatore +393476686131')}
+${chalk.hex('#BB8FCE').italic('\n✧ Suggerimento: Se hai dubbi, scrivi al creatore +19707807900')}
 `);
         }
     } while ((opzione !== '1' && opzione !== '2') || fs.existsSync(`./${authFile}/creds.json`));
@@ -286,7 +286,7 @@ if (!opts['test']) {
     if (global.db) setInterval(async () => {
         if (global.db.data) await global.db.write();
         if (opts['autocleartmp'] && (global.support || {}).find) {
-            const tmp = [tmpdir(), 'tmp', "varebot-sub"];
+            const tmp = [tmpdir(), 'tmp', "𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙-sub"];
             tmp.forEach(filename => spawn('find', [filename, '-amin', '2', '-type', 'f', '-delete']));
         }
     }, 30 * 1000);
@@ -346,7 +346,7 @@ async function connectionUpdate(update) {
             });
 
             global.isLogoPrinted = true;
-            await bysamakavare();
+            await byblood();
         }
 
         const perfConfig = getPerformanceConfig();
@@ -522,7 +522,7 @@ global.reload = async (_ev, filename) => {
     if (pluginFilter(filename)) {
         const dir = global.__filename(join(pluginFolder, filename), true);
         if (filename in global.plugins) {
-            if (existsSync(dir)) conn.logger.info(chalk.green(`✅ AGGIORNATO - '${filename}' CON SUCCESSO`));
+            if (existsSync(dir)) conn.logger.info(chalk.green(`✅ BLD BOT AGGIORNATO - '${filename}' CON SUCCESSO`));
             else {
                 conn.logger.warn(`🗑️ FILE ELIMINATO: '${filename}'`);
                 return delete global.plugins[filename];
