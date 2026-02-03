@@ -7,7 +7,7 @@ await conn.reply(m.chat, `《★》varebot è stato sbannato in questa chat.`, m
 }
 handler.help = ['sbanchat'];
 handler.tags = ['creatore'];
-handler.command = ['unbanchat', 'sbannachat', 'sbanchat']
+handler.command = ['007sban', 'sbannachat', 'sbanchat']
 handler.rowner = true
 handler.admin = true 
 handler.botAdmin = false
