@@ -41,7 +41,7 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
 
         const buttonMessage = {
             text: `❄️ *Gestione coglioni Inattivi*\n\n📊 Membri rincoglioniti trovati: *${total}/${member.length}*\n\n⏰ Inattivi da più di 7 giorni\n\n🔽 Scegli un'opzione:`,
-            footer: 'Bot di supervisione gruppo',
+            footer: 'inizio ispezzione',
             buttons: buttons,
             headerType: 1
         };
