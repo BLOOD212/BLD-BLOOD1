@@ -40,7 +40,7 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
         ];
 
         const buttonMessage = {
-            text: `❄️ *Gestione Membri Inattivi*\n\n📊 Membri inattivi trovati: *${total}/${member.length}*\n\n⏰ Inattivi da più di 7 giorni\n\n🔽 Scegli un'opzione:`,
+            text: `❄️ *Gestione coglioni Inattivi*\n\n📊 Membri rincoglioniti trovati: *${total}/${member.length}*\n\n⏰ Inattivi da più di 7 giorni\n\n🔽 Scegli un'opzione:`,
             footer: 'Bot di gestione gruppo',
             buttons: buttons,
             headerType: 1
@@ -56,7 +56,7 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
         
         if (total === 0) {
             const successButton = {
-                text: '✅ *Nessun membro inattivo trovato!*\n\n🎉 Tutti i membri del gruppo sono attivi.',
+                text: '✅ *Nessun coglione inattivo trovato!*\n\n🎉 Tutti i cani del gruppo sono attivi.',
                 footer: 'Gestione gruppo',
                 buttons: [{
                     buttonId: `.inattivi`,
@@ -69,12 +69,12 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
         }
         
         const groupName = await conn.getName(m.chat);
-        const message = `📋 *Lista Membri Inattivi*\n\n👥 Gruppo: *${groupName}*\n📊 Inattivi: *${total}/${member.length}*\n\n${sider.map((v, i) => `${i + 1}. @${v.replace(/@.+/, '')}`).join('\n')}`;
+        const message = `📋 *Lista coglioni Inattivi*\n\n👥 Gruppo: *${groupName}*\n📊 Inattivi: *${total}/${member.length}*\n\n${sider.map((v, i) => `${i + 1}. @${v.replace(/@.+/, '')}`).join('\n')}`;
 
         const listButtons = [
             {
-                buttonId: `.inattivi rimuovi`,
-                buttonText: { displayText: '🗑️ Rimuovi Tutti' },
+                buttonId: `.rimuovi sti mongoplettici`,
+                buttonText: { displayText: '🗑️ Rimuovili' },
                 type: 1
             },
             {
@@ -99,12 +99,12 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
 
     if (args[0] === 'rimuovi') {
         if (!isOwner && !isAdmin) {
-            return conn.reply(m.chat, '❌ Solo gli *admin* del gruppo possono rimuovere gli inattivi.', m);
+            return conn.reply(m.chat, '❌ Solo gli *admin* del gruppo possono rimuovere sti rincoglioniti.', m);
         }
         
         if (total === 0) {
             const noRemoveButton = {
-                text: '✅ *Nessun membro da rimuovere!*\n\n🎉 Tutti i membri del gruppo sono attivi.',
+                text: '✅ *Nessun down da rimuovere!*\n\n🎉 Tutti i cani del gruppo sono attivi.',
                 footer: 'Gestione gruppo',
                 buttons: [{
                     buttonId: `.inattivi`,
@@ -142,11 +142,11 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
 
     if (args[0] === 'conferma') {
         if (!isOwner && !isAdmin) {
-            return conn.reply(m.chat, '❌ Solo gli *admin* del gruppo possono rimuovere gli inattivi.', m);
+            return conn.reply(m.chat, '❌ Solo gli *admin* del gruppo possono rimuovere i rincoglioniti.', m);
         }
 
         if (total === 0) {
-            return conn.reply(m.chat, `❄️ *Non ci sono membri inattivi da rimuovere.*`, m);
+            return conn.reply(m.chat, `❄️ *Non ci sono coglioni inattivi da rimuovere.*`, m);
         }
 
         let removedCount = 0;
