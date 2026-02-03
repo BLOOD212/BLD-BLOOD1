@@ -41,7 +41,7 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
 
         const buttonMessage = {
             text: `❄️ *Gestione coglioni Inattivi*\n\n📊 Membri rincoglioniti trovati: *${total}/${member.length}*\n\n⏰ Inattivi da più di 7 giorni\n\n🔽 Scegli un'opzione:`,
-            footer: 'Bot di gestione gruppo',
+            footer: 'Bot di supervisione gruppo',
             buttons: buttons,
             headerType: 1
         };
@@ -57,7 +57,7 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
         if (total === 0) {
             const successButton = {
                 text: '✅ *Nessun coglione inattivo trovato!*\n\n🎉 Tutti i cani del gruppo sono attivi.',
-                footer: 'Gestione gruppo',
+                footer: 'supervisione cani',
                 buttons: [{
                     buttonId: `.inattivi`,
                     buttonText: { displayText: '🔄 Torna al Menu' },
@@ -86,7 +86,7 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
 
         const listMessage = {
             text: message,
-            footer: 'Gestione gruppo - Lista inattivi',
+            footer: 'supervisine cani - lista rincoglioniti',
             buttons: listButtons,
             headerType: 1,
             contextInfo: {
@@ -105,7 +105,7 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
         if (total === 0) {
             const noRemoveButton = {
                 text: '✅ *Nessun down da rimuovere!*\n\n🎉 Tutti i cani del gruppo sono attivi.',
-                footer: 'Gestione gruppo',
+                footer: 'supervisione cani',
                 buttons: [{
                     buttonId: `.inattivi`,
                     buttonText: { displayText: '🔄 Torna al Menu' },
@@ -132,7 +132,7 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
 
         const confirmMessage = {
             text: `⚠️ *Conferma Rimozione*\n\n🗑️ Stai per rimuovere *${total}* membri inattivi dal gruppo.\n\n❗ Questa azione è irreversibile!\n\n🤔 Sei sicuro di voler continuare?`,
-            footer: 'Gestione gruppo - Conferma',
+            footer: 'supervisione cani - giustiziali',
             buttons: confirmButtons,
             headerType: 1
         };
@@ -168,7 +168,7 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
 
         const resultButton = {
             text: successMessage,
-            footer: 'Gestione gruppo - Risultato',
+            footer: 'supervisione cani - giustizia fatta',
             buttons: [{
                 buttonId: `.inattivi`,
                 buttonText: { displayText: '🔄 Torna al Menu' },
@@ -183,7 +183,7 @@ let handler = async (m, { conn, text, args, groupMetadata, isAdmin, isOwner }) =
     // Opzione non valida
     const errorButton = {
         text: `❌ *Opzione non valida*\n\nUsa i bottoni del menu per navigare correttamente.`,
-        footer: 'Gestione gruppo',
+        footer: 'supervisione cani',
         buttons: [{
             buttonId: `.inattivi`,
             buttonText: { displayText: '🔄 Torna al Menu' },
