@@ -26,7 +26,7 @@ const handler = async (m, { conn, participants, groupMetadata, args, isOwner, is
             mentionedJid: mentionList,
             externalAdReply: {
                 title: groupMetadata.subject,
-                body: "『 🛎️ 』 invocando gli admin",
+                body: "『 🛎️ 』 invocando i capi mafia",
                 thumbnailUrl: foto,
                 mediaType: 1,
                 renderLargerThumbnail: false
