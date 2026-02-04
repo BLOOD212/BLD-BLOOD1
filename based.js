@@ -385,7 +385,7 @@ async function connectionUpdate(update) {
 }
 process.on('uncaughtException', console.error);
 async function connectSubBots() {
-    const subBotDirectory = './varebot-sub';
+    const subBotDirectory = './𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙-sub';
     if (!existsSync(subBotDirectory)) {
         console.log(chalk.bold.magentaBright('🌙 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 non ha Sub-Bot collegati. Creazione directory...'));
         try {
