@@ -278,7 +278,7 @@ handler.before = async (m, { conn, usedPrefix, command }) => {
         
         await conn.sendMessage(chat, {
             text: congratsMessage,
-            footer: 'vare ✧ bot',
+            footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙',
             interactiveButtons: playAgainButtons()
         }, { quoted: m });
         delete global.bandieraGame[chat];
