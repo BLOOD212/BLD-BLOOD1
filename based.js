@@ -46,7 +46,7 @@ function redefineConsoleMethod(methodName, filterStrings) {
     const originalConsoleMethod = console[methodName];
     console[methodName] = function () {
         const message = arguments[0];
-        if (typeof message === 'string' && filterStrings.some(filterString => message.includes(atob(filterString)))) {
+       if (typeof message === 'string' && filterStrings.some(filterString => message.includes(atob(filterString)))) {
             arguments[0] = "";
         }
         originalConsoleMethod.apply(console, arguments);
@@ -56,8 +56,8 @@ function redefineConsoleMethod(methodName, filterStrings) {
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
     return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
 };
-    
-};
+
+global.__dirname = function dirname(pathURL) {
 
 global.__dirname = function dirname(pathURL) {
     return path.dirname(global.__filename(pathURL, true));
