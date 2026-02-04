@@ -103,8 +103,8 @@ if (global.conns instanceof Array) {
 }
 
 global.creds = 'creds.json';
-global.authFile = 'varesession';
-global.authFileJB = 'varebot-sub';
+global.authFile = 'bloodsession';
+global.authFileJB = '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙-sub';
 
 setPerformanceConfig({
     performance: {
@@ -170,7 +170,7 @@ ${prompt}`);
         if (!/^[1-2]$/.test(opzione)) {
             console.log(`\n${chalk.hex('#E74C3C').bold('✖ INPUT NON VALIDO')}
 
-${chalk.hex('#F5EEF8')('   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━')}
+${chalk.hex('#F5EEF8')('━━━━━━━━━━━━━━𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙━━━━━━━━━━━━━')}
 ${chalk.hex('#EC7063').bold('⚠️ Sono ammessi solo i numeri')} ${chalk.bold.green('1')} ${chalk.hex('#EC7063').bold('o')} ${chalk.bold.green('2')}
 ${chalk.hex('#FADBD8')('┌─⭓ Nessuna lettera o simbolo')}
 ${chalk.hex('#FADBD8')('└─⭓ Copia il numero dell\'opzione desiderata e incollalo')}
@@ -286,7 +286,7 @@ if (!opts['test']) {
     if (global.db) setInterval(async () => {
         if (global.db.data) await global.db.write();
         if (opts['autocleartmp'] && (global.support || {}).find) {
-            const tmp = [tmpdir(), 'tmp', "varebot-sub"];
+            const tmp = [tmpdir(), 'tmp', "𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙-sub"];
             tmp.forEach(filename => spawn('find', [filename, '-amin', '2', '-type', 'f', '-delete']));
         }
     }, 30 * 1000);
