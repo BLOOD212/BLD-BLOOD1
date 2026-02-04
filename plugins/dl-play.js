@@ -90,7 +90,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
     
     if (!text) {
         const helpMessage = `
-*╭─ׄ✦☾⋆⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽✦─ׅ⭒*
+*╭─ׄ✦☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽✦─ׅ⭒*
 *├* 『 ⁉️ 』 _Comandi disponibili:_
 *├* *├* \`${prefix}play\` _<nome/url>_
 *├* ↳ 『 🎵 』- *Scarica audio veloce*
@@ -105,7 +105,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
 *├* _${prefix}play Charge me Future_
 *├* _${prefix}playaudio https://youtu.be/gLNpPiUpJ4w_
 *╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*
-> \`vare ✧ bot\``;
+> \`𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙\``;
         await conn.reply(m.chat, helpMessage.trim(), m);
         return;
     }
@@ -126,7 +126,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
             searchResults = videoInfoCache.get(searchKey).data
         } else {
             const search = await ytSearch(text)
-            if (!search.videos.length) throw '❌ *Nessun risultato trovato!*'
+            if (!search.videos.length) throw '❌ *che cazzo hai cercato coglione*'
             searchResults = search.videos.slice(0, 5)
             videoInfoCache.set(searchKey, { data: searchResults, timestamp: Date.now() })
         }
@@ -161,7 +161,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
             const thumbnailUrl = videoInfo.thumbnail || `https://img.youtube.com/vi/${videoInfo.id}/maxresdefault.jpg`;
 
             const captionMessage = `
-*╭─ׄ✦☾⋆⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽✦─ׅ⭒*
+*╭─ׄ✦☾⋆⁺₊✧𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽✦─ׅ⭒*
 *├* *\`${title}\`*
 *├* 👤 \`Autore:\` *${author}*
 *├* 👁️ \`Views:\` *${views}*
@@ -190,7 +190,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
                 image: { url: thumbnailUrl },
                 title: `${index + 1}. ${shortTitle}`,
                 body: `『 👤 』 *${author}*\n『 ⏱️ 』 *${duration}* - 『 👁️ 』 *${views}*`,
-                footer: `˗ˏˋ ☾ 𝚟𝚊𝚛𝚎𝚋𝚘𝚝 ☽ ˎˊ˗`,
+                footer: `˗ˏˋ𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙ˎˊ˗`,
                 buttons: [
                     {
                         name: "quick_reply",
@@ -223,7 +223,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
             m.chat,
             {
                 text: `『 🔍 』 *Risultati trovati per:*\n- ↳ *\`${text}\`*`,
-                footer: 'vare ✧ bot',
+                footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙',
                 cards: cards
             },
             { quoted: m }
@@ -399,7 +399,7 @@ async function downloadMedia(m, conn, command, url, prefix, preloadedVideoInfo =
                 video: buffer,
                 mimetype: 'video/mp4',
                 fileName: fileName,
-                caption: `> \`vare ✧ bot\``,
+                caption: `> \`𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙\``,
                 footer: '',
                 interactiveButtons: videoButtons,
                 contextInfo: {...global.fake?.contextInfo}
@@ -416,7 +416,7 @@ async function downloadMedia(m, conn, command, url, prefix, preloadedVideoInfo =
                     externalAdReply: {
                         ...global.fake?.contextInfo?.externalAdReply,
                         title: videoInfo ? videoInfo.title : 'Audio',
-                        body: '⋆⭑˚₊ 𝓥𝓪𝓻𝓮𝓫𝓸𝓽 ₊˚⭑⋆',
+                        body: '⋆⭑˚₊𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ₊˚⭑⋆',
                         thumbnailUrl: videoInfo ? videoInfo.thumbnail : 'https://img.youtube.com/vi/default/maxresdefault.jpg',
                         sourceUrl: null,
                         mediaType: 2,
