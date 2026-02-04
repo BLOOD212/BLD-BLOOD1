@@ -51,10 +51,13 @@ function redefineConsoleMethod(methodName, filterStrings) {
         }
         originalConsoleMethod.apply(console, arguments);
     };
-}
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
-    return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
+    return rmPrefix
+        ? /file:\/\/\//.test(pathURL)
+            ? fileURLToPath(pathURL)
+            : pathURL
+        : pathToFileURL(pathURL).toString();
 };
 
 global.__dirname = function dirname(pathURL) {
@@ -340,7 +343,7 @@ async function connectionUpdate(update) {
                 `╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝`
             ];
 
-            va rebot.forEach((line, i) => {
+            𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙.forEach((line, i) => {
                 const color =
                     finchevedotuttoviolaviola[i] ||
                     finchevedotuttoviolaviola[finchevedotuttoviolaviola.length - 1];
@@ -348,7 +351,9 @@ async function connectionUpdate(update) {
             });
 
             global.isLogoPrinted = true;
-            await byblood();
+async function byblood() {
+    // placeholder
+}
         }
 
         const perfConfig = getPerformanceConfig();
