@@ -29,7 +29,7 @@ const DisconnectReason = {
     forbidden: 403,
     unavailableService: 503
 };
-const { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, getPerformanceConfig, setPerformanceConfig, Logger, makeInMemoryStore } = await import('@blood/based');
+const { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, getPerformanceConfig, setPerformanceConfig, Logger, makeInMemoryStore } = await import('@vare/based');
 const { chain } = lodash;
 const PORT = process.env.PORT || process.env.SERVER_PORT || 3000;
 protoType();
@@ -54,7 +54,9 @@ function redefineConsoleMethod(methodName, filterStrings) {
 }
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
-    return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
+    return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileUR
+        LToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
+    
 };
 
 global.__dirname = function dirname(pathURL) {
