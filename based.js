@@ -54,8 +54,8 @@ function redefineConsoleMethod(methodName, filterStrings) {
 }
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
-    return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileUR
-        LToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
+    return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
+};
     
 };
 
@@ -340,7 +340,7 @@ async function connectionUpdate(update) {
                 `╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝`
             ];
 
-            varebot.forEach((line, i) => {
+            va rebot.forEach((line, i) => {
                 const color =
                     finchevedotuttoviolaviola[i] ||
                     finchevedotuttoviolaviola[finchevedotuttoviolaviola.length - 1];
