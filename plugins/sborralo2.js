@@ -26,7 +26,7 @@ let handler = async (m, { conn, text }) => {
     // Messaggi personalizzati
     let sequenza = [
         `inizio a segarmi su🥵*${nomeDestinatario}*...`,
-        "; mi sta pulsando preparati🍆...",
+        " *mi sta pulsando preparati*🍆...",
         "preparati alla sborrata💦💦"
     ];
 
