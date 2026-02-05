@@ -18,7 +18,7 @@ let handler = async (m, { conn, text }) => {
     }
     // Se non c'è nulla
     else {
-        return m.reply("Tagga qualcuno o rispondi a un messaggio per iniziare il ditalino.");
+        return m.reply("Tagga qualcuno o rispondi a un messaggio per iniziare l'imbiancamento.");
     }
 
     let nomeDestinatario = `@${destinatario.split('@')[0]}`;
