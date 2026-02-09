@@ -11,11 +11,11 @@ import NodeCache from 'node-cache'
 const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf-8'))
 const moduleCache = new NodeCache({ stdTTL: 300 });
 
-/*⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽༺❘✦━━━⭒⭑*/
+/*⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙✧₊⁺⋆☽༺❘✦━━━⭒⭑*/
 
 global.sam = ['19707807900',]
 global.owner = [
-  ['19707807900', 'blood', true],
+  ['393701330693', 'blood', true],
   ['212773631903', 'deadly', true],
   ['212614246845', 'gorilla', true],
   ['xxxxxxxxxxx'],
@@ -37,7 +37,7 @@ global.errore = '⚠️ *Errore inatteso!* Usa il comando `.segnala _errore_` pe
 
 /*⭑⭒━━━✦❘༻🌐 LINK 🌐༺❘✦━━━⭒⭑*/
 
-global.repobot ='https//wa.me/19707807900'
+global.repobot ='https//wa.me/393701330693'
 global.gruppo = 'https://chat.whatsapp.com/KdLKg5DoZ2CGrNlbqJRdV9'
 global.insta = 'https://www.instagram.com/bloodvelith'
 
