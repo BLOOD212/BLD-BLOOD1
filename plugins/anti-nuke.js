@@ -16,7 +16,8 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
 
   const sender = m.key?.participant || m.participant || m.sender;
 
-  if (![29, 30].includes(m.messageStubType)) return;
+  // 🔥 ADESSO INCLUDE ANCHE KICK (28)
+  if (![28, 29, 30].includes(m.messageStubType)) return;
 
   const botJid = conn.user.id.split(':')[0] + '@s.whatsapp.net';
   const BOT_OWNERS = global.owner.map(o => o[0] + '@s.whatsapp.net');
@@ -36,14 +37,6 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
     founderJid
   ].filter(Boolean);
 
-  console.log({
-    sender,
-    stub: m.messageStubType,
-    isBotAdmin,
-    participants: participants.map(p => ({ jid: p.jid, admin: p.admin })),
-    allowed
-  });
-
   if (allowed.includes(sender)) return;
 
   const usersToDemote = participants
@@ -61,7 +54,10 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
 
   await conn.groupSettingUpdate(m.chat, 'announcement');
 
-  const action = m.messageStubType === 29 ? 'promozione' : 'retrocessione';
+  const action =
+    m.messageStubType === 28 ? 'rimozione di un membro' :
+    m.messageStubType === 29 ? 'promozione' :
+    'retrocessione';
 
   const text = `🚨 ANTI-NUKE ATTIVO
 
