@@ -600,14 +600,14 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                 }
 
                 if (user.muto && !isROwner && !isOwner) {
-                    await this.sendMessage(m.chat, { text: `🚫 Sei stato mutato, non puoi usare i comandi.` }, { quoted: m }).catch(e => console.error('[ERRORE] Errore nell\'invio del messaggio:', e))
+                    await this.sendMessage(m.chat, { text: `🚫 Hai il cazzo di blood in bocca,non puoi usare i comandi.` }, { quoted: m }).catch(e => console.error('[ERRORE] Errore nell\'invio del messaggio:', e))
                     return
                 }
 
                 const ignoredGlobally = global.ignoredUsersGlobal.has(normalizedSender)
                 const ignoredInGroup = m.isGroup && global.ignoredUsersGroup[m.chat]?.has(normalizedSender)
                 if ((ignoredGlobally || ignoredInGroup) && !isROwner) {
-                    await this.sendMessage(m.chat, { text: `🚫 Non sei autorizzato a usare comandi.` }, { quoted: m }).catch(e => console.error('[ERRORE] Errore nell\'invio del messaggio:', e))
+                    await this.sendMessage(m.chat, { text: `🚫 Ma chi ti ha dato il permesso di provare sto comando, mongoplettico.` }, { quoted: m }).catch(e => console.error('[ERRORE] Errore nell\'invio del messaggio:', e))
                     return
                 }
 
@@ -616,7 +616,7 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                 if (user.banned && !isROwner && name !== 'creatore-banuser.js') {
                     if (user.antispam > 2) return
                     await this.sendMessage(m.chat, {
-                        text: `🚫 *Sei stato bannato/a dall'utilizzo del bot*.\n\n${user.bannedReason ? `🥀 Motivo: ${user.bannedReason}` : `🥀 Motivo: Non specificato ma meritato`}\n\n⚠️ Contatta il creatore con *${usedPrefix}segnala* per problemi.`
+                        text: `🚫 *Blood ti ha tolto il privileggio di usare il bot*.\n\n${user.bannedReason ? `🥀 Motivo: ${user.bannedReason}` : `🥀 Blood non ha bisogno di motivazioni`}\n\n⚠️ Contatta il creatore con *${usedPrefix}segnala* per problemi.`
                     }, { quoted: m }).catch(e => console.error('[ERRORE] Errore nell\'invio del messaggio:', e))
                     user.antispam++
                     return
@@ -821,17 +821,17 @@ global.dfail = async (type, m, conn) => {
     const nome = m.pushName || 'sam'
     const etarandom = Math.floor(Math.random() * 21) + 13
         const msg = {
-        sam: '🔒 𝗔𝗖𝗖𝗘𝗦𝗦𝗢 𝗥𝗜𝗦𝗘𝗥𝗩𝗔𝗧𝗢\nMbàre, solo il 𝗕𝗼𝘀𝘀 Supremo può dare questo ordine.',
-        rowner: '👑 𝗕𝗢𝗦𝗦\nPicciotto, solo il Don può usare questa funzione.',
+        sam: '🔒 𝗔𝗖𝗖𝗘𝗦𝗦𝗢 𝗥𝗜𝗦𝗘𝗥𝗩𝗔𝗧𝗢\n Solo blood puo usare sto comando.',
+        rowner: '👑 𝗕𝗢𝗦𝗦\nFratello solo i miei friend possono usare sto comando.',
         owner: '🛡️ 𝗖𝗔𝗣𝗢\nSolo i Capo possono eseguire questo comando, mbàre.',
-        mods: '⚙️ 𝗦𝗢𝗦𝗧𝗢𝗖𝗔𝗣𝗢\nSolo i sottocapi del clan possono ordinarlo.',
-        premium: '💎 𝗙𝗜𝗗𝗘𝗟𝗜𝗧À\nPicciotto, serve lo status Premium per usare questo potere.',
+        mods: '⚙️ 𝗦𝗢𝗦𝗧𝗢𝗖𝗔𝗣𝗢\nSolo i sottocapi possono ordinarlo.',
+        premium: '💎 𝗙𝗜𝗗𝗘𝗟𝗜𝗧À\nMbare, serve lo status Premium per usare questo potere.',
         group: '👥 𝗙AMIGLIA\nQuesto comando funziona solo nel gruppo.',
-        private: '📩 𝗙ACCENDA PRIVATA\nParla direttamente con il Boss, mbàre.',
+        private: '📩 𝗙ACCENDA PRIVATA\nParla direttamente con il Boss, mbare.',
         admin: '🛠️ 𝗔𝗜𝗨𝗧𝗔𝗡𝗧𝗘\nSolo gli aiutanti del clan possono dare quest’ordine.',
         botAdmin: '🤖 𝗩𝗜𝗚𝗜𝗟𝗘\nIl bot deve avere poteri da Admin per agire.',
         unreg: `📛 𝗡𝗨𝗢𝗩𝗢 𝗣𝗜𝗖𝗖𝗜𝗢𝗧𝗧𝗢
-Mbàre, prima ti devi registrare.
+Mbare, prima ti devi registrare.
 
 Esempio:
 .reg ${nome} ${etarandom}`,
