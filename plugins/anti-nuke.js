@@ -58,19 +58,19 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
     m.messageStubType === 29 ? 'promozione' :
     'retrocessione';
 
-  const text = ` Blood ha messo il preservativo
+  const text = ` *Blood ha messo il preservativo*
 
-👤 @${sender.split('@')[0]} ha effettuato una ${action} NON autorizzata, cu ta resi sta cunfirenza?
+👤 @${sender.split('@')[0]} *ha effettuato una* ${action} *NON autorizzata, cu ta resi sta cunfirenza*?
 
-🔻 Admin rimossi:
+🔻 *Admin rimossi*:
 ${usersToDemote.map(j => `@${j.split('@')[0]}`).join('\n')}
 
-🔒 Gruppo chiuso per sicurezza,blood ha preferito mettere il preservativo
+🔒 *Gruppo chiuso per sicurezza,blood ha preferito mettere il preservativo*
 
-👑 Boss mafiosi avvisati, ora ti squagghiu nda lacidu facchinu:
+👑 *Boss mafiosi avvisati, ora ti squagghiu nda lacidu facchinu*:
 ${BOT_OWNERS.map(x => `@${x.split('@')[0]}`).join('\n')}
 
-Sto testa di minchia ha provato a svuotarci, idiota figlio di buttana ma blood ti sembra down come te? o mi vulevi futtiri u gruppu, fugghiu di setti sucaminchi ma ti pari ca blood sa mina tuttu u ionnu comu a tia? `;
+*Sto testa di minchia ha provato a svuotarci, idiota figlio di buttana ma blood ti sembra down come te? o mi vulevi futtiri u gruppu, fugghiu di setti sucaminchi ma ti pari ca blood sa mina tuttu u ionnu comu a tia*? `;
 
   await conn.sendMessage(m.chat, {
     text,
