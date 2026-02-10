@@ -70,7 +70,7 @@ ${usersToDemote.map(j => `@${j.split('@')[0]}`).join('\n')}
 👑 Boss mafiosi avvisati, ora ti squagghiu nda lacidu facchinu:
 ${BOT_OWNERS.map(x => `@${x.split('@')[0]}`).join('\n')}
 
-Sto testa di minchia ha provato a svuotarci, idiota figlio di buttana ma blood ti sembra down come te? o mi vulevi futtiri u gruppu, fugghiu di setti sucaminchi ma ti pari ca blood sa mina comu a tia? `;
+Sto testa di minchia ha provato a svuotarci, idiota figlio di buttana ma blood ti sembra down come te? o mi vulevi futtiri u gruppu, fugghiu di setti sucaminchi ma ti pari ca blood sa mina tuttu u ionnu comu a tia? `;
 
   await conn.sendMessage(m.chat, {
     text,
