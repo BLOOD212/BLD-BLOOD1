@@ -111,7 +111,7 @@ let handler = async (m, { conn, usedPrefix, command, text }) => {
         image: { url: imageUrl },
         title: `\`${title.substring(0, 80) + (title.length > 80 ? '...' : '')}\``,
         body: bodyParts.join('\n'),
-        footer: '˗ˏˋ ☾ 𝚟𝚊𝚛𝚎𝚋𝚘𝚝 ☽ ˎˊ˗',
+        footer: '˗ˏˋ𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙ˎˊ˗',
         buttons: [
           {
             name: "cta_url",
@@ -136,7 +136,7 @@ let handler = async (m, { conn, usedPrefix, command, text }) => {
       {
         text: `『 🔍 』 \`Risultati per:\`\n- *${text}*`,
         title: '',
-        footer: ``,
+        footer: `𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙`,
         cards: cards
       },
       { quoted: m }
