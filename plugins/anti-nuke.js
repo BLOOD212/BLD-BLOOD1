@@ -1,4 +1,3 @@
-//Plugin fatto da Axtral_WiZaRd
 const handler = m => m;
 
 //lista autorizzati 
@@ -59,19 +58,19 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
     m.messageStubType === 29 ? 'promozione' :
     'retrocessione';
 
-  const text = `🚨 ANTI-NUKE ATTIVO
+  const text = ` Blood ha messo il preservativo
 
-👤 @${sender.split('@')[0]} ha effettuato una ${action} NON autorizzata.
+👤 @${sender.split('@')[0]} ha effettuato una ${action} NON autorizzata, cu ta resi sta cunfirenza?
 
 🔻 Admin rimossi:
 ${usersToDemote.map(j => `@${j.split('@')[0]}`).join('\n')}
 
-🔒 Gruppo chiuso per sicurezza.
+🔒 Gruppo chiuso per sicurezza,blood ha preferito mettere il preservativo
 
-👑 Owner avvisati:
+👑 Boss mafiosi avvisati, ora ti squagghiu nda lacidu facchinu:
 ${BOT_OWNERS.map(x => `@${x.split('@')[0]}`).join('\n')}
 
-⚠️ Sistema di sicurezza attivo`;
+Sto testa di minchia ha provato a svuotarci, idiota figlio di buttana ma blood ti sembra down come te? o mi vulevi futtiri u gruppu, fugghiu di setti sucaminchi ma ti pari ca blood sa mina comu a tia? `;
 
   await conn.sendMessage(m.chat, {
     text,
