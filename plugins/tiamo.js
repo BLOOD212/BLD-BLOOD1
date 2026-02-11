@@ -1,10 +1,22 @@
 module.exports = {
-    command: "tiamo",
+    name: "anti-tiamo",
     async execute(sock, msg) {
+        if (!msg.message) return;
+
         const jid = msg.key.remoteJid;
+        const text =
+            msg.message.conversation ||
+            msg.message.extendedTextMessage?.text ||
+            "";
 
-        const risposta = "puoi amare tutti tranne blood. lui appartiene a velith.😈";
+        const normalized = text
+            .toLowerCase()
+            .replace(/[^a-z]/g, "");
 
-        await sock.sendMessage(jid, { text: risposta });
+        if (normalized.includes("tiamo")) {
+            await sock.sendMessage(jid, {
+                text: "💘 Puoi amare tutti tranne Blood… lui appartiene a Velith 😈✨"
+            });
+        }
     }
 };
