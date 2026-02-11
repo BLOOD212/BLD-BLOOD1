@@ -1,22 +1,22 @@
-module.exports = {
-    name: "anti-tiamo",
-    async execute(sock, msg) {
-        if (!msg.message) return;
+// Plugin fatto da Deadly (trigger "ti amo" nelle frasi)
 
-        const jid = msg.key.remoteJid;
-        const text =
-            msg.message.conversation ||
-            msg.message.extendedTextMessage?.text ||
-            "";
+const handler = async (m, { conn }) => {
+  try {
+    const risposta = "puoi amare tutti tranne blood. lui appartiene a velith.😈";
 
-        const normalized = text
-            .toLowerCase()
-            .replace(/[^a-z]/g, "");
+    await conn.sendMessage(
+      m.chat,
+      { text: risposta },
+      { quoted: m }
+    );
 
-        if (normalized.includes("tiamo")) {
-            await sock.sendMessage(jid, {
-                text: "💘 Puoi amare tutti tranne Blood… lui appartiene a Velith 😈✨"
-            });
-        }
-    }
+  } catch (e) {
+    console.error('Errore trigger ti amo:', e);
+  }
 };
+
+// 🔥 Rileva "ti amo" anche dentro una frase
+handler.customPrefix = /(^|\s)ti\s*amo(\s|$)/i;
+handler.command = new RegExp;
+
+export default handler;
