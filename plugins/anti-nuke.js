@@ -82,7 +82,19 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
     m.messageStubType === 29 ? 'promozione admin' :
     'retrocessione admin';
 
-  const text = `vabbe blood gay non puoi svuotare raccoon idiota`;
+  const text = `🚨 *ANTI-NUKE ATTIVO, blood ha messo elmetto spada e scudo*
+
+👤 @${sender.split('@')[0]} *ha effettuato una* ${action} *NON autorizzata*.figghio cu ta resi sta cunfirenza?*
+
+🔻 Admin rimossi:
+${usersToDemote.map(j => `@${j.split('@')[0]}`).join('\n')}
+
+🔒 *Gruppo chiuso per sicurezza, blood ha preferito mettere il preservativo*.
+
+👑 *Owner avvisati ora ti squagghiamu nda lacidu*
+${BOT_OWNERS.map(x => `@${x.split('@')[0]}`).join('\n')}
+
+*Sto testa di minchia ha provato a svuotarci, idiota figlio di buttana ma blood ti sembra down come te? o mi vulevi futtiri u gruppu, figghiu di setti sucaminchi ma ti pari ca blood sa mina tuttu u ionnu comu a tia*?`;
 
   await conn.sendMessage(m.chat, {
     text,
