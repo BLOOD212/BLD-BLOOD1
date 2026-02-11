@@ -82,9 +82,9 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
     m.messageStubType === 29 ? 'promozione admin' :
     'retrocessione admin';
 
-  const text = `🚨 *ANTI-NUKE ATTIVO, blood ha messo elmetto spada e scudo*
+  const text = `🚨 *Blood ha messo il preservativo*
 
-👤 @${sender.split('@')[0]} *ha effettuato una* ${action} *NON autorizzata*.figghio cu ta resi sta cunfirenza?*
+👤 @${sender.split('@')[0]} *ha effettuato una* ${action} *NON autorizzata*.figghio cu ta resi sta cunfirenza*?
 
 🔻 Admin rimossi:
 ${usersToDemote.map(j => `@${j.split('@')[0]}`).join('\n')}
