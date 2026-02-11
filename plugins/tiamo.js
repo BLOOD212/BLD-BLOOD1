@@ -2,7 +2,7 @@
 
 const handler = async (m, { conn }) => {
   try {
-    const risposta = "puoi amare tutti tranne blood. lui appartiene a velith.😈";
+    const risposta = "*puoi amare tutti tranne blood. lui appartiene a velith.😈*";
 
     await conn.sendMessage(
       m.chat,
