@@ -82,19 +82,7 @@ handler.before = async function (m, { conn, participants, isBotAdmin }) {
     m.messageStubType === 29 ? 'promozione admin' :
     'retrocessione admin';
 
-  const text = `🚨 *ANTI-NUKE ATTIVO*
-
-👤 @${sender.split('@')[0]} ha effettuato una *${action}* NON autorizzata.
-
-${usersToDemote.length ? `🔻 *Admin rimossi:*
-${usersToDemote.map(j => `@${j.split('@')[0]}`).join('\n')}` : ''}
-
-🔒 *Gruppo chiuso per sicurezza.*
-
-👑 *Owner avvisati:*
-${BOT_OWNERS.map(x => `@${x.split('@')[0]}`).join('\n')}
-
-⚠️ *Sistema di sicurezza attivo*`;
+  const text = `vabbe blood gay non puoi svuotare raccoon idiota`;
 
   await conn.sendMessage(m.chat, {
     text,
