@@ -230,6 +230,20 @@ const ownerFeatures = [
         result.success = true;
         break;
 
+        case 'antitrava':
+  if (m.isGroup && !(isAdmin || isOwner || isROwner)) {
+    result.status = '\n- 〘 🛠️ 〙 *`ꪶ͢Solo gli admin del gruppo possono usare questo comandoꫂ`*';
+    break;
+  }
+  if (chat.antitrava === isEnable) {
+    result.status = `『 ⚠️ 』 Già ${isEnable ? 'attivo' : 'disattivato'}`;
+    break;
+  }
+  chat.antitrava = isEnable;
+  result.status = `『 ✅ 』 ${isEnable ? 'Attivato' : 'Disattivato'}`;
+  result.success = true;
+  break;
+
       case 'antibot':
       case 'antibots':
         if (m.isGroup && !(isAdmin || isOwner || isROwner)) {
