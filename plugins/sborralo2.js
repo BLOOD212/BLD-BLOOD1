@@ -44,6 +44,6 @@ let handler = async (m, { conn, text }) => {
     conn.reply(m.chat, resultMessage, m, { mentions: [destinatario] });
 };
 
-handler.command = ["sborralo"];
+handler.command = ["sborralo", "sborrala"];
 handler.tags = ["fun"];
 export default handler;
