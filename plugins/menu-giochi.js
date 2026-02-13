@@ -16,7 +16,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
   let tags = { 'giochi': 'Giochi' }
 
   try {
-    // dati base
+    // --------------- DATI BASE ---------------
     let d = new Date(new Date() + 3600000)
     let locale = 'it'
     let week = d.toLocaleDateString(locale, { weekday: 'long' })
@@ -38,38 +38,38 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     let uptime = clockString(_uptime)
     let muptimeStr = clockString(muptime)
     let wib = moment.tz('Europe/Rome').format('HH:mm:ss')
-    let mode = global.opts['self'] ? 'Privato' : 'Pubblico'
+    let mode = global.opts?.self ? 'Privato' : 'Pubblico'
     let _package = JSON.parse(await promises.readFile(join(__dirname, '../package.json')).catch(_ => ({}))) || {}
 
-    let { age, exp, limit, level, role, registered, eris } = global.db.data.users[m.sender]
-    let { min, xp, max } = xpRange(level, global.multiplier)
+    // --------------- DATI UTENTE ---------------
+    let user = global.db.data.users[m.sender] || {}
+    let { age = 0, exp = 0, limit = 10, level = 1, role = 'Utente', registered = false, eris = 0, premiumTime = 0 } = user
+    let { min, xp, max } = xpRange(level, global.multiplier || 1)
     let name = await conn.getName(m.sender)
-    let premium = global.db.data.users[m.sender].premiumTime
-    let prems = `${premium > 0 ? 'Premium' : 'Utente comune'}`
+    let prems = premiumTime > 0 ? '💎 Premium' : '👤 Utente comune'
     let platform = os.platform()
-
     let totalreg = Object.keys(global.db.data.users).length
-    let rtotalreg = Object.values(global.db.data.users).filter(user => user.registered).length
+    let rtotalreg = Object.values(global.db.data.users).filter(u => u.registered).length
 
-    // help plugins
-    let help = Object.values(global.plugins).filter(p => !p.disabled).map(p => ({
-      help: Array.isArray(p.tags) ? p.help : [p.help],
-      tags: Array.isArray(p.tags) ? p.tags : [p.tags],
-      prefix: 'customPrefix' in p,
-      limit: p.limit,
-      premium: p.premium,
-      enabled: !p.disabled
-    }))
+    // --------------- PLUGIN HELP ---------------
+    let help = Object.values(global.plugins)
+      .filter(p => !p.disabled)
+      .map(p => ({
+        help: Array.isArray(p.tags) ? p.help : [p.help],
+        tags: Array.isArray(p.tags) ? p.tags : [p.tags],
+        prefix: 'customPrefix' in p,
+        limit: p.limit,
+        premium: p.premium,
+        enabled: !p.disabled
+      }))
 
+    // raggruppa plugin per tag
     let groups = {}
     for (let tag in tags) {
-      groups[tag] = []
-      for (let plugin of help)
-        if (plugin.tags && plugin.tags.includes(tag) && plugin.help)
-          groups[tag].push(plugin)
+      groups[tag] = help.filter(menu => menu.tags && menu.tags.includes(tag) && menu.help)
     }
 
-    // costruzione menu
+    // --------------- COSTRUZIONE MENU ---------------
     let before = conn.menu?.before || defaultMenu.before
     let header = conn.menu?.header || defaultMenu.header
     let body = conn.menu?.body || defaultMenu.body
@@ -81,20 +81,23 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       ...Object.keys(tags).map(tag => {
         return header.replace(/%category/g, tags[tag]) + '\n' +
           [
-            ...help.filter(menu => menu.tags && menu.tags.includes(tag) && menu.help)
-              .map(menu => menu.help.map(cmd => body.replace(/%cmd/g, menu.prefix ? cmd : _p + cmd)
+            ...groups[tag].map(menu =>
+              menu.help.map(cmd => body
+                .replace(/%cmd/g, menu.prefix ? cmd : _p + cmd)
                 .replace(/%islimit/g, menu.limit ? '⚠️ Limitato' : '')
                 .replace(/%isPremium/g, menu.premium ? '💎 Premium' : '')
                 .trim()
-              ).join('\n')),
+              ).join('\n')
+            ),
             footer
           ].join('\n')
       }),
       after
     ].join('\n')
 
-    let text = typeof conn.menu === 'string' ? conn.menu : typeof conn.menu === 'object' ? _text : ''
+    let text = typeof conn.menu === 'string' ? conn.menu : _text
 
+    // sostituzioni variabili
     let replace = {
       '%': '%',
       p: _p,
@@ -124,26 +127,26 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
 
   } catch (e) {
     console.error(e)
-    conn.reply(m.chat, '❌ Si è verificato un errore nel menu giochi.', m)
+    conn.reply(m.chat, '❌ Errore nel menu giochi:\n' + e.message, m)
   }
 }
 
+// ------------------- HANDLER -------------------
 handler.help = ['menugiochi']
 handler.tags = ['menu']
 handler.command = ['menugiochi', 'menugame']
 
 export default handler
 
-// -------------------
-// utils
-// -------------------
+// ------------------- UTILS -------------------
 const more = String.fromCharCode(8206)
 const readMore = more.repeat(4001)
 
 function clockString(ms) {
-  let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000)
-  let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60
-  let s = isNaN(ms) ? '--' : Math.floor(ms / 1000) % 60
+  if (!ms) return '-- H -- M -- S'
+  let h = Math.floor(ms / 3600000)
+  let m = Math.floor(ms / 60000) % 60
+  let s = Math.floor(ms / 1000) % 60
   return [h, ' H ', m, ' M ', s, ' S '].map(v => v.toString().padStart(2, '0')).join('')
 }
 
