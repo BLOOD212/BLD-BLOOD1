@@ -1,63 +1,49 @@
-import { performance } from 'perf_hooks'
-
 let handler = async (m, { conn }) => {
 
-  let nomeDelBot = global.db.data.nomedelbot || `𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙`
-
-  // Identifica il destinatario
   let destinatario
 
+  // Se risponde a qualcuno
   if (m.quoted && m.quoted.sender) {
     destinatario = m.quoted.sender
+
+  // Se menziona qualcuno
   } else if (m.mentionedJid && m.mentionedJid.length > 0) {
     destinatario = m.mentionedJid[0]
+
+  // Se non fa nulla → si auto-targetta
   } else {
-    return m.reply("Tagga qualcuno o rispondi a un messaggio per segarlo 😏")
+    destinatario = m.sender
   }
 
-  let nomeDestinatario = `@${destinatario.split('@')[0]}`
+  let nome = '@' + destinatario.split('@')[0]
 
-  // Messaggio iniziale
-  let { key } = await conn.sendMessage(m.chat, {
-    text: `Ora sego ${nomeDestinatario}...`,
-    mentions: [destinatario]
-  }, { quoted: m })
-
-  const animazione = [
+  const frames = [
+    `Ora sego ${nome}... 😏`,
     "8===👊=D",
     "8=👊===D",
     "8==👊==D",
-    "8===👊=D",
-    "8===👊=D💦"
+    "8===👊=D💦",
+    `Oh ${nome} ha sborrato! 😋💦`
   ]
 
-  for (let frame of animazione) {
-    await new Promise(resolve => setTimeout(resolve, 400))
+  for (let msg of frames) {
     await conn.sendMessage(m.chat, {
-      text: frame,
-      edit: key,
+      text: msg,
       mentions: [destinatario]
-    })
+    }, { quoted: m })
+
+    await new Promise(r => setTimeout(r, 700))
   }
-
-  // Messaggio finale
-  await new Promise(resolve => setTimeout(resolve, 400))
-
-  return conn.sendMessage(m.chat, {
-    text: `Oh ${nomeDestinatario} ha sborrato! 😋💦`,
-    edit: key,
-    mentions: [destinatario]
-  })
 }
 
 handler.help = ['sega @tag']
 handler.tags = ['fun']
 handler.command = /^(sega)$/i
 
-// 🔓 NESSUNA RESTRIZIONE
+// 🔓 Nessuna restrizione
 handler.owner = false
 handler.admin = false
-handler.group = true
+handler.group = false
 handler.private = false
 handler.premium = false
 
