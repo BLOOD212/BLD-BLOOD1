@@ -32,11 +32,12 @@ ${list}`, m, { mentions: escorts })
                 if (!m.isGroup)
                     return m.reply('⚠️ Solo nei gruppi')
 
-                let metadata = await conn.groupMetadata(m.chat)
-                let isAdmin = metadata.participants.find(p => p.id === m.sender)?.admin
+ let metadata = await conn.groupMetadata(m.chat)
+let participant = metadata.participants.find(p => p.id === m.sender)
+let isAdmin = participant?.admin === 'admin' || participant?.admin === 'superadmin'
 
-                if (!isAdmin)
-                    return m.reply('⚠️ Solo gli admin possono aggiungere escort')
+if (!isAdmin)
+    return m.reply('⚠️ Solo gli admin possono aggiungere escort')
 
                 let user = m.quoted
                     ? m.quoted.sender
@@ -94,6 +95,7 @@ ${list}`, m, { mentions: escorts })
 handler.help = ['escort', 'addescort', 'delescort']
 handler.tags = ['divertimento']
 handler.command = /^(escort|addescort|delescort)$/i
+handler.group = true
 handler.admin = true
 
 export default handler
