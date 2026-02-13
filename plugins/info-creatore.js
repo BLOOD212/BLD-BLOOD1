@@ -7,7 +7,7 @@ let text = `
 ✨ *Contatti ufficiali*
 
 📞 *WhatsApp*
-wa.me/19707807900
+wa.me/393701330693
 
 📸 *Instagram*
 @bloodvelith
