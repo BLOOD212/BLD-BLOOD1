@@ -1,12 +1,12 @@
 {
-  "name": "𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙",
+  "name": "varebot",
   "version": "2.5.8",
-  "description": "MIglior bot di zap by blood",
+  "description": "Miglior bot di zozzap by sam",
   "main": "based.js",
   "type": "module",
   "license": "Apache-2.0",
   "author": {
-    "name": "Blood",
+    "name": "realvare",
     "url": "https://github.com/realvare"
   },
   "homepage": "https://github.com/realvare/varebot",
@@ -32,7 +32,7 @@
   "directories": {
     "lib": "lib",
     "plugins": "plugins",
-    "varebot-sub": "𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙"
+    "varebot-sub": "varebot-sub"
   },
   "scripts": {
     "start": "node based.js",
