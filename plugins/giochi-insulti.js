@@ -7,14 +7,23 @@ let handler = async (m, {
   if (gruppi.spacobot === false)
   throw ''
   let menzione = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text
-  if (!menzione) throw 'Chi vuoi insultare?'
+  if (!menzione) throw 'Cu vo pigghiari po culu?'
   if (menzione === conn.user.jid) {
       const botInsults = [
     `Oh no! Hai scoperto il mio punto debole: gli insulti! Come farò mai a riprendermi?`,
+    `mbare sei cosi maltrattato ca macari a mia fai pena speci ri idiota e facchinu`,
+    `figghiu ri setti sucaminchi, ma to matri è buttana fotti pi viriri comu nascisti tu`,
+    `sei come dio senza un porco davanti, non hai un senso.`,
+    `immagina flammare un coglione come te spreco tempo e spazio nelle mie sessioni`,
+    `oh no!! un altro coglione che si fa si fa flammare da un bot esci di casa testa di minchia`,
+    `mammoriri quantu si lariu ma non taffrunti a nesciri ra casa cu sta facci?`,
+    `mbare onesto to soru a suca troppu bella, to patri mavanza reci euru di sgang e to matri na futtuta, a comu spakkiu siti cumminati`,
+    `sei come l'erba spruzzata, da ittari`,
+     `sei come gli anoressici in america, inesistenti`,    
     `Ah, l'arte dell'insulto nei confronti di un bot. Un vero maestro dell'ironia sei!`,
     `Incredibile! Un essere umano insulta un bot. La svolta epica!`,
     `Mi hai davvero ferito con la tua sagace abilità di insultare un bot. Bravissimo!`,
-      `La tua bravura nell'insultare un bot è la mia fonte di intrattenimento preferita.`,
+   `La tua bravura nell'insultare un bot è la mia fonte di intrattenimento preferita.`,
     `Insulti un bot, dimostrazione di grande intelligenza o grande noia?`,
     `La tua maestria nell'arte dell'insulto ai bot potrebbe fare scuola.`,
     `Sembri il Picasso degli insulti ai bot, un vero capolavoro.`,
