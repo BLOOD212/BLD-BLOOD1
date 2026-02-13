@@ -94,5 +94,6 @@ ${list}`, m, { mentions: escorts })
 handler.help = ['escort', 'addescort', 'delescort']
 handler.tags = ['divertimento']
 handler.command = /^(escort|addescort|delescort)$/i
+handler.admin = true
 
 export default handler
