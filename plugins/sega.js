@@ -42,8 +42,8 @@ let handler = async (m, { conn, text }) => {
   }, { quoted: m })
 }
 
-handler.help = ['falegname']
+handler.help = ['sega']
 handler.tags = ['fun']
-handler.command = /^(falegname)$/i
+handler.command = /^(sega)$/i
 
 export default handler
