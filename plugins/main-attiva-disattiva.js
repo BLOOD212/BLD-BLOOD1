@@ -21,7 +21,7 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   } else {
     dynamicContextInfo = {
       externalAdReply: {
-        title: "varebot",
+        title: "𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙",
         body: "Sistema di gestione funzioni",
         mediaType: 1,
         jpegThumbnail: userProfilePicBuffer.length > 0 ? userProfilePicBuffer : null
@@ -90,7 +90,7 @@ const ownerFeatures = [
           image: { url: varebot },
           title: '『 👥 』 \`Impostazioni Admin\`',
           body: '- 〘 🛠️ 〙 *Gestisci le funzioni del gruppo selezionando attiva o disattiva.*',
-          footer: '˗ˏˋ ☾ 𝚟𝚊𝚛𝚎𝚋𝚘𝚝 ☽ ˎˊ˗',
+          footer: '˗ˏˋ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙ˎˊ˗',
           buttons: [
             {
               name: 'single_select',
@@ -105,7 +105,7 @@ const ownerFeatures = [
           image: { url: 'https://i.ibb.co/kVdFLyGL/sam.jpg' },
           title: '『 👑 』 \`Impostazioni Owner\`',
           body: '- 〘 🛠️ 〙Gestisci le funzioni proprietario selezionando attiva o disattiva.',
-          footer: '˗ˏˋ ☾ 𝚟𝚊𝚛𝚎𝚋𝚘𝚝 ☽ ˎˊ˗',
+          footer: '˗ˏˋ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ˎˊ˗',
           buttons: [
             {
               name: 'single_select',
@@ -123,7 +123,7 @@ const ownerFeatures = [
           image: { url: varebot },
           title: '『 👥 』 \`Impostazioni Admin\`',
           body: '- 〘 🛠️ 〙 *Gestisci le funzioni del gruppo selezionando attiva o disattiva.*',
-          footer: '˗ˏˋ ☾ 𝚟𝚊𝚛𝚎𝚋𝚘𝚝 ☽ ˎˊ˗',
+          footer: '˗ˏˋ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ˎˊ˗',
           buttons: [
             {
               name: 'single_select',
@@ -139,7 +139,7 @@ const ownerFeatures = [
 
     const message = {
       text: '*Sistema di gestione funzioni*',
-      footer: '*─ׄ✦☾⋆⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽✦─ׅ⭒*',
+      footer: '*─ׄ✦☾⋆⁺₊✧𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽✦─ׅ⭒*',
       cards: cards,
       contextInfo: dynamicContextInfo
     };
@@ -584,7 +584,7 @@ case 'antinuke':
     }
     results.push(result);
   }
-  let summaryMessage = `『 🉐 』 \`Riepilogo modifiche:\`\n\n`;
+  let summaryMessage = `『 🉐 』 \`Sistema di sicurezza:\`\n\n`;
   results.forEach(result => {
     summaryMessage += `- *\`${result.type}\`*${result.status}`;
   });
