@@ -1,62 +1,54 @@
-// Ranking temporaneo (si resetta al riavvio)
-global.tetteRank = global.tetteRank || {};
+// Se vuoi mantenere il ranking
+globalThis.tetteRank = globalThis.tetteRank || {};
 
 let handler = async (m, { conn }) => {
 
-  let user = m.mentionedJid?.[0] || m.quoted?.sender;
-  if (!user) return m.reply("Devi menzionare qualcuno 😏");
+  let user = null;
 
-  const numeri = [1,2,3,4,5,6,7,8,9];
-  const lettere = ["A","B","C","D","E","F"];
-
-  const numeroRandom = numeri[Math.floor(Math.random() * numeri.length)];
-  const letteraRandom = lettere[Math.floor(Math.random() * lettere.length)];
-
-  let misura = `${numeroRandom}${letteraRandom}`;
-
-  // 💀 10% possibilità misura negativa
-  if (Math.random() < 0.10) {
-    misura = `-${numeroRandom}${letteraRandom}`;
+  if (m.mentionedJid && m.mentionedJid[0]) {
+    user = m.mentionedJid[0];
+  } else if (m.quoted && m.quoted.sender) {
+    user = m.quoted.sender;
   }
 
-  // 🔥 Sistema rarità
-  const roll = Math.random();
-  let rarita = "COMMON";
+  if (!user) return m.reply('Devi menzionare qualcuno 😏');
 
-  if (roll > 0.95) rarita = "MYTHIC 🔱";
-  else if (roll > 0.85) rarita = "LEGENDARY 🔥";
-  else if (roll > 0.65) rarita = "EPIC ⚡";
-  else if (roll > 0.40) rarita = "RARE ⭐";
+  let numero = Math.floor(Math.random() * 9) + 1;
+  let lettere = ['A','B','C','D','E','F'];
+  let lettera = lettere[Math.floor(Math.random() * lettere.length)];
 
-  const fortuna = Math.floor(Math.random() * 101);
+  let misura = numero + lettera;
 
-  const frasi = [
-    `oh @${user.split("@")[0]} ha una ${misura}`,
-    `analisi completata 🧪 @${user.split("@")[0]} possiede una ${misura}`,
-    `i calcoli parlano chiaro 📊 @${user.split("@")[0]} ha una ${misura}`,
-    `attenzione gruppo ⚠️ @${user.split("@")[0]} ha una ${misura}`,
-    `breaking news 📰 @${user.split("@")[0]} ha una ${misura}`
-  ];
+  // 10% possibilità negativa
+  if (Math.random() < 0.10) {
+    misura = '-' + misura;
+  }
 
-  const fraseRandom = frasi[Math.floor(Math.random() * frasi.length)];
+  let roll = Math.random();
+  let rarita = 'COMMON';
 
-  // 🏆 Ranking
-  if (!global.tetteRank[user]) global.tetteRank[user] = 0;
-  global.tetteRank[user] += 1;
+  if (roll > 0.95) rarita = 'MYTHIC 🔱';
+  else if (roll > 0.85) rarita = 'LEGENDARY 🔥';
+  else if (roll > 0.65) rarita = 'EPIC ⚡';
+  else if (roll > 0.40) rarita = 'RARE ⭐';
 
-  let testoFinale = `
-${fraseRandom}
+  let fortuna = Math.floor(Math.random() * 101);
 
-🎲 Rarità: ${rarita}
-🍀 Fortuna: ${fortuna}%
-🏆 Livello Caos: ${global.tetteRank[user]}
-  `.trim();
+  // Ranking
+  if (!globalThis.tetteRank[user]) globalThis.tetteRank[user] = 0;
+  globalThis.tetteRank[user] += 1;
+
+  let testo =
+    'oh @' + user.split('@')[0] + ' ha una ' + misura +
+    '\n\n🎲 Rarità: ' + rarita +
+    '\n🍀 Fortuna: ' + fortuna + '%' +
+    '\n🏆 Livello Caos: ' + globalThis.tetteRank[user];
 
   await conn.sendMessage(
     m.chat,
     {
-      text: testoFinale,
-      mentions: [user],
+      text: testo,
+      mentions: [user]
     },
     { quoted: m }
   );
@@ -64,6 +56,6 @@ ${fraseRandom}
 
 handler.help = ['tette @tag'];
 handler.tags = ['fun'];
-handler.command = /^tette$/i;
+handler.command = ['tette'];
 
-module.exports = handler;
+export default handler;
