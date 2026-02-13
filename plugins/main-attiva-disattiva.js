@@ -56,7 +56,7 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isR
   { key: 'antiLink2', name: '🌐❌ Antilinksocial', desc: 'Antilink social' },
   { key: 'reaction', name: '😎 Reazioni', desc: 'Reazioni automatiche' },
   { key: 'autolevelup', name: '⬆️ Autolivello', desc: 'Messaggio di livello automatico' },
-{ key: 'antitrava', name: 'Antitrava', desc: 'Anti-Trava oppure messaggi lunghi' }
+{ key: 'antitrava', name: 'Antitrava', desc: 'Anti-Trava oppure messaggi lunghi' },
 { key: 'antinuke', name: 'Antinuke', desc: 'Sicurezza del gruppo' }
 ];
 
