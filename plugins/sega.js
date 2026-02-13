@@ -1,50 +1,49 @@
-let handler = async (m, { conn }) => {
+import { performance } from 'perf_hooks'
 
-  let destinatario
+let handler = async (m, { conn, text }) => {
+  let nomeDelBot = global.db.data.nomedelbot || `𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙`
 
-  // Se risponde a qualcuno
+  // Identifica il destinatario: risposto o menzionato
+  let destinatario;
   if (m.quoted && m.quoted.sender) {
-    destinatario = m.quoted.sender
-
-  // Se menziona qualcuno
+    destinatario = m.quoted.sender;
   } else if (m.mentionedJid && m.mentionedJid.length > 0) {
-    destinatario = m.mentionedJid[0]
-
-  // Se non fa nulla → si auto-targetta
+    destinatario = m.mentionedJid[0];
   } else {
-    destinatario = m.sender
+    return m.reply("Tagga qualcuno o rispondi a un messaggio per segarlo 😏");
   }
 
-  let nome = '@' + destinatario.split('@')[0]
+  let nomeDestinatario = `@${destinatario.split('@')[0]}`
 
-  const frames = [
-    `Ora sego ${nome}... 😏`,
-    "8===👊=D",
-    "8=👊===D",
-    "8==👊==D",
-    "8===👊=D💦",
-    `Oh ${nome} ha sborrato! 😋💦`
+  // Messaggio iniziale
+  let { key } = await conn.sendMessage(m.chat, { 
+    text: `Ora sego ${nomeDestinatario}...`,
+    mentions: [destinatario]
+  }, { quoted: m })
+
+  const array = [
+    "8===👊=D", "8=👊===D", "8==👊==D", "8===👊=D", "8===👊=D💦"
   ]
 
-  for (let msg of frames) {
-    await conn.sendMessage(m.chat, {
-      text: msg,
+  for (let item of array) {
+    await conn.sendMessage(m.chat, { 
+      text: `${item}`, 
+      edit: key,
       mentions: [destinatario]
     }, { quoted: m })
-
-    await new Promise(r => setTimeout(r, 700))
+    await new Promise(resolve => setTimeout(resolve, 20))
   }
+
+  // Messaggio finale
+  return conn.sendMessage(m.chat, { 
+    text: `Oh ${nomeDestinatario} ha sborrato! 😋💦`,
+    edit: key,
+    mentions: [destinatario]
+  }, { quoted: m })
 }
 
-handler.help = ['sega @tag']
+handler.help = ['falegname']
 handler.tags = ['fun']
-handler.command = /^(sega)$/i
-
-// 🔓 Nessuna restrizione
-handler.owner = false
-handler.admin = false
-handler.group = false
-handler.private = false
-handler.premium = false
+handler.command = /^(falegname)$/i
 
 export default handler
