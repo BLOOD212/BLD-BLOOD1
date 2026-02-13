@@ -25,9 +25,9 @@ let handler = async (m, { conn, text }) => {
 
     // Messaggi personalizzati
     let sequenza = [
-        `🤟🏻 Inizio un bel ditalino per *${nomeDestinatario}*...`,
-        "🤟🏻 Ci siamo quasi...",
-        "👋🏻 Riparatevi dalla cascata, si salvi chi può!!"
+        `🤟🏻 *Inizio un bel ditalino per* *${nomeDestinatario}*...`,
+        "🤟🏻 *Ci siamo quasi*...",
+        "👋🏻 *Riparatevi dalla cascata, si salvi chi può*!!"
     ];
 
     // Invia i messaggi uno alla volta
@@ -40,7 +40,7 @@ let handler = async (m, { conn, text }) => {
     let endTime = performance.now();
     let elapsedTime = (endTime - startTime).toFixed(2);
 
-    let resultMessage = `✨ *${nomeDestinatario}* è venuta🥵! Sta spruzzando come una troietta bagnata, dopo *${elapsedTime}ms*!`;
+    let resultMessage = `✨ *${nomeDestinatario}* *è venuta allagando l'intero gruppo e sta spruzzando come una troietta bagnata dopo* *${elapsedTime}ms*!`;
 
     conn.reply(m.chat, resultMessage, m, { mentions: [destinatario] });
 };
