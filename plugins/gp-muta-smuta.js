@@ -68,7 +68,7 @@ let handler = async (m, { conn, command, args, participants }) => {
                 data.displayNumber + '@lid'
             let currentName = getUserName(userJid, participants) || data.displayNumber
             text += `│ 『 🔇 』 @${currentName} - ${timeLeft}\n`
-            text += `│ 『 📝 』 \`motivo:\` *${data.reason}*\n`
+            text += `│ 『 📝 』 \`motivo:\` *ancora? SE DICO ZITTO STAI ZITTO/A*\n`
             mentions.push(userJid)
         }
         text += `*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
@@ -176,7 +176,7 @@ let handler = async (m, { conn, command, args, participants }) => {
             const normalizedPunish = normalizeId(conn.decodeJid(m.sender))
             mutedUsers.set(normalizedPunish, {
                 timestamp: Date.now() + (2 * 60000),
-                reason: 'Hai provato a mutare un owner 👀',
+                reason: 'Hai provato a mutare il king blood 👀',
                 lastNotification: 0,
                 displayNumber: conn.decodeJid(m.sender).split('@')[0]
             })
@@ -224,7 +224,7 @@ let handler = async (m, { conn, command, args, participants }) => {
     if (isMute) {
         msg += time ? `│ 『 ⏱️ 』 \`durata:\` *${time / 60000} minuti*\n` : `│ 『 ⏱️ 』 \`durata:\` *∞ Permanente*\n`
     }
-    msg += `│ 『 📝 』 \`motivo:\` *${reason}*\n`
+    msg += `│ 『 📝 』 \`motivo:\` *perchè si,ce ancora osi chiedermi il motivo ma stai zitto*`
     msg += `*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
 
     await conn.sendMessage(m.chat, {
@@ -375,7 +375,7 @@ handler.before = async (m, { conn, isCommand }) => {
         
         try {
             await conn.sendMessage(m.chat, {
-                text: `ㅤㅤ⋆｡˚『 ╭ \`SEI MUTATO\` ╯ 』˚｡⋆\n╭\n│ 『 🚫 』 \`utente:\` *@${m.sender.split('@')[0]}*\n│ 『 🔇 』 \`stato:\` *Non puoi parlare o usare comandi*\n│ 『 📝 』 \`motivo:\` il fra ancora si chiede il perche,stai zitto paracappato\n│ 『 ⏱️ 』 \`tempo:\` *${remaining}*\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
+                text: `ㅤㅤ⋆｡˚『 ╭ \`SEI MUTATO\` ╯ 』˚｡⋆\n╭\n│ 『 🚫 』 \`utente:\` *@${m.sender.split('@')[0]}*\n│ 『 🔇 』 \`stato:\` *Non puoi parlare o usare comandi*\n│ 『 📝 』 \`motivo:\` *il fra ancora si chiede il perche,stai zitto paracappato*\n│ 『 ⏱️ 』 \`tempo:\` *${remaining}*\n*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`,
                 mentions: [m.sender],
                 contextInfo: {
                     ...global.fake,
