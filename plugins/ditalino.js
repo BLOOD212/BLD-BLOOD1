@@ -40,7 +40,7 @@ let handler = async (m, { conn, text }) => {
     let endTime = performance.now();
     let elapsedTime = (endTime - startTime).toFixed(2);
 
-    let resultMessage = `✨ *${nomeDestinatario}* *è venuta allagando l'intero gruppo e sta spruzzando come una troietta bagnata dopo* *${elapsedTime}ms*!`;
+    let resultMessage = `✨ *${nomeDestinatario}* *è venuta💦💦 allagando l'intero gruppo e sta spruzzando come una troietta bagnata dopo* *${elapsedTime}ms*!`;
 
     conn.reply(m.chat, resultMessage, m, { mentions: [destinatario] });
 };
