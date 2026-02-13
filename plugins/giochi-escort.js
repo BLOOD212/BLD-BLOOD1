@@ -5,97 +5,97 @@ const ESCORTS_FILE = join(process.cwd(), 'media', 'database', 'escorts.json')
 let escorts = []
 
 try {
-    escorts = JSON.parse(readFileSync(ESCORTS_FILE, 'utf-8'))
+  escorts = JSON.parse(readFileSync(ESCORTS_FILE, 'utf-8'))
 } catch (e) {
-    writeFileSync(ESCORTS_FILE, '[]')
-    escorts = []
+  writeFileSync(ESCORTS_FILE, '[]')
+  escorts = []
 }
 
-let handler = async (m, { conn, text, command }) => {
-    try {
-        switch (command) {
+let handler = async (m, { conn, text, command, isAdmin, isOwner, isROwner }) => {
+  try {
 
-            case 'escort':
-                if (!escorts.length)
-                    return m.reply('❌ *Nessuna escort disponibile*')
+    switch (command) {
 
-                let list = escorts.map((escort, i) =>
-                    `${i + 1}. @${escort.split('@')[0]}`
-                ).join('\n')
+      // 📋 LISTA
+      case 'escort':
+        if (!escorts.length)
+          return m.reply('❌ *Nessuna escort disponibile*')
 
-                return conn.reply(m.chat,
+        let list = escorts.map((escort, i) =>
+          `${i + 1}. @${escort.split('@')[0]}`
+        ).join('\n')
+
+        return conn.reply(m.chat,
 `📋 *LISTA ESCORT*
 
 ${list}`, m, { mentions: escorts })
 
-            case 'addescort':
-                if (!m.isGroup)
-                    return m.reply('⚠️ Solo nei gruppi')
 
- let metadata = await conn.groupMetadata(m.chat)
-let participant = metadata.participants.find(p => p.id === m.sender)
-let isAdmin = participant?.admin === 'admin' || participant?.admin === 'superadmin'
+      // ➕ AGGIUNGI
+      case 'addescort':
 
-if (!isAdmin)
-    return m.reply('⚠️ Solo gli admin possono aggiungere escort')
+        if (!m.isGroup)
+          return m.reply('⚠️ Solo nei gruppi')
 
-                let user = m.quoted
-                    ? m.quoted.sender
-                    : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+        if (!isAdmin && !isOwner && !isROwner)
+          return m.reply('⚠️ Solo gli admin possono aggiungere escort')
 
-                if (!user)
-                    return m.reply('❌ Tagga qualcuno o rispondi a un messaggio')
+        let userAdd = m.quoted
+          ? m.quoted.sender
+          : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
 
-                if (escorts.includes(user))
-                    return m.reply('⚠️ Questa escort è già in lista')
+        if (!userAdd || userAdd === '@s.whatsapp.net')
+          return m.reply('❌ Tagga qualcuno o rispondi a un messaggio')
 
-                escorts.push(user)
-                writeFileSync(ESCORTS_FILE, JSON.stringify(escorts, null, 2))
+        if (escorts.includes(userAdd))
+          return m.reply('⚠️ Questa escort è già in lista')
 
-                return conn.reply(
-                    m.chat,
-                    `✅ @${user.split('@')[0]} aggiunta alla lista escort!`,
-                    m,
-                    { mentions: [user] }
-                )
+        escorts.push(userAdd)
+        writeFileSync(ESCORTS_FILE, JSON.stringify(escorts, null, 2))
 
-            case 'delescort':
-                if (!m.isGroup)
-                    return m.reply('⚠️ Solo nei gruppi')
+        return conn.reply(
+          m.chat,
+          `✅ @${userAdd.split('@')[0]} aggiunta alla lista escort!`,
+          m,
+          { mentions: [userAdd] }
+        )
 
-                let metadataDel = await conn.groupMetadata(m.chat)
-                let isAdminDel = metadataDel.participants.find(p => p.id === m.sender)?.admin
 
-                if (!isAdminDel)
-                    return m.reply('⚠️ Solo gli admin possono rimuovere escort')
+      // ➖ RIMUOVI
+      case 'delescort':
 
-                let userToDel = m.quoted
-                    ? m.quoted.sender
-                    : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
+        if (!m.isGroup)
+          return m.reply('⚠️ Solo nei gruppi')
 
-                if (!escorts.includes(userToDel))
-                    return m.reply('⚠️ Questa persona non è nella lista escort')
+        if (!isAdmin && !isOwner && !isROwner)
+          return m.reply('⚠️ Solo gli admin possono rimuovere escort')
 
-                escorts = escorts.filter(e => e !== userToDel)
-                writeFileSync(ESCORTS_FILE, JSON.stringify(escorts, null, 2))
+        let userDel = m.quoted
+          ? m.quoted.sender
+          : text.replace(/[^0-9]/g, '') + '@s.whatsapp.net'
 
-                return conn.reply(
-                    m.chat,
-                    `✅ @${userToDel.split('@')[0]} rimossa dalla lista escort!`,
-                    m,
-                    { mentions: [userToDel] }
-                )
-        }
-    } catch (e) {
-        console.error('Errore escort:', e)
-        m.reply('❌ Errore durante l\'operazione')
+        if (!escorts.includes(userDel))
+          return m.reply('⚠️ Questa persona non è nella lista escort')
+
+        escorts = escorts.filter(e => e !== userDel)
+        writeFileSync(ESCORTS_FILE, JSON.stringify(escorts, null, 2))
+
+        return conn.reply(
+          m.chat,
+          `✅ @${userDel.split('@')[0]} rimossa dalla lista escort!`,
+          m,
+          { mentions: [userDel] }
+        )
     }
+
+  } catch (e) {
+    console.error('Errore escort:', e)
+    m.reply('❌ Errore durante l\'operazione')
+  }
 }
 
 handler.help = ['escort', 'addescort', 'delescort']
 handler.tags = ['divertimento']
 handler.command = /^(escort|addescort|delescort)$/i
-handler.group = true
-handler.admin = true
 
 export default handler
