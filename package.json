@@ -1,12 +1,12 @@
 {
-  "name": "varebot",
+  "name": "𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙",
   "version": "2.5.8",
-  "description": "Miglior bot di zozzap by sam",
+  "description": "Miglior bot di zozzap by blood",
   "main": "based.js",
   "type": "module",
   "license": "Apache-2.0",
   "author": {
-    "name": "realvare",
+    "name": "blood",
     "url": "https://github.com/realvare"
   },
   "homepage": "https://github.com/realvare/varebot",
