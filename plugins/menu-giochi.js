@@ -16,7 +16,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
   let tags = { 'giochi': 'Giochi' }
 
   try {
-    // --------------- DATI BASE ---------------
+    // ----------------- DATI BASE -----------------
     let d = new Date(new Date() + 3600000)
     let locale = 'it'
     let week = d.toLocaleDateString(locale, { weekday: 'long' })
@@ -41,7 +41,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     let mode = global.opts?.self ? 'Privato' : 'Pubblico'
     let _package = JSON.parse(await promises.readFile(join(__dirname, '../package.json')).catch(_ => ({}))) || {}
 
-    // --------------- DATI UTENTE ---------------
+    // ----------------- DATI UTENTE -----------------
     let user = global.db.data.users[m.sender] || {}
     let { age = 0, exp = 0, limit = 10, level = 1, role = 'Utente', registered = false, eris = 0, premiumTime = 0 } = user
     let { min, xp, max } = xpRange(level, global.multiplier || 1)
@@ -51,7 +51,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     let totalreg = Object.keys(global.db.data.users).length
     let rtotalreg = Object.values(global.db.data.users).filter(u => u.registered).length
 
-    // --------------- PLUGIN HELP ---------------
+    // ----------------- PLUGIN HELP -----------------
     let help = Object.values(global.plugins)
       .filter(p => !p.disabled)
       .map(p => ({
@@ -69,7 +69,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       groups[tag] = help.filter(menu => menu.tags && menu.tags.includes(tag) && menu.help)
     }
 
-    // --------------- COSTRUZIONE MENU ---------------
+    // ----------------- COSTRUZIONE MENU -----------------
     let before = conn.menu?.before || defaultMenu.before
     let header = conn.menu?.header || defaultMenu.header
     let body = conn.menu?.body || defaultMenu.body
@@ -97,7 +97,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
 
     let text = typeof conn.menu === 'string' ? conn.menu : _text
 
-    // sostituzioni variabili
+    // ----------------- SOSTITUZIONE VARIABILI -----------------
     let replace = {
       '%': '%',
       p: _p,
@@ -112,12 +112,12 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       xp4levelup: max - exp,
       wib, mode, _p, eris, age, name, prems, level, limit,
       weton, week, date, dateIslamic, time, totalreg, rtotalreg, role,
-      readmore
+      readMore // corretto qui
     }
 
     text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name])
 
-    // invio menu solo testo
+    // ----------------- INVIO MENU -----------------
     await conn.sendMessage(m.chat, {
       text: text.trim(),
       mentions: [m.sender]
