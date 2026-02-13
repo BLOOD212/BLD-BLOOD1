@@ -57,7 +57,7 @@ handler.command = /^(sega)$/i
 // 🔓 NESSUNA RESTRIZIONE
 handler.owner = false
 handler.admin = false
-handler.group = false
+handler.group = true
 handler.private = false
 handler.premium = false
 
