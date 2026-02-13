@@ -224,8 +224,7 @@ let handler = async (m, { conn, command, args, participants }) => {
     if (isMute) {
         msg += time ? `│ 『 ⏱️ 』 \`durata:\` *${time / 60000} minuti*\n` : `│ 『 ⏱️ 』 \`durata:\` *∞ Permanente*\n`
     }
-    msg += `│ 『 📝 』 \`motivo:\` *perchè si,ce ancora osi chiedermi il motivo ma stai zitto*`
-    msg += `*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
+    msg += `│ 『 📝 』 \`motivo:\` *perchè si,ce ancora osi chiedermi il motivo paracappato*`
 
     await conn.sendMessage(m.chat, {
         text: msg,
