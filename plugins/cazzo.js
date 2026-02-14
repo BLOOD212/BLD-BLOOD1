@@ -28,28 +28,39 @@ let handler = async (m, { conn }) => {
     fraseRandom = `🚀 IMPRESSIONANTE! @${target.split("@")[0]} ha ${misura}cm! 🍆💪`;
   }
 
-  // Ranking
+  // Salva misura
   if (!globalThis.piselliRank[target]) globalThis.piselliRank[target] = [];
   globalThis.piselliRank[target].push(misura);
 
-  // Classifica Top 5
-  let classifica = Object.entries(globalThis.piselliRank)
+  // Calcolo Top 5
+  let top5 = Object.entries(globalThis.piselliRank)
     .map(([jid, misure]) => {
       const maxMisura = Math.max(...misure);
       return { jid, maxMisura };
     })
     .sort((a, b) => b.maxMisura - a.maxMisura)
-    .slice(0, 5)
-    .map((e, i) => `${i+1}. @${e.jid.split("@")[0]} - ${e.maxMisura}cm 🍆`)
+    .slice(0, 5);
+
+  const medaglie = ["🥇", "🥈", "🥉"];
+
+  let classifica = top5
+    .map((e, i) => {
+      const medaglia = medaglie[i] || "🏅";
+      const titoloRe = i === 0 ? " 👑 Re del gruppo" : "";
+      return `${medaglia} @${e.jid.split("@")[0]} - ${e.maxMisura}cm 🍆${titoloRe}`;
+    })
     .join("\n");
 
   const testoFinale = `${fraseRandom}\n\n🏆 Top piselli:\n${classifica}`;
+
+  // Menziona solo target + top5
+  const mentions = [...new Set([target, ...top5.map(e => e.jid)])];
 
   await conn.sendMessage(
     m.chat,
     {
       text: testoFinale,
-      mentions: [target, ...Object.keys(globalThis.piselliRank)]
+      mentions: mentions
     },
     { quoted: m }
   );
