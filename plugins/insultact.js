@@ -22,7 +22,7 @@ let handler = async (m, { conn, usedPrefix, text }) => {
 
     if (now - lastUse < cooldownTime) {
         const remaining = Math.ceil((cooldownTime - (now - lastUse)) / 1000);
-        return m.reply(`⏳ Aspetta ${remaining}s, m'anticchia ri rispetto!`);
+        return m.reply(`⏳ Aspetta ${remaining}s, minchia npocu ri rispetto!`);
     }
 
     global.cooldowns = global.cooldowns || {};
@@ -30,7 +30,7 @@ let handler = async (m, { conn, usedPrefix, text }) => {
 
     // Target dell'insulto
     let menzione = m.mentionedJid[0] ? m.mentionedJid[0] : m.quoted ? m.quoted.sender : text
-    if (!menzione) throw 'Cu vo pigghiari po culu? Taggari a quarcunu devi!'
+    if (!menzione) throw 'Cu vo pigghiari po culu?'
 
     // Categorie di insulti catanesi
     const categorie = {
