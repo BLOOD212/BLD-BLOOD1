@@ -1,6 +1,9 @@
+// Non serve fetch qui, ma manteniamo lo stesso stile
+import { sticker } from '../lib/sticker.js';
+
 let handler = async (m, { conn, text, usedPrefix, command }) => {
 
-    // Controllo target: menzione o risposta
+    // Controllo se l'utente ha taggato qualcuno o risposto
     let target = m.quoted ? m.quoted.sender : m.mentionedJid?.[0];
     if (!target) return m.reply(
         `『 💡 』- \`Tagga qualcuno o rispondi a un messaggio\`\n> 『 💡 』- \`Esempio:\` ${usedPrefix + command} @utente`
@@ -10,7 +13,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     let nome1 = await conn.getName(m.sender);
     let nome2 = await conn.getName(target);
 
-    // 🔥 Mix random dei due nomi
+    // 🔥 Mix totalmente casuale dei due nomi
     let unione = (nome1 + nome2).replace(/\s+/g, '');
     let lettere = unione.split('');
     for (let i = lettere.length - 1; i > 0; i--) {
@@ -18,6 +21,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         [lettere[i], lettere[j]] = [lettere[j], lettere[i]];
     }
 
+    // Lunghezza random del nome fuso
     let lunghezza = Math.floor(Math.random() * 5) + 4; // 4-8 lettere
     let nomeFuso = lettere.join('').slice(0, lunghezza);
 
@@ -29,7 +33,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     else if (percentuale <= 85) risultato = '😍 Ottima ship!';
     else risultato = '💍 MATRIMONIO imminente!';
 
-    // Testo finale
+    // Testo finale nello stile emojimix
     let testo = `
 『 💘 』*ACCOPPIAMENTO RANDOM*
 
@@ -43,11 +47,11 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 ${risultato}
     `.trim();
 
+    // Invia come messaggio normale (come emojimix invia sticker)
     await conn.sendMessage(m.chat, {
         text: testo,
         mentions: [m.sender, target]
     }, { quoted: m });
-
 };
 
 handler.help = ['accoppia @utente'];
