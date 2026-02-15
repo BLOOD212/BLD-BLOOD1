@@ -36,6 +36,6 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
 handler.help = ['nonemix'];
 handler.tags = ['fun'];
-handler.command = /^(nonemix)$/i; // Assicurati che il comando sia esattamente .nonemix
+handler.command = /^(nomemix)$/i; 
 
 export default handler;
