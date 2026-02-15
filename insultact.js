@@ -29,7 +29,7 @@ let handler = async (m, {
  
   })
   }
-  handler.command = /^insulta$/i; // Cambia il customPrefix con un comando specifico
+  handler.command = /^insultact$/i; // Cambia il customPrefix con un comando specifico
   export default handler
   function pickRandom(list) {
   return list[Math.floor(Math.random() * list.length)]
