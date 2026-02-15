@@ -1,4 +1,4 @@
-let handler = async (m, { conn }) => {
+let handler = async (m, { conn, usedPrefix, command }) => {
 
   let sender = m.sender
   let target = m.quoted 
@@ -7,31 +7,49 @@ let handler = async (m, { conn }) => {
       ? m.mentionedJid[0] 
       : null
 
-  if (!target) {
-    return m.reply('⭔ `Tagga qualcuno o rispondi a un messaggio`\n\n*`Esempio:`* *.accoppia @user*')
+  let msg = `⭔ \`Tagga qualcuno o rispondi a un messaggio\`\n\n*\`Esempio:\`* *${usedPrefix + command} @user*`
+  if (!target) return m.reply(msg)
+
+  let nome1 = await conn.getName(sender)
+  let nome2 = await conn.getName(target)
+
+  // 🔥 Unione nomi senza spazi
+  let unione = (nome1 + nome2).replace(/\s+/g, '')
+
+  // 🎲 Mischia lettere casualmente
+  let lettere = unione.split('')
+  for (let i = lettere.length - 1; i > 0; i--) {
+    let j = Math.floor(Math.random() * (i + 1))
+    ;[lettere[i], lettere[j]] = [lettere[j], lettere[i]]
   }
 
-  const nome1 = sender.split('@')[0]
-  const nome2 = target.split('@')[0]
+  // Prendiamo una lunghezza random tra 4 e 8 lettere
+  let lunghezza = Math.floor(Math.random() * 5) + 4
+  let nomeFuso = lettere.join('').slice(0, lunghezza)
 
-  const metà1 = nome1.slice(0, Math.floor(nome1.length / 2))
-  const metà2 = nome2.slice(Math.floor(nome2.length / 2))
+  let percentuale = Math.floor(Math.random() * 101)
 
-  const nomeFuso = (metà1 + metà2).replace(/\s+/g, '')
+  let risultato = ''
+  if (percentuale <= 30) risultato = '💀 Destinati al blocco reciproco.'
+  else if (percentuale <= 60) risultato = '😅 Relazione instabile...'
+  else if (percentuale <= 85) risultato = '😍 Ottima ship!'
+  else risultato = '💍 MATRIMONIO IN ARRIVO!'
 
-  const giudizio = Math.random() > 0.5
-    ? '😍 Nome stupendo!'
-    : '💀 Mamma mia che disastro...'
+  let testo = `
+💘 *LOVE TEST RANDOM*
 
-  const testo =
-`💞 Accoppiamento attivato!
+👤 @${sender.split('@')[0]}
++
+👤 @${target.split('@')[0]}
 
-@${nome1} + @${nome2} = *${nomeFuso}*
+✨ Nome coppia: *${nomeFuso}*
+💞 Compatibilità: *${percentuale}%*
 
-${giudizio}`
+${risultato}
+`
 
   await conn.sendMessage(m.chat, {
-    text: testo,
+    text: testo.trim(),
     mentions: [sender, target]
   }, { quoted: m })
 
