@@ -1,48 +1,47 @@
-let handler = async (m, { conn, usedPrefix, command }) => {
+let handler = async (m, { conn, text }) => {
 
-    // Determina target: menzione o risposta
-    let target = m.quoted ? m.quoted.sender : m.mentionedJid?.[0];
-    if (!target) return m.reply(
-        `⭔ \`Tagga qualcuno o rispondi a un messaggio\`\n\n*Esempio:* ${usedPrefix + command} @utente`
-    );
+    if (!m.isGroup) throw '';
 
-    // Lista di insulti catanesi
-    const insulti = [
+    let gruppi = global.db.data.chats[m.chat];
+    if (gruppi.spacobot === false) throw '';
+
+    // Determina chi insultare: menzione o risposta
+    let menzione = m.mentionedJid?.[0] || m.quoted?.sender || text;
+    if (!menzione) throw 'Cu vo pigghiari po culu?';
+
+    // Lista di insulti catanesi personalizzati
+    const insultiCatanesi = [
         '*speci ri cosu moncu spakkiu sta scrivennu ca hai 40anni e ancora tarrti i baddi*',
         '*cunnutu tu to oma to opa da sucaminchi ri to soru e tutta a to razza*',
         '*ancora sta parannu? ma quannu cia tagghi ri ncucchiari minchiati e tuoccuchi npocu*',
         '*mammoriri si accussi lariu ca quannu nascisti u dutturi ti resi na pirata pi fariti tunnari intra*',
         '*hai chiu conna tu ca na pignata ri vaccareddi*',
-        '*pigghiari po culu a tia e comu pigghialla ndo culu,pi picca cridtiani*',
+        '*pigghiari po culu a tia e comu pigghialla ndo culu, pi picca cridtiani*',
         '*mbare ma non taffrunti? pisi 600kila hai 40anni e ancora fai u lesu areri du speci ri telefunu ra fera*',
         '*figghiu ri setti sucaminchi si chiu lariu ra motti buttama*',
         '*insultarti in dialetto sarebbe uno spreco di tempo e un insulto verso il catanese ietta sangu*',
         '*maffruntu a pigghiariti po culu*'
     ];
 
-    // Scegli insulto random
-    const insulto = insulti[Math.floor(Math.random() * insulti.length)];
+    // Se il target è il bot stesso
+    if (menzione === conn.user.jid) {
+        const botRisposte = [
+            'Oh no! Hai scoperto il mio punto debole: gli insulti!',
+            'Mbare sei cosi maltrattato ca macari a mia fai pena speci ri idiota e facchinu',
+            'Sei come dio senza un porco davanti, non hai un senso.',
+            'Ah, l\'arte dell\'insulto nei confronti di un bot. Un vero maestro dell\'ironia sei!'
+        ];
+        await conn.reply(m.chat, `@${menzione.split('@')[0]} ${pickRandom(botRisposte)}`, null, { mentions: [menzione] });
+        return;
+    }
 
-    // Testo finale
-    const testo = `
-💥 *INSULTACT!*
-
-👤 @${m.sender.split('@')[0]} ha insultato
-👤 @${target.split('@')[0]}
-
-🗯️ Insulto catanese: *${insulto}*
-    `.trim();
-
-    await conn.sendMessage(m.chat, {
-        text: testo,
-        mentions: [m.sender, target]
-    }, { quoted: m });
+    // Risposta normale con insulto catanese
+    await conn.reply(m.chat, `@${menzione.split('@')[0]} ${pickRandom(insultiCatanesi)}`, null, { mentions: [menzione] });
 
 };
 
-handler.help = ['insultact @utente'];
-handler.tags = ['fun'];
-handler.command = ['insultact'];
-handler.register = true;
-
+handler.command = /^insultact$/i;
 export default handler;
+
+function pickRandom(list) {
+    return list[Math.floor(Math.random() * list.length)];
