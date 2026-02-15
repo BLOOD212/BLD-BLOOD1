@@ -1,21 +1,16 @@
 let handler = async (m, { conn, text, usedPrefix, command }) => {
 
-    // Determina il target: risposta a messaggio o menzione
+    // Controllo target: menzione o risposta
     let target = m.quoted ? m.quoted.sender : m.mentionedJid?.[0];
-
     if (!target) return m.reply(
-        `⭔ \`Tagga qualcuno o rispondi a un messaggio\`\n\n*Esempio:* ${usedPrefix + command} @utente`
+        `『 💡 』- \`Tagga qualcuno o rispondi a un messaggio\`\n> 『 💡 』- \`Esempio:\` ${usedPrefix + command} @utente`
     );
 
+    // Prendi nomi reali
     let nome1 = await conn.getName(m.sender);
     let nome2 = await conn.getName(target);
 
-    // Mostra chi è stato scelto
-    let infoTarget = m.quoted 
-        ? `Hai risposto a: @${target.split('@')[0]}` 
-        : `Hai menzionato: @${target.split('@')[0]}`;
-
-    // 🔥 Mix totalmente casuale dei due nomi
+    // 🔥 Mix random dei due nomi
     let unione = (nome1 + nome2).replace(/\s+/g, '');
     let lettere = unione.split('');
     for (let i = lettere.length - 1; i > 0; i--) {
@@ -23,8 +18,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         [lettere[i], lettere[j]] = [lettere[j], lettere[i]];
     }
 
-    // Lunghezza random nome fuso
-    let lunghezza = Math.floor(Math.random() * 5) + 4;
+    let lunghezza = Math.floor(Math.random() * 5) + 4; // 4-8 lettere
     let nomeFuso = lettere.join('').slice(0, lunghezza);
 
     // Compatibilità casuale
@@ -37,9 +31,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
     // Testo finale
     let testo = `
-💘 *ACCOPPIAMENTO RANDOM*
-
-${infoTarget}
+『 💘 』*ACCOPPIAMENTO RANDOM*
 
 👤 @${m.sender.split('@')[0]}
 +
@@ -60,7 +52,7 @@ ${risultato}
 
 handler.help = ['accoppia @utente'];
 handler.tags = ['giochi'];
-handler.command = /^accoppia$/i;
+handler.command = ['accoppia'];
 handler.register = true;
 
 export default handler;
