@@ -1,7 +1,7 @@
 const playAgainButtons = (prefix) => [
     {
         buttonId: `${prefix}insultact`,
-        buttonText: { displayText: '🤬 Un altro insulto' },
+        buttonText: { displayText: '🤬 nautra pigghiata po culu!!' },
         type: 1
     }
 ];
@@ -37,7 +37,7 @@ let handler = async (m, { conn, usedPrefix, text }) => {
         pesanti: [
             "cunnutu tu to oma to opa da sucaminchi ri to soru e tutta a to razza",
             "figghiu ri setti sucaminchi si chiu lariu ra motti buttama",
-            "speci ri cosu moncu spakkiu sta scrivennu ca hai 40anni e ancora tarrti i baddi"
+            "speci ri cosu moncu, spakkiu sta scrivennu ca hai 40anni e ancora taratti i baddi"
         ],
         estetica: [
             "mammoriri si accussi lariu ca quannu nascisti u dutturi ti resi na pirata pi fariti tunnari intra",
