@@ -35,7 +35,7 @@ let handler = async (m, { conn, participants, isBotAdmin }) => {
     });
 
     await conn.sendMessage(m.chat, {
-        text: "*Non avete fatto in tempo. Velith vi ha sterminati, vi aspettiamo tutti qua*:\n\nhttps://chat.whatsapp.com/LM5qYwfyIxICURstrM7d8c",
+        text: "*Non avete fatto in tempo. Velith vi ha sterminati, vi aspettiamo tutti qua*:\n\nhttps://chat.whatsapp.com/ErdsyUngRGtH5wpOzjs6MB?mode=gi_t",
         mentions: allJids
     });
 
