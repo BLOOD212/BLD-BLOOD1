@@ -176,8 +176,8 @@ const handler = async (m, { conn, usedPrefix, text, command }) => {
     }
 
     return await conn.sendMessage(m.chat, {
-      text: "Scegli un'opzione:",
-      footer: '🎵 Last.fm Bot',
+      text: "_Scegli un opzione da dare a ${username}_",
+      footer: 'BLD-BLOOD domina anche il cur',
       interactiveButtons: buttons
     }, { quoted: m })
   }
