@@ -40,7 +40,7 @@ let handler = async (m, { conn, command, usedPrefix }) => {
   // =========================
   // 📊 STATS (MESSAGGI GRUPPO)
   // =========================
-  if (command === 'reseconto') {
+  if (command === 'resoconto') {
 
     let totalGroupMessages = ranking.reduce((acc, [, total]) => acc + total, 0)
 
