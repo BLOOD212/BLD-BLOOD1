@@ -186,7 +186,7 @@ async function startGame(conn, m, usedPrefix) {
         let msg = await conn.sendMessage(chat, { 
             image: boardImage, 
             caption: startCaption,
-            footer: 'vare ✧ bot'
+            footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙'
         }, { quoted: m });
 
         global.wordleGame[chat] = newGame;
