@@ -55,7 +55,7 @@ const formatMessage = (song, lyrics) => {
     const album = song.album?.name || 'Singolo';
     const producer = song.producer_artists?.length > 0 ? song.producer_artists[0].name : 'N/D';
 
-    let header = `🎶 ${song.title.toUpperCase()}\r\n👤 Artista: ${song.primary_artist.name}\r\n💿 Album: ${album}\r\n📅 Anno: ${releaseDate}\r\n🎛 Produttore: ${producer}\r\n👁 Visualizzazioni: ${views}\r\n\r\n⭑⭒━✦⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺✦━⭒⭑\r\n\r\n`;
+    let header = `🎶 ${song.title.toUpperCase()}\r\n👤 Artista: ${song.primary_artist.name}\r\n💿 Album: ${album}\r\n📅 Anno: ${releaseDate}\r\n🎛 Produttore: ${producer}\r\n👁 Visualizzazioni: ${views}\r\n\r\n⭑⭒━✦⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙✧₊⁺✦━⭒⭑\r\n\r\n`;
 
     return header + lyrics + ``;
 };
