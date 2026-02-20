@@ -1,31 +1,24 @@
 let handler = async (m, { conn, command, usedPrefix }) => {
     let staff = `
-ㅤㅤ⋆｡˚『 ╭ \`STAFF VAREBOT\` ╯ 』˚｡⋆\n╭\n│
+ㅤㅤ⋆｡˚『 ╭ \`STAFF BLD BOT\` ╯ 』˚｡⋆\n╭\n│
 │ 『 🤖 』 \`Bot:\` *${global.nomebot}*
 │ 『 🍥 』 \`Versione:\` *${global.versione}*
 │
 │⭒─ׄ─『 👑 \`Sviluppatore\` 』 ─ׄ─⭒
 │
-│ • \`Nome:\` *sam aka vare*
+│ • \`Nome:\` *𝐁𝐋𝐎𝐎𝐃#ᵛᵉˡᶦᵗʰ*
 │ • \`Ruolo:\` *Creatore / dev*
-│ • \`Contatto:\` @393476686131
+│ • \`Contatto:\` @393701330693
 │
 │⭒─ׄ─『 🛡️ \`Moderatori\` 』 ─ׄ─⭒
 │
-│ • \`Nome:\` *felix*
+│ • \`Nome:\` *Death*
 │ • \`Ruolo:\` *Moderatore*
-│ • \`Contatto:\` @67078163216
-│
-│ • \`Nome:\` *gio*
-│ • \`Ruolo:\` *Moderatore*
-│ • \`Contatto:\` @393511082922
-│
 │─ׄ─『 📌 \`Info Utili\` 』 ─ׄ─⭒
 │
-│ • \`GitHub:\` *github.com/realvare*
-│ • \`Supporto:\` @393476686131
-│ • \`Telegram:\` *t.me/realvare*
-│ • *instagram.com/samakavare*
+│ • \`GitHub:\` *github.com/BLOOD212*
+│ • \`Supporto:\` @393701330693
+│ • *instagram.com/bloodxvelith*
 │
 *╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`;
     await conn.reply(
@@ -55,24 +48,24 @@ let handler = async (m, { conn, command, usedPrefix }) => {
                 {
                     vcard: `BEGIN:VCARD
 VERSION:3.0
-FN:Sam aka Vare
-ORG:VareBot - Creatore
+FN:blood
+ORG:BloodBot - Creatore
 TEL;type=CELL;type=VOICE;waid=393476686131:+393476686131
 END:VCARD`
                 },
                 {
                     vcard: `BEGIN:VCARD
 VERSION:3.0
-FN:Felix
-ORG:VareBot - Moderatore
+FN: DEATH 
+ORG:BloodBot - Moderatore
 TEL;type=CELL;type=VOICE;waid=67078163216:+67078163216
 END:VCARD`
                 },
                 {
                     vcard: `BEGIN:VCARD
 VERSION:3.0
-FN:Gio
-ORG:VareBot - Moderatore
+FN:
+ORG:VareBot -
 TEL;type=CELL;type=VOICE;waid=393511082922:+393511082922
 END:VCARD`
                 }
