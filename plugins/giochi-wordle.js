@@ -143,7 +143,7 @@ async function handleGameTimeout(conn, chat, gameId, usedPrefix, targetWord, pla
 
         await conn.sendMessage(chat, {
             text: timeoutText,
-            footer: 'vare ✧ bot',
+            footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙',
             interactiveButtons: buttons
         });
         
@@ -234,7 +234,7 @@ let handler = async (m, { conn, command, usedPrefix }) => {
         await conn.sendMessage(m.chat, {
             image: boardImage,
             caption: skipCaption,
-            footer: 'vare ✧ bot',
+            footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙',
             interactiveButtons: buttons
         }, { quoted: m });
         delete global.wordleGame[m.chat];
@@ -297,7 +297,7 @@ handler.before = async (m, { conn, usedPrefix }) => {
         await conn.sendMessage(chat, {
             image: boardImage,
             caption: winCaption,
-            footer: 'vare ✧ bot',
+            footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙',
             interactiveButtons: buttons
         }, { quoted: m });
         delete global.wordleGame[chat];
@@ -311,7 +311,7 @@ handler.before = async (m, { conn, usedPrefix }) => {
         await conn.sendMessage(chat, {
             image: boardImage,
             caption: loseCaption,
-            footer: 'vare ✧ bot',
+            footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙',
             interactiveButtons: buttons
         }, { quoted: m });
         delete global.wordleGame[chat];
@@ -326,7 +326,7 @@ handler.before = async (m, { conn, usedPrefix }) => {
         let newMsg = await conn.sendMessage(chat, {
             image: boardImage,
             caption: continueCaption,
-            footer: 'vare ✧ bot'
+            footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙'
         }, { quoted: m });
         
         game.id = newMsg.key.id;
