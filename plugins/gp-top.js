@@ -119,7 +119,7 @@ function checkResets(db, conn) {
 
   // Reset giornaliero
   if (db.lastDailyReset !== today) {
-    console.log('🔄 Reset giornaliero')
+    console.log('🔄 Reset giornaliero attivato a mezzanotte')
     for (let u in db.users) {
       db.users[u].daily = 0
       db.users[u].notifiedTop3 = false
@@ -127,20 +127,16 @@ function checkResets(db, conn) {
     db.lastDailyReset = today
     changed = true
 
-    // Notifica top 3 giornaliero
     for (let chatId of chats) notifyTop3(conn, db, chatId, 'daily')
   }
 
   // Reset settimanale
   if (db.lastWeeklyReset !== week) {
-    console.log('🔄 Reset settimanale')
-    for (let u in db.users) {
-      db.users[u].weekly = 0
-    }
+    console.log('🔄 Reset settimanale attivato a mezzanotte')
+    for (let u in db.users) db.users[u].weekly = 0
     db.lastWeeklyReset = week
     changed = true
 
-    // Notifica top 3 settimanale
     for (let chatId of chats) notifyTop3(conn, db, chatId, 'weekly')
   }
 
@@ -152,9 +148,13 @@ function checkResets(db, conn) {
 // =========================
 async function scheduleResoconto(conn) {
   const now = new Date()
-  const next = new Date()
-  next.setHours(24, 0, 0, 0) // mezzanotte
-  const delay = next - now
+  const nextMidnight = new Date(
+    now.getFullYear(),
+    now.getMonth(),
+    now.getDate() + 1, // giorno successivo
+    0, 0, 0, 0
+  )
+  const delay = nextMidnight - now
 
   setTimeout(async () => {
     const db = loadDB()
@@ -163,7 +163,7 @@ async function scheduleResoconto(conn) {
     const chats = Object.keys(conn.chats || {}).filter(id => id.endsWith('@g.us'))
     for (let chatId of chats) await sendResoconto(conn, db, chatId)
 
-    scheduleResoconto(conn) // ricorsione per il giorno successivo
+    scheduleResoconto(conn)
   }, delay)
 }
 
@@ -177,7 +177,6 @@ let handler = async (m, { conn, command }) => {
     let db = loadDB()
     checkResets(db, conn)
 
-    // ✅ Inizializza utente se non esiste
     if (!db.users[m.sender]) {
       db.users[m.sender] = {
         xp: 0,
@@ -193,22 +192,18 @@ let handler = async (m, { conn, command }) => {
     let user = db.users[m.sender]
     const nowTime = Date.now()
 
-    // =========================
-    // ANTI-SPAM per XP (max 1 XP ogni 3 sec)
-    // =========================
+    // Anti-spam XP (max 1 XP ogni 3 sec)
     if (!user.lastMessage || nowTime - user.lastMessage > 3000) {
       user.xp += 5
       user.lastMessage = nowTime
     }
 
-    // ✅ Incrementa sempre i contatori
+    // Incrementa sempre contatori
     user.daily = (user.daily || 0) + 1
     user.weekly = (user.weekly || 0) + 1
     user.global = (user.global || 0) + 1
 
-    // =========================
-    // LEVEL UP
-    // =========================
+    // Level up
     const newLevel = calculateLevel(user.xp)
     if (newLevel > user.level) {
       user.level = newLevel
@@ -220,9 +215,7 @@ let handler = async (m, { conn, command }) => {
 
     saveDB(db)
 
-    // =========================
     // COMANDI
-    // =========================
     if (command === 'rank') {
       return m.reply(
 `📊 *IL TUO PROFILO*
