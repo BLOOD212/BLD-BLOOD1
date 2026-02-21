@@ -44,37 +44,7 @@ function getISOWeekNumber(date) {
   tmp.setDate(tmp.getDate() - dayNum + 3)
   const firstThursday = new Date(tmp.getFullYear(), 0, 4)
   const diff = tmp - firstThursday
-  return 1 + Math.round(diff / 604800000) // 7*24*60*60*1000
-}
-
-// =========================
-// RESET AUTOMATICO
-// =========================
-function checkResets(db) {
-  const now = new Date()
-  const today = now.toISOString().split('T')[0]
-  const week = `${now.getFullYear()}-W${getISOWeekNumber(now)}`
-
-  // Reset giornaliero
-  if (db.lastDailyReset !== today) {
-    console.log('🔄 Reset giornaliero')
-    for (let u in db.users) {
-      db.users[u].daily = 0
-      db.users[u].notifiedTop3 = false
-    }
-    db.lastDailyReset = today
-  }
-
-  // Reset settimanale
-  if (db.lastWeeklyReset !== week) {
-    console.log('🔄 Reset settimanale')
-    for (let u in db.users) {
-      db.users[u].weekly = 0
-    }
-    db.lastWeeklyReset = week
-  }
-
-  saveDB(db)
+  return 1 + Math.round(diff / 604800000)
 }
 
 // =========================
@@ -96,13 +66,12 @@ function getBadge(level) {
 // =========================
 function getRanking(db, type) {
   return Object.entries(db.users)
-    .filter(([jid, data]) => (data[type] ?? 0) > 0) // filtriamo utenti con 0 messaggi
     .map(([jid, data]) => [jid, data[type] ?? 0])
     .sort((a, b) => b[1] - a[1])
 }
 
 // =========================
-// RESOCONTO AUTOMATICO
+// INVIO RESOCONTO / TOP 3
 // =========================
 async function sendResoconto(conn, db, chatId) {
   const ranking = getRanking(db, 'global')
@@ -120,6 +89,62 @@ async function sendResoconto(conn, db, chatId) {
   await conn.sendMessage(chatId, { text, mentions })
 }
 
+async function notifyTop3(conn, db, chatId, type) {
+  const ranking = getRanking(db, type)
+  if (!ranking.length) return
+
+  let text = type === 'daily' ? '🏅 *TOP 3 GIORNALIERO*\n\n' : '🏅 *TOP 3 SETTIMANALE*\n\n'
+  let mentions = []
+  const medals = ['🥇', '🥈', '🥉']
+
+  ranking.slice(0, 3).forEach(([jid, total], i) => {
+    mentions.push(jid)
+    text += `${medals[i]} @${jid.split('@')[0]} — 💬 ${total}\n`
+  })
+
+  await conn.sendMessage(chatId, { text, mentions })
+}
+
+// =========================
+// RESET AUTOMATICO
+// =========================
+function checkResets(db, conn) {
+  const now = new Date()
+  const today = now.toISOString().split('T')[0]
+  const week = `${now.getFullYear()}-W${getISOWeekNumber(now)}`
+
+  const chats = Object.keys(conn?.chats || {}).filter(id => id.endsWith('@g.us'))
+
+  // Reset giornaliero
+  if (db.lastDailyReset !== today) {
+    console.log('🔄 Reset giornaliero')
+    for (let u in db.users) {
+      db.users[u].daily = 0
+      db.users[u].notifiedTop3 = false
+    }
+
+    db.lastDailyReset = today
+
+    // Notifica top 3 giornaliero
+    chats.forEach(chatId => notifyTop3(conn, db, chatId, 'daily'))
+  }
+
+  // Reset settimanale
+  if (db.lastWeeklyReset !== week) {
+    console.log('🔄 Reset settimanale')
+    for (let u in db.users) {
+      db.users[u].weekly = 0
+    }
+
+    db.lastWeeklyReset = week
+
+    // Notifica top 3 settimanale
+    chats.forEach(chatId => notifyTop3(conn, db, chatId, 'weekly'))
+  }
+
+  saveDB(db)
+}
+
 // =========================
 // SCHEDULING RESOCONTO
 // =========================
@@ -133,10 +158,9 @@ async function scheduleResoconto(conn) {
 
   setTimeout(async () => {
     const db = loadDB()
-    checkResets(db)
-    const chats = Object.keys(conn.chats || {})
+    checkResets(db, conn)
+    const chats = Object.keys(conn.chats || {}).filter(id => id.endsWith('@g.us'))
     for (let chatId of chats) {
-      if (!chatId.endsWith('@g.us')) continue
       await sendResoconto(conn, db, chatId)
     }
     scheduleResoconto(conn)
@@ -148,8 +172,8 @@ async function scheduleResoconto(conn) {
 // =========================
 setInterval(() => {
   const db = loadDB()
-  checkResets(db)
-}, 60 * 1000) // ogni minuto controlla reset
+  checkResets(db, global.conn)
+}, 60 * 1000)
 
 // =========================
 // HANDLER
@@ -159,7 +183,7 @@ let handler = async (m, { conn, command }) => {
     if (!m.isGroup) return
 
     let db = loadDB()
-    checkResets(db)
+    checkResets(db, conn)
 
     if (!db.users[m.sender]) {
       db.users[m.sender] = {
@@ -177,15 +201,17 @@ let handler = async (m, { conn, command }) => {
     const nowTime = Date.now()
 
     // =========================
-    // ANTI-SPAM (3 sec)
+    // ANTI-SPAM per XP (3 sec)
     // =========================
     if (nowTime - user.lastMessage > 3000) {
       user.xp += 5
-      user.daily += 1
-      user.weekly += 1
-      user.global += 1
       user.lastMessage = nowTime
     }
+
+    // daily/weekly/global sempre incrementati
+    user.daily += 1
+    user.weekly += 1
+    user.global += 1
 
     // =========================
     // LEVEL UP
