@@ -96,8 +96,7 @@ function getBadge(level) {
 // =========================
 function getRanking(db, type) {
   return Object.entries(db.users)
-    .map(([jid, data]) => [jid, data[type] || 0])
-    .filter(([_, total]) => total > 0)
+    .map(([jid, data]) => [jid, data[type] ?? 0])
     .sort((a, b) => b[1] - a[1])
 }
 
@@ -212,6 +211,8 @@ let handler = async (m, { conn, command }) => {
     if (['topday', 'topweek', 'topglobal'].includes(command)) {
       const type = command === 'topday' ? 'daily' : command === 'topweek' ? 'weekly' : 'global'
       const ranking = getRanking(db, type)
+
+      if (!ranking.length) return m.reply(`⚠️ Nessun dato disponibile per ${command}`)
 
       let text = `🏆 *TOP ${type.toUpperCase()}*\n\n`
       let mentions = []
