@@ -96,6 +96,7 @@ function getBadge(level) {
 // =========================
 function getRanking(db, type) {
   return Object.entries(db.users)
+    .filter(([jid, data]) => (data[type] ?? 0) > 0) // filtriamo utenti con 0 messaggi
     .map(([jid, data]) => [jid, data[type] ?? 0])
     .sort((a, b) => b[1] - a[1])
 }
@@ -132,6 +133,7 @@ async function scheduleResoconto(conn) {
 
   setTimeout(async () => {
     const db = loadDB()
+    checkResets(db)
     const chats = Object.keys(conn.chats || {})
     for (let chatId of chats) {
       if (!chatId.endsWith('@g.us')) continue
@@ -140,6 +142,14 @@ async function scheduleResoconto(conn) {
     scheduleResoconto(conn)
   }, delay)
 }
+
+// =========================
+// RESET AUTOMATICO ALLO START
+// =========================
+setInterval(() => {
+  const db = loadDB()
+  checkResets(db)
+}, 60 * 1000) // ogni minuto controlla reset
 
 // =========================
 // HANDLER
@@ -167,9 +177,9 @@ let handler = async (m, { conn, command }) => {
     const nowTime = Date.now()
 
     // =========================
-    // ANTI-SPAM (10 sec)
+    // ANTI-SPAM (3 sec)
     // =========================
-    if (nowTime - user.lastMessage > 10000) {
+    if (nowTime - user.lastMessage > 3000) {
       user.xp += 5
       user.daily += 1
       user.weekly += 1
