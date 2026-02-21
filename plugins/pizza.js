@@ -45,6 +45,16 @@ const pizzaCondimenti = [
   '*Cavolo 🥗*',
   '*Feta 🧀*',
   '*Gualda 🧀*',
+  '*Hamburger 🍔*',
+  '*Kebab 🍖*',
+  '*Lenticchie 🍲*',
+  '*Mezze lune 🍕*',
+  '*Noci 🌰*',
+  '*Orecchiette 🍝*',
+  '*Pancetta 🍖*',
+  '*Peperoncino 🔥*',
+  '*Pesto 🥗*',
+  '*Polenta 🍲*',
   '*Prosciutto affumicato 🍖*',
   '*Salsiccia di maiale 🍖*',
   '*Salsiccia di pollo 🍖*',
@@ -56,106 +66,12 @@ const pizzaCondimenti = [
   '*Spezi 🧀*',
   '*Stracchino 🧀*',
   '*Tartufi 🌰*',
+  '*Tortellini 🍝*',
   '*Trippa 🍲*',
   '*Uova 🥚*',
   '*Vegan 🍖*',
   '*Vegetariano 🥗*',
   '*Zucca 🥔*',
-  '*Melone 🍈*',
-  '*Prosciutto di Milano 🍖*',
-  '*Salsiccia di Napoli 🍖*',
-  '*Cacciatore 🍖*',
-  '*Pepperoni 🍖*',
-  '*Chorizo 🍖*',
-  '*Mortadella di Bologna 🍖*',
-  '*Prosciutto di Toscana 🍖*',
-  '*Salsiccia di Toscana 🍖*',
-  '*Funghi porcini 🍄*',
-  '*Funghi champignons 🍄*',
-  '*Funghi shiitake 🍄*',
-  '*Funghi oyster 🍄*',
-  '*Funghi enoki 🍄*',
-  '*Funghi crimini 🍄*',
-  '*Funghi portobello 🍄*',
-  '*Funghi morel 🍄*',
-  '*Funghi chanterelle 🍄*',
-  '*Funghi lobster 🍄*',
-  '*Funghi maitake 🍄*',
-  '*Funghi reishi 🍄*',
-  '*Pomodoro cherry 🍅*',
-  '*Pomodoro datterino 🍅*',
-  '*Pomodoro cuore 🍅*',
-  '*Pomodoro ciliegino 🍅*',
-  '*Pomodoro grappolo 🍅*',
-  '*Pomodoro insalata 🍅*',
-  '*Pomodoro pachino 🍅*',
-  '*Pomodoro pelato 🍅*',
-  '*Pomodoro piccato 🍅*',
-  '*Pomodoro ramato 🍅*',
-  '*Pomodoro San Marzano 🍅*',
-  '*Pomodoro tondo 🍅*',
-  '*Aglio nero 🧄*',
-  '*Aglio bianco 🧄*',
-  '*Aglio rosso 🧄*',
-  '*Aglio elefante 🧄*',
-  '*Cipolla bianca 🧅*',
-  '*Cipolla rossa 🧅*',
-  '*Cipolla gialla 🧅*',
-  '*Cipolla cipollina 🧅*',
-  '*Cipolla tropea 🧅*',
-  '*Peperoncino verde 🔥*',
-  '*Peperoncino rosso 🔥*',
-  '*Peperoncino giallo 🔥*',
-  '*Peperoncino habanero 🔥*',
-  '*Peperoncino jalapeño 🔥*',
-  '*Peperoncino serrano 🔥*',
-  '*Peperoncino thai 🔥*',
-  '*Peperoncino calabrese 🔥*',
-  '*Peperoncino diavolo 🔥*',
-  '*Peperoncino peperoncino 🔥*',
-  '*Peperoncino piccante 🔥*',
-  '*Peperoncino rosso piccante 🔥*',
-  '*Peperoncino verde piccante 🔥*',
-  '*Peperoncino giallo piccante 🔥*',
-];
-
-const risposte = [
-  'Pizza perfetta!',
-  'Che schifo!',
-  'Mi piace!',
-  'Non mi piace!',
-  'È troppo piccante!',
-  'È troppo salata!',
-  'È troppo dolce!',
-  'È troppo secca!',
-  'È troppo umida!',
-  'È troppo buona!',
-  'È troppo cattiva!',
-  'Mi fa schifo!',
-  'Mi fa ridere!',
-  'Mi fa piangere!',
-  'Mi fa arrabbiare!',
-  'Mi fa felice!',
-  'Mi fa triste!',
-  'Mi fa paura!',
-  'Mi fa sorpresa!',
-  'Mi fa disgusto!',
-  'Mi fa noia!',
-  'Mi fa dormire!',
-  'Mi fa svegliare!',
-  'Mi fa ballare!',
-  'Mi fa cantare!',
-  'Mi fa suonare!',
-  'Mi fa scrivere!',
-  'Mi fa leggere!',
-  'Mi fa pensare!',
-  'Mi fa sognare!',
-  'Mi fa volare!',
-  'Mi fa cadere!',
-  'Mi fa correre!',
-  'Mi fa fermare!',
-  'Mi fa iniziare!',
-  'Mi fa finire!',
 ];
 
 const playAgainButtons = () => [{ name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Ordina un\'altra pizza! 🍕', id: `.pizza` }) }];
@@ -193,4 +109,52 @@ let handler = async (m, { conn, args }) => {
 
   try {
     let msg = await conn.sendMessage(m.chat, { text: messaggio, footer: '🍕 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🍕' }, { quoted: m });
-    global.p
+    global.pizzaGame = global.pizzaGame || {};
+    global.pizzaGame[m.chat] = {
+      id: msg.key.id,
+      condimenti: [],
+      utente: m.sender,
+      timeout: setTimeout(async () => {
+        if (global.pizzaGame?.[m.chat]) {
+          const pizza = global.pizzaGame[m.chat].condimenti.join(', ');
+          const utente = `@${global.pizzaGame[m.chat].utente.split('@')[0]}`;
+          await conn.sendMessage(m.chat, { text: `*PIZZA CREATA DA* ${utente}\n\n*Questa è la tua pizza:* ${pizza}`, footer: '🍕 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🍕', interactiveButtons: playAgainButtons() }, { quoted: msg });
+          delete global.pizzaGame[m.chat];
+        }
+      }, 120000)
+    };
+  } catch (error) {
+    console.error('Errore nel gioco pizza:', error);
+    m.reply('❌ *Si è verificato un errore durante l\'avvio del gioco*' + '\n\n' + '🔄 *Riprova tra qualche secondo*');
+  }
+};
+
+handler.before = async (m, { conn }) => {
+  const chat = m.chat;
+  const game = global.pizzaGame?.[chat];
+  if (!game || !m.quoted || m.quoted.id !== game.id || m.key.fromMe || m.sender !== game.utente) return;
+  const scelte = m.text.trim().split(',').map(s => s.trim());
+  for (const scelta of scelte) {
+    if (pizzaCondimenti[parseInt(scelta) - 1]) {
+      game.condimenti.push(pizzaCondimenti[parseInt(scelta) - 1]);
+    } else if (scelta.toLowerCase() === 'fine') {
+      clearTimeout(game.timeout);
+      const pizza = game.condimenti.join(', ');
+      const utente = `@${game.utente.split('@')[0]}`;
+      await conn.sendMessage(m.chat, { text: `*PIZZA CREATA DA* ${utente}\n\n*Questa è la tua pizza:* ${pizza}`, footer: '🍕 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🍕', interactiveButtons: playAgainButtons() }, { quoted: m });
+      delete global.pizzaGame[m.chat];
+      return;
+    } else {
+      await conn.sendMessage(m.chat, { text: '*Scelta non valida. Riprova.*' });
+      return;
+    }
+  }
+  await conn.sendMessage(m.chat, { text: `*Hai scelto ${game.condimenti.join(', ')}.* *Vuoi aggiungere altro? (rispondi con i numeri dei condimenti separati da virgola o "fine")*` });
+};
+
+handler.help = ['pizza'];
+handler.tags = ['giochi'];
+handler.command = /^pizza$/i;
+handler.group = true;
+handler.register = true;
+export default handler;
