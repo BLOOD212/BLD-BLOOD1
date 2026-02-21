@@ -1,113 +1,105 @@
-const { default: makeWASocket, useSingleFileAuthState, DisconnectReason } = require('@adiwajshing/baileys');
-const fs = require('fs');
-
 const pizzaCondimenti = [
-  '*Formaggio 🧀*','*Mozzarella 🧀*','*Bufala 🐃*','*Ricotta 🧀*','*Stracchino 🧀*','*Feta 🧀*','*Gorgonzola 🧀*','*Gruyère 🧀*','*Scamorza 🧀*','*Burrata 🧀*',
-  '*Pomodoro 🍅*','*Salsa 🍅*','*Passata di pomodoro 🍅*','*Pesto 🥗*','*Aglio 🧄*','*Cipolla 🧅*','*Porro 🧅*','*Peperoni 🔥*','*Jalapeño 🔥*','*Peperoncino 🔥*',
-  '*Salame 🍖*','*Wurstel 🍖*','*Prosciutto 🍖*','*Prosciutto crudo 🍖*','*Prosciutto di Parma 🍖*','*Soppressata 🍖*','*Pancetta 🍖*','*Bacon 🍖*','*Salsiccia 🍖*','*Salsiccia piccante 🔥*',
-  '*Salsiccia di pollo 🍖*','*Salsiccia di tacchino 🍖*','*Salsiccia di vitello 🍖*','*Pollo 🍗*','*Carne macinata 🍖*','*Tonno 🐟*','*Acciughe 🐟*','*Funghi 🍄*','*Champignon 🍄*','*Porcini 🍄',
-  '*Gombas 🍄*','*Olive nere 🫒*','*Olive verdi 🫒*','*Capperi 🌿*','*Mais 🌽*','*Ananas 🍍*','*Spinaci 🥗*','*Rucola 🥗*','*Broccoli 🥗*','*Cavolfiore 🥗*',
-  '*Asparagi 🥗*','*Zucchine 🥒*','*Peperoni dolci 🌶️*','*Carciofi 🌿*','*Pomodorini 🍅*','*Erbe aromatiche 🌿*','*Origano 🌿*','*Basilico 🌿*','*Tartufi 🌰*','*Pistacchio 🌰*',
-  '*Noci 🌰*','*Semi di zucca 🌰*','*Uova 🥚*','*Spezi 🧂*','*Pepe nero 🧂*','*Olio extra vergine 🫒*','*Burro 🧈*','*Carne di manzo 🍖*','*Carne di maiale 🍖*','*Carne di tacchino 🍖*',
-  '*Carne di pollo 🍗*','*Vegan 🌱*','*Vegetariano 🥗*','*Pomodoro secco 🍅*','*Peperoncini sott’aceto 🔥*','*Sottaceti 🥒*','*Funghi sott’olio 🍄*','*Cipolle caramellate 🧅*','*Peperoni arrostiti 🌶️*','*Melanzane grigliate 🍆*',
-  '*Zucchine grigliate 🥒*','*Pancetta affumicata 🍖*','*Prosciutto affumicato 🍖*','*Carne secca 🍖*','*Polpettine 🍖*','*Mozzarella affumicata 🧀*','*Caciocavallo 🧀*','*Formaggio di capra 🧀*','*Taleggio 🧀*','*Gorgonzola piccante 🧀*',
-  '*Crema di tartufo 🌰*','*Pomodoro fresco 🍅*','*Peperoncino verde 🔥*','*Peperoncino rosso 🔥*','*Funghi misti 🍄*','*Zucchine julienne 🥒*','*Carote julienne 🥕*','*Radicchio 🥗*','*Cicoria 🥗*','*Porcini secchi 🍄*',
-  '*Broccoli al vapore 🥗*','*Cipolle rosse 🧅*','*Peperoni piccanti 🔥*','*Basilico fresco 🌿*','*Origano fresco 🌿*','*Aglio tritato 🧄*','*Olio al tartufo 🌰*','*Peperoncino in polvere 🔥*','*Semi di sesamo 🌰*','*Spezie miste 🧂*',
-  '*Zucchine gratinate 🥒*','*Melanzane gratinate 🍆*','*Rucola fresca 🥗*','*Pomodorini ciliegia 🍅*'
+  '*Formaggio 🧀*', '*Mozzarella 🧀*', '*Bufala 🐃*', '*Gorgonzola 🧀*', '*Feta 🧀*', '*Grana Padano 🧀*', '*Provolone 🧀*', '*Scamorza 🧀*', '*Burrata 🧀*', '*Pecorino 🧀*',
+  '*Salsa 🍅*', '*Pomodoro 🍅*', '*Passata di pomodoro 🍅*', '*Pesto 🥗*', '*Olio d’oliva 🫒*', '*Aglio 🧄*', '*Cipolla 🧅*', '*Peperoni 🔥*', '*Jalapeño 🔥*', '*Peperoncino 🔥*',
+  '*Salame 🍖*', '*Wurstel 🍖*', '*Prosciutto cotto 🍖*', '*Prosciutto crudo 🍖*', '*Mortadella 🍖*', '*Salsiccia 🍖*', '*Salsiccia piccante 🔥*', '*Bacon 🍖*', '*Pollo 🍗*', '*Tonno 🐟*',
+  '*Acciughe 🐟*', '*Funghi 🍄*', '*Champignon 🍄*', '*Porcini 🍄*', '*Olive nere 🫒*', '*Olive verdi 🫒*', '*Carciofi 🥗*', '*Zucchine 🥒*', '*Melanzane 🍆*', '*Peperoni dolci 🌶️*',
+  '*Spinaci 🥗*', '*Rucola 🥗*', '*Asparagi 🥗*', '*Broccoli 🥗*', '*Cavolfiore 🥗*', '*Mais 🌽*', '*Patate 🍟*', '*Zucca 🎃*', '*Pistacchio 🌰*', '*Noci 🌰*',
+  '*Pinoli 🌰*', '*Tartufi 🌰*', '*Uova 🥚*', '*Capperi 🌿*', '*Sottaceti 🥗*', '*Erbe aromatiche 🌿*', '*Origano 🌿*', '*Basilico 🌿*', '*Prezzemolo 🌿*', '*Timo 🌿*',
+  '*Rosmarino 🌿*', '*Peperoncino dolce 🌶️*', '*Peperoncini piccanti 🔥*', '*Formaggio grattugiato 🧀*', '*Stracchino 🧀*', '*Grana grattugiato 🧀*', '*Caciocavallo 🧀*', '*Gorgonzola piccante 🧀*', '*Mozzarella di bufala 🐃*', '*Burrata cremosa 🧀*',
+  '*Ricotta 🧀*', '*Prosciutto di Parma 🍖*', '*Speck 🍖*', '*Soppressata 🍖*', '*Salame piccante 🔥*', '*Kebab 🍖*', '*Hamburger 🍔*', '*Patatine fritte 🍟*', '*Peperoncino fresco 🌶️*', '*Cipolla rossa 🧅*',
+  '*Funghi trifolati 🍄*', '*Funghi champignon 🍄*', '*Cipolla caramellata 🧅*', '*Pomodorini 🍅*', '*Rucola fresca 🥗*', '*Spinaci freschi 🥗*', '*Olive taggiasche 🫒*', '*Olive denocciolate 🫒*', '*Capperi sott’aceto 🌿*', '*Aglio fresco 🧄*',
+  '*Basilico fresco 🌿*', '*Origano secco 🌿*', '*Peperone grigliato 🌶️*', '*Zucchine grigliate 🥒*', '*Melanzane grigliate 🍆*', '*Asparagi grigliati 🥗*', '*Broccoli al vapore 🥗*', '*Pomodori secchi 🍅*', '*Mais dolce 🌽*', '*Formaggio affumicato 🧀*',
+  '*Carne macinata 🍖*', '*Prosciutto affumicato 🍖*', '*Salsiccia di maiale 🍖*', '*Salsiccia di pollo 🍖*', '*Salsiccia di tacchino 🍖*', '*Salsiccia di vitello 🍖*', '*Salsiccia vegetale 🍖*'
 ];
 
-const pizzaRisposte = [
-  "🍕 Pizza perfetta 😍",
-  "🤢 Che schifo...",
-  "😋 Mmm, deliziosa!",
-  "🔥 Questa è piccante!",
-  "🥗 Fresca e leggera!",
-  "🍖 Super carnosa!",
-  "🧀 Troppo formaggio!",
-  "🍍 Ananas? Coraggioso!",
-  "😮 Mai vista una pizza così!",
-  "🎉 Pizza da urlo!",
-  "😵 Una combinazione assurda!"
+const pizzaBotReplies = [
+  "🍕 Pizza perfetta!", "🤢 Che schifo!", "🔥 Wow, questa pizza è piccante!", "🌟 Una vera opera d'arte!", 
+  "😱 Troppo condimento!", "😋 Mmm, che bontà!", "🙃 Interessante combinazione!", "🫣 Non so se è commestibile...", 
+  "🎉 Pizza da campioni!", "🤔 Pizza... strana, ma coraggiosa!"
 ];
 
-let pizzaGame = {}; // memorizza le partite attive
+const playAgainButtons = () => [{ name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Ordina un\'altra pizza! 🍕', id: `.pizza` }) }];
 
-// ─────────── funzione principale ───────────
-const handlePizzaCommand = async (m, conn) => {
-  if (pizzaGame[m.chat]) {
-    return conn.sendMessage(m.chat, { text: '⚠️ *C\'è già una partita attiva in questo gruppo!*' });
+let handler = async (m, { conn, args }) => {
+  let frasi = [
+    `🍕 *Scegli i condimenti per la tua pizza!*`,
+    `🔥 *Personalizza la tua pizza!*`,
+    `🌟 *Crea la tua pizza ideale!*`,
+    `🧂 *Scegli i tuoi condimenti preferiti!*`,
+  ];
+
+  if (global.pizzaGame?.[m.chat]) return m.reply('⚠️ *C\'è già una partita attiva in questo gruppo!*');
+
+  const cooldownKey = `pizza_${m.chat}`;
+  const now = Date.now();
+  const cooldownTime = 5000;
+  const lastGame = global.cooldowns?.[cooldownKey] || 0;
+  if (now - lastGame < cooldownTime) {
+    const remainingTime = Math.ceil((cooldownTime - (now - lastGame)) / 1000);
+    return m.reply(`⏳ *Aspetta ancora ${remainingTime} secondi prima di avviare un nuovo gioco!*`);
   }
 
-  let messaggio = '*Scegli i condimenti per la tua pizza:*\n\n';
-  pizzaCondimenti.forEach((c, i) => {
-    messaggio += `${i + 1}. ${c}\n`;
-  });
-  messaggio += '\n*Rispondi con i numeri separati da virgola o spazio (es. 1,2,3 o 1 2 3)*\n*Scrivi "fine" per terminare*';
+  global.cooldowns = global.cooldowns || {};
+  global.cooldowns[cooldownKey] = now;
 
-  const msg = await conn.sendMessage(m.chat, { text: messaggio });
+  const frase = frasi[Math.floor(Math.random() * frasi.length)];
+  let messaggio = `${frase}\n\n`;
+  pizzaCondimenti.forEach((c, i) => { messaggio += `${i + 1}. ${c}\n`; });
+  messaggio += '\n*Rispondi con i numeri dei condimenti separati da virgola (es. 1, 2, 3)*\n*Scrivi "fine" per terminare la tua pizza*';
 
-  const timeout = setTimeout(async () => {
-    if (pizzaGame[m.chat]) {
-      const pizza = pizzaGame[m.chat].condimenti.join(', ');
-      const rispostaBot = pizzaRisposte[Math.floor(Math.random() * pizzaRisposte.length)];
-      await conn.sendMessage(m.chat, { text: `${rispostaBot}\n\n*PIZZA CREATA DA* @${pizzaGame[m.chat].utente.split('@')[0]}\n${pizza}` });
-      delete pizzaGame[m.chat];
-    }
-  }, 120000); // 2 minuti
-
-  // reminder a metà tempo
-  const reminder = setTimeout(async () => {
-    if (pizzaGame[m.chat]) {
-      await conn.sendMessage(m.chat, { text: `⏰ @${m.sender.split('@')[0]}, hai ancora tempo per scegliere i condimenti!` });
-    }
-  }, 60000); // 1 minuto
-
-  pizzaGame[m.chat] = {
-    utente: m.sender,
-    condimenti: [],
-    msgId: msg.key.id,
-    timeout,
-    reminder
-  };
+  try {
+    const msg = await conn.sendMessage(m.chat, { text: messaggio, footer: '🍕 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🍕' }, { quoted: m });
+    global.pizzaGame = global.pizzaGame || {};
+    global.pizzaGame[m.chat] = {
+      id: msg.key.id,
+      condimenti: [],
+      utente: m.sender,
+      timeout: setTimeout(async () => {
+        if (!global.pizzaGame?.[m.chat]) return;
+        const pizza = global.pizzaGame[m.chat].condimenti.join(', ');
+        const utente = `@${global.pizzaGame[m.chat].utente.split('@')[0]}`;
+        const randomReply = pizzaBotReplies[Math.floor(Math.random() * pizzaBotReplies.length)];
+        await conn.sendMessage(m.chat, { text: `*PIZZA CREATA DA* ${utente}\n\n*Questa è la tua pizza:* ${pizza}\n\n${randomReply}`, footer: '🍕 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🍕', interactiveButtons: playAgainButtons() }, { quoted: msg });
+        delete global.pizzaGame[m.chat];
+      }, 120000)
+    };
+  } catch (error) {
+    console.error('Errore nel gioco pizza:', error);
+    m.reply('❌ *Si è verificato un errore durante l\'avvio del gioco*\n🔄 *Riprova tra qualche secondo*');
+  }
 };
 
-// ─────────── gestione messaggi ───────────
-const handleMessage = async (m, conn) => {
-  const text = m.message?.conversation || m.message?.extendedTextMessage?.text;
-  if (!text) return;
+handler.before = async (m, { conn }) => {
+  const chat = m.chat;
+  const game = global.pizzaGame?.[chat];
+  if (!game || !m.quoted || m.quoted.id !== game.id || m.key.fromMe || m.sender !== game.utente) return;
 
-  // avvia pizza
-  if (/^pizza$/i.test(text)) {
-    return handlePizzaCommand(m, conn);
-  }
-
-  // gestione scelta condimenti
-  const game = pizzaGame[m.chat];
-  if (!game || m.sender !== game.utente) return;
-
-  const choices = text.split(/[\s,]+/).map(s => s.trim());
-  for (const scelta of choices) {
+  const scelte = m.text.trim().split(',').map(s => s.trim()).filter(s => s);
+  for (const scelta of scelte) {
     if (scelta.toLowerCase() === 'fine') {
       clearTimeout(game.timeout);
-      clearTimeout(game.reminder);
       const pizza = game.condimenti.join(', ');
-      const rispostaBot = pizzaRisposte[Math.floor(Math.random() * pizzaRisposte.length)];
-      await conn.sendMessage(m.chat, { text: `${rispostaBot}\n\n*PIZZA CREATA DA* @${game.utente.split('@')[0]}\n${pizza}` });
-      delete pizzaGame[m.chat];
+      const utente = `@${game.utente.split('@')[0]}`;
+      const randomReply = pizzaBotReplies[Math.floor(Math.random() * pizzaBotReplies.length)];
+      await conn.sendMessage(m.chat, { text: `*PIZZA CREATA DA* ${utente}\n\n*Questa è la tua pizza:* ${pizza}\n\n${randomReply}`, footer: '🍕 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🍕', interactiveButtons: playAgainButtons() }, { quoted: m });
+      delete global.pizzaGame[m.chat];
       return;
     }
     const index = parseInt(scelta) - 1;
-    if (!isNaN(index) && pizzaCondimenti[index]) {
-      if (game.condimenti.length < 10) {
-        game.condimenti.push(pizzaCondimenti[index]);
-      } else {
-        await conn.sendMessage(m.chat, { text: '*Hai raggiunto il limite di 10 condimenti!*' });
-        break;
-      }
+    if (!isNaN(index) && pizzaCondimenti[index] && !game.condimenti.includes(pizzaCondimenti[index])) {
+      game.condimenti.push(pizzaCondimenti[index]);
+    } else if (isNaN(index)) {
+      await conn.sendMessage(m.chat, { text: '*Scelta non valida. Usa solo numeri o "fine".*' });
+      return;
     }
   }
-
-  await conn.sendMessage(m.chat, { text: `*Hai scelto: ${game.condimenti.join(', ')}*\n*Vuoi aggiungere altro o scrivi "fine"?*` });
+  await conn.sendMessage(m.chat, { text: `*Hai scelto ${game.condimenti.join(', ')}.*\n*Vuoi aggiungere altro? (rispondi con i numeri dei condimenti separati da virgola o "fine")*` });
 };
 
-module.exports = { handleMessage };
+handler.help = ['pizza'];
+handler.tags = ['giochi'];
+handler.command = /^pizza$/i;
+handler.group = true;
+handler.register = true;
+
+export default handler;
