@@ -1,7 +1,8 @@
+const pizzaCondimenti = ['formaggio', 'salsa', 'wurstel', 'patatine', 'salame', 'piccante', 'ananas', 'acciughe', 'mozzarella', 'pistacchio', 'bufala', 'mortadella'];
+
 let handler = async (m, { conn, args }) => {
   if (args[0] === 'pizza') {
-    const condimenti = ['formaggio', 'salsa', 'wurstel', 'patatine', 'salame', 'piccante', 'ananas', 'acciughe', 'mozzarella', 'pistacchio', 'bufala', 'mortadella'];
-    const buttons = condimenti.map((condimento) => ({
+    const buttons = pizzaCondimenti.map((condimento) => ({
       buttonId: `pizza ${condimento}`,
       buttonText: { displayText: condimento },
       type: 1,
@@ -21,7 +22,7 @@ let handler = async (m, { conn, args }) => {
     while (!sceltaCompleta) {
       const risposta = await conn.waitForMessage(m.chat, (message) => message.sender === user);
       if (risposta.text === 'si') {
-        const buttons = condimenti.map((condimento) => ({
+        const buttons = pizzaCondimenti.map((condimento) => ({
           buttonId: `pizza ${condimento}`,
           buttonText: { displayText: condimento },
           type: 1,
@@ -43,7 +44,7 @@ let handler = async (m, { conn, args }) => {
 };
 
 handler.command = ['pizza'];
-handler.tags = ['games'];
+handler.tags = ['giochi'];
 handler.help = ['pizza'];
 
 export default handler;
