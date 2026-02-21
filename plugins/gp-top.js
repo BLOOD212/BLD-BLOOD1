@@ -115,6 +115,8 @@ function checkResets(db, conn) {
 
   const chats = Object.keys(conn?.chats || {}).filter(id => id.endsWith('@g.us'))
 
+  let changed = false
+
   // Reset giornaliero
   if (db.lastDailyReset !== today) {
     console.log('🔄 Reset giornaliero')
@@ -122,11 +124,11 @@ function checkResets(db, conn) {
       db.users[u].daily = 0
       db.users[u].notifiedTop3 = false
     }
-
     db.lastDailyReset = today
+    changed = true
 
     // Notifica top 3 giornaliero
-    chats.forEach(chatId => notifyTop3(conn, db, chatId, 'daily'))
+    for (let chatId of chats) notifyTop3(conn, db, chatId, 'daily')
   }
 
   // Reset settimanale
@@ -135,48 +137,38 @@ function checkResets(db, conn) {
     for (let u in db.users) {
       db.users[u].weekly = 0
     }
-
     db.lastWeeklyReset = week
+    changed = true
 
     // Notifica top 3 settimanale
-    chats.forEach(chatId => notifyTop3(conn, db, chatId, 'weekly'))
+    for (let chatId of chats) notifyTop3(conn, db, chatId, 'weekly')
   }
 
-  saveDB(db)
+  if (changed) saveDB(db)
 }
 
 // =========================
-// SCHEDULING RESOCONTO
+// SCHEDULING RESOCONTO AUTOMATICO
 // =========================
 async function scheduleResoconto(conn) {
   const now = new Date()
   const next = new Date()
-  next.setHours(23, 59, 0, 0)
-  if (now > next) next.setDate(next.getDate() + 1)
-
+  next.setHours(24, 0, 0, 0) // mezzanotte
   const delay = next - now
 
   setTimeout(async () => {
     const db = loadDB()
     checkResets(db, conn)
+
     const chats = Object.keys(conn.chats || {}).filter(id => id.endsWith('@g.us'))
-    for (let chatId of chats) {
-      await sendResoconto(conn, db, chatId)
-    }
-    scheduleResoconto(conn)
+    for (let chatId of chats) await sendResoconto(conn, db, chatId)
+
+    scheduleResoconto(conn) // ricorsione per il giorno successivo
   }, delay)
 }
 
 // =========================
-// RESET AUTOMATICO ALLO START
-// =========================
-setInterval(() => {
-  const db = loadDB()
-  checkResets(db, global.conn)
-}, 60 * 1000)
-
-// =========================
-// HANDLER
+// HANDLER MESSAGGI
 // =========================
 let handler = async (m, { conn, command }) => {
   try {
@@ -202,7 +194,7 @@ let handler = async (m, { conn, command }) => {
     const nowTime = Date.now()
 
     // =========================
-    // ANTI-SPAM per XP (3 sec)
+    // ANTI-SPAM per XP (max 1 XP ogni 3 sec)
     // =========================
     if (!user.lastMessage || nowTime - user.lastMessage > 3000) {
       user.xp += 5
