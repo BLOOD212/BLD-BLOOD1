@@ -1,160 +1,289 @@
-const pizzaCondimenti = [
-  '*Formaggio 🧀*',
-  '*Salsa 🍅*',
-  '*Wurstel 🍖*',
-  '*Patatine 🍟*',
-  '*Salame 🍖*',
-  '*Piccante 🔥*',
-  '*Ananas 🍍*',
-  '*Acciughe 🐟*',
-  '*Mozzarella 🧀*',
-  '*Pistacchio 🌰*',
-  '*Bufala 🐃*',
-  '*Mortadella 🍖*',
-  '*Prosciutto 🍖*',
-  '*Funghi 🍄*',
-  '*Olive 🫒*',
-  '*Capricciosa 🍕*',
-  '*Gruyère 🧀*',
-  '*Gombas 🍄*',
-  '*Peperoni 🔥*',
-  '*Prosciutto crudo 🍖*',
-  '*Ricotta 🧀*',
-  '*Spinaci 🥗*',
-  '*Tonno 🐟*',
-  '*Zucchini 🥒*',
-  '*Carne 🍖*',
-  '*Pollo 🍗*',
-  '*Salsiccia 🍖*',
-  '*Bacon 🍖*',
-  '*Arugula 🥗*',
-  '*Pomodoro 🍅*',
-  '*Aglio 🧄*',
-  '*Cipolla 🧅*',
-  '*Mais 🌽*',
-  '*Jalapeño 🔥*',
-  '*Pine Nuts 🌰*',
-  '*Prosciutto di Parma 🍖*',
-  '*Soppressata 🍖*',
-  '*Burrata 🧀*',
-  '*Graciano 🧀*',
-  '*Scamorza 🧀*',
-  '*Asparagi 🥗*',
-  '*Broccoli 🥗*',
-  '*Cavolfiore 🥗*',
-  '*Cavolo 🥗*',
-  '*Feta 🧀*',
-  '*Gualda 🧀*',
-  '*Hamburger 🍔*',
-  '*Kebab 🍖*',
-  '*Lenticchie 🍲*',
-  '*Mezze lune 🍕*',
-  '*Noci 🌰*',
-  '*Orecchiette 🍝*',
-  '*Pancetta 🍖*',
-  '*Peperoncino 🔥*',
-  '*Pesto 🥗*',
-  '*Polenta 🍲*',
-  '*Prosciutto affumicato 🍖*',
-  '*Salsiccia di maiale 🍖*',
-  '*Salsiccia di pollo 🍖*',
-  '*Salsiccia di tacchino 🍖*',
-  '*Salsiccia di vitello 🍖*',
-  '*Salsiccia piccante 🔥*',
-  '*Salsiccia vegetale 🍖*',
-  '*Sottaceti 🥗*',
-  '*Spezi 🧀*',
-  '*Stracchino 🧀*',
-  '*Tartufi 🌰*',
-  '*Tortellini 🍝*',
-  '*Trippa 🍲*',
-  '*Uova 🥚*',
-  '*Vegan 🍖*',
-  '*Vegetariano 🥗*',
-  '*Zucca 🥔*',
-];
+import fs from 'fs'
 
-const playAgainButtons = () => [{ name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Ordina un\'altra pizza! 🍕', id: `.pizza` }) }];
+const DB_FILE = './pizzaDB.json'
+
+global.pizzaDB = fs.existsSync(DB_FILE)
+  ? JSON.parse(fs.readFileSync(DB_FILE))
+  : {
+      users: {},
+      clans: {},
+      cities: {
+        Napoli: { owner: null, difesa: 100 },
+        Milano: { owner: null, difesa: 100 },
+        Roma: { owner: null, difesa: 100 },
+        Tokyo: { owner: null, difesa: 120 },
+        "New York": { owner: null, difesa: 150 }
+      },
+      market: [],
+      events: { active: null, ends: 0 },
+      royale: null,
+      season: { number: 1 }
+    }
+
+function saveDB() {
+  fs.writeFileSync(DB_FILE, JSON.stringify(global.pizzaDB, null, 2))
+}
+
+const ingredienti = [
+  { nome: "Mozzarella 🧀", rarita: 1 },
+  { nome: "Salsa 🍅", rarita: 1 },
+  { nome: "Salame 🍖", rarita: 2 },
+  { nome: "Funghi 🍄", rarita: 2 },
+  { nome: "Bufala 🐃", rarita: 3 },
+  { nome: "Gorgonzola 🧀", rarita: 3 },
+  { nome: "Ananas 🍍", rarita: 4 },
+  { nome: "Tartufo Nero 👑", rarita: 5 },
+  { nome: "Oro Alimentare ✨", rarita: 6 },
+  { nome: "Carbone 💀", rarita: -2 }
+]
+
+function createUser() {
+  return {
+    xp: 0,
+    soldi: 300,
+    gemme: 0,
+    clan: null,
+    classe: null,
+    inventario: [0,1],
+    rating: 1000
+  }
+}
+
+function scorePizza(lista) {
+  let score = 0
+  lista.forEach(i => score += ingredienti[i].rarita * 25)
+  score += lista.length * 10
+
+  // AI combo
+  const nomi = lista.map(i => ingredienti[i].nome)
+
+  if (nomi.includes("Mozzarella 🧀") && nomi.includes("Salsa 🍅") && lista.length === 2)
+    score += 100
+
+  if (nomi.includes("Ananas 🍍") && nomi.includes("Carbone 💀"))
+    score -= 80
+
+  return score
+}
+
+function livello(xp) {
+  if (xp >= 5000) return "🌍 Imperatore"
+  if (xp >= 2500) return "👑 Dominatore"
+  if (xp >= 1000) return "🔥 Maestro"
+  if (xp >= 500) return "👨‍🍳 Chef"
+  return "🍕 Pizzaiolo"
+}
 
 let handler = async (m, { conn, args }) => {
-  let frasi = [
-    `🍕 *Scegli i condimenti per la tua pizza!*`,
-    `🔥 *Personalizza la tua pizza!*`,
-    `🌟 *Crea la tua pizza ideale!*`,
-    `🧂 *Scegli i tuoi condimenti preferiti!*`,
-  ];
 
-  if (global.pizzaGame?.[m.chat]) {
-    return m.reply('⚠️ *C\'è già una partita attiva in questo gruppo!*');
+  const text = m.text.trim()
+  const user = m.sender
+
+  global.pizzaDB.users[user] = global.pizzaDB.users[user] || createUser()
+  const u = global.pizzaDB.users[user]
+
+  // ===== PROFILO =====
+  if (/^pizzastats$/i.test(text)) {
+    return m.reply(
+`👤 PROFILO
+
+XP: ${u.xp}
+💰 Soldi: ${u.soldi}
+💎 Gemme: ${u.gemme}
+🏆 Rating: ${u.rating}
+🏅 Livello: ${livello(u.xp)}
+🏰 Clan: ${u.clan || "Nessuno"}
+🎭 Classe: ${u.classe || "Nessuna"}`
+    )
   }
 
-  const cooldownKey = `pizza_${m.chat}`;
-  const lastGame = global.cooldowns?.[cooldownKey] || 0;
-  const now = Date.now();
-  const cooldownTime = 5000;
-  if (now - lastGame < cooldownTime) {
-    const remainingTime = Math.ceil((cooldownTime - (now - lastGame)) / 1000);
-    return m.reply(`⏳ *Aspetta ancora ${remainingTime} secondi prima di avviare un nuovo gioco!*`);
+  // ===== CLASSE =====
+  if (/^pizzaclasse/i.test(text)) {
+    const c = args[0]
+    if (!c) return m.reply("Usa: .pizzaclasse classica|gourmet|chaos")
+
+    u.classe = c
+    saveDB()
+    return m.reply("🎭 Classe impostata: " + c)
   }
 
-  global.cooldowns = global.cooldowns || {};
-  global.cooldowns[cooldownKey] = now;
+  // ===== CLAN =====
+  if (/^pizzaclan crea/i.test(text)) {
+    const nome = args[1]
+    if (!nome) return m.reply("Nome clan mancante")
 
-  let frase = frasi[Math.floor(Math.random() * frasi.length)];
-  let messaggio = '*Scegli i condimenti per la tua pizza:*' + '\n\n';
-  pizzaCondimenti.forEach((condimento, index) => {
-    messaggio += `${index + 1}. ${condimento}\n`;
-  });
-  messaggio += '\n*Rispondi con i numeri dei condimenti separati da virgola (es. 1, 2, 3)*\n*Scrivi "fine" per terminare la tua pizza*';
-
-  try {
-    let msg = await conn.sendMessage(m.chat, { text: messaggio, footer: '🍕 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🍕' }, { quoted: m });
-    global.pizzaGame = global.pizzaGame || {};
-    global.pizzaGame[m.chat] = {
-      id: msg.key.id,
-      condimenti: [],
-      utente: m.sender,
-      timeout: setTimeout(async () => {
-        if (global.pizzaGame?.[m.chat]) {
-          const pizza = global.pizzaGame[m.chat].condimenti.join(', ');
-          const utente = `@${global.pizzaGame[m.chat].utente.split('@')[0]}`;
-          await conn.sendMessage(m.chat, { text: `*PIZZA CREATA DA* ${utente}\n\n*Questa è la tua pizza:* ${pizza}`, footer: '🍕 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🍕', interactiveButtons: playAgainButtons() }, { quoted: msg });
-          delete global.pizzaGame[m.chat];
-        }
-      }, 120000)
-    };
-  } catch (error) {
-    console.error('Errore nel gioco pizza:', error);
-    m.reply('❌ *Si è verificato un errore durante l\'avvio del gioco*' + '\n\n' + '🔄 *Riprova tra qualche secondo*');
+    global.pizzaDB.clans[nome] = { leader: user, membri: [user], xp: 0 }
+    u.clan = nome
+    saveDB()
+    return m.reply("🏰 Clan creato: " + nome)
   }
-};
 
-handler.before = async (m, { conn }) => {
-  const chat = m.chat;
-  const game = global.pizzaGame?.[chat];
-  if (!game || !m.quoted || m.quoted.id !== game.id || m.key.fromMe || m.sender !== game.utente) return;
-  const scelte = m.text.trim().split(',').map(s => s.trim());
-  for (const scelta of scelte) {
-    if (pizzaCondimenti[parseInt(scelta) - 1]) {
-      game.condimenti.push(pizzaCondimenti[parseInt(scelta) - 1]);
-    } else if (scelta.toLowerCase() === 'fine') {
-      clearTimeout(game.timeout);
-      const pizza = game.condimenti.join(', ');
-      const utente = `@${game.utente.split('@')[0]}`;
-      await conn.sendMessage(m.chat, { text: `*PIZZA CREATA DA* ${utente}\n\n*Questa è la tua pizza:* ${pizza}`, footer: '🍕 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🍕', interactiveButtons: playAgainButtons() }, { quoted: m });
-      delete global.pizzaGame[m.chat];
-      return;
+  if (/^pizzaclan join/i.test(text)) {
+    const nome = args[1]
+    if (!global.pizzaDB.clans[nome]) return m.reply("Clan inesistente")
+
+    global.pizzaDB.clans[nome].membri.push(user)
+    u.clan = nome
+    saveDB()
+    return m.reply("🤝 Entrato nel clan " + nome)
+  }
+
+  // ===== ATTACCO CITTÀ =====
+  if (/^pizzaclan attacca/i.test(text)) {
+    const city = args[1]
+    if (!global.pizzaDB.cities[city]) return m.reply("Città inesistente")
+    if (!u.clan) return m.reply("Devi avere un clan")
+
+    const potere = global.pizzaDB.clans[u.clan].membri.length * 100
+    const difesa = global.pizzaDB.cities[city].difesa
+
+    if (potere > difesa) {
+      global.pizzaDB.cities[city].owner = u.clan
+      global.pizzaDB.cities[city].difesa += 50
+      saveDB()
+      return m.reply(`🏆 ${u.clan} ha conquistato ${city}!`)
     } else {
-      await conn.sendMessage(m.chat, { text: '*Scelta non valida. Riprova.*' });
-      return;
+      return m.reply("❌ Attacco fallito!")
     }
   }
-  await conn.sendMessage(m.chat, { text: `*Hai scelto ${game.condimenti.join(', ')}.* *Vuoi aggiungere altro? (rispondi con i numeri dei condimenti separati da virgola o "fine")*` });
-};
 
-handler.help = ['pizza'];
-handler.tags = ['giochi'];
-handler.command = /^pizza$/i;
-handler.group = true;
-handler.register = true;
-export default handler;
+  // ===== MERCATO =====
+  if (/^pizzamarket sell/i.test(text)) {
+    const index = parseInt(args[1])
+    const prezzo = parseInt(args[2])
+
+    if (!u.inventario.includes(index))
+      return m.reply("Non possiedi questo ingrediente")
+
+    global.pizzaDB.market.push({
+      id: Date.now(),
+      seller: user,
+      index,
+      prezzo
+    })
+
+    saveDB()
+    return m.reply("🛒 In vendita!")
+  }
+
+  if (/^pizzamarket$/i.test(text)) {
+    let msg = "🛒 MERCATO\n\n"
+    global.pizzaDB.market.forEach(i => {
+      msg += `ID:${i.id} - ${ingredienti[i.index].nome} - 💰${i.prezzo}\n`
+    })
+    return m.reply(msg)
+  }
+
+  if (/^pizzamarket buy/i.test(text)) {
+    const id = parseInt(args[1])
+    const item = global.pizzaDB.market.find(x => x.id === id)
+    if (!item) return m.reply("ID non trovato")
+
+    if (u.soldi < item.prezzo)
+      return m.reply("Soldi insufficienti")
+
+    u.soldi -= item.prezzo
+    global.pizzaDB.users[item.seller].soldi += item.prezzo
+    u.inventario.push(item.index)
+
+    global.pizzaDB.market =
+      global.pizzaDB.market.filter(x => x.id !== id)
+
+    saveDB()
+    return m.reply("✅ Acquisto completato")
+  }
+
+  // ===== LOOTBOX =====
+  if (/^pizzaloot$/i.test(text)) {
+    if (u.soldi < 200) return m.reply("Servono 200💰")
+
+    u.soldi -= 200
+    let roll = Math.random()
+    let drop = roll < 0.7 ? 2 :
+               roll < 0.9 ? 4 :
+               roll < 0.98 ? 7 : 8
+
+    if (!u.inventario.includes(drop))
+      u.inventario.push(drop)
+
+    saveDB()
+    return m.reply("🎁 Hai trovato: " + ingredienti[drop].nome)
+  }
+
+  // ===== BATTLE ROYALE =====
+  if (/^pizzaroyale$/i.test(text)) {
+    if (!global.pizzaDB.royale)
+      global.pizzaDB.royale = []
+
+    global.pizzaDB.royale.push(user)
+
+    if (global.pizzaDB.royale.length >= 3) {
+      const winner =
+        global.pizzaDB.royale[Math.floor(Math.random()*global.pizzaDB.royale.length)]
+
+      global.pizzaDB.users[winner].gemme += 3
+      global.pizzaDB.royale = null
+      saveDB()
+      return conn.sendMessage(m.chat,{
+        text:`🏆 Battle Royale vinta da @${winner.split("@")[0]}! +3💎`,
+        mentions:[winner]
+      })
+    }
+
+    saveDB()
+    return m.reply("⚔️ Entrato in Battle Royale")
+  }
+
+  // ===== CREA PIZZA =====
+  if (/^pizza$/i.test(text)) {
+
+    let lista = u.inventario.map(i=>`${i}. ${ingredienti[i].nome}`).join("\n")
+
+    return m.reply(
+`🍕 CREA PIZZA
+
+${lista}
+
+Scrivi numeri separati da virgola.
+`)
+  }
+
+  // ===== VALUTA PIZZA =====
+  if (/^\d+(,\d+)*$/.test(text)) {
+    const picks = text.split(",").map(x=>parseInt(x.trim()))
+    const valid = picks.every(p=>u.inventario.includes(p))
+
+    if (!valid) return m.reply("Ingrediente non valido")
+
+    let score = scorePizza(picks)
+    let bot = scorePizza([Math.floor(Math.random()*ingredienti.length)])
+
+    if (score > bot) {
+      u.xp += 150
+      u.soldi += 100
+      u.rating += 25
+    } else {
+      u.xp += 30
+      u.rating -= 10
+    }
+
+    saveDB()
+
+    return m.reply(
+`⭐ Tuo punteggio: ${score}
+🤖 Bot: ${bot}
+
+XP: ${u.xp}
+💰 Soldi: ${u.soldi}
+🏆 Rating: ${u.rating}
+🏅 ${livello(u.xp)}`
+    )
+  }
+
+}
+
+handler.command = /^pizza|pizzastats|pizzaclasse|pizzaclan|pizzamarket|pizzaloot|pizzaroyale$/i
+handler.group = true
+handler.register = true
+
+export default handler
