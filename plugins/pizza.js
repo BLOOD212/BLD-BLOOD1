@@ -10,7 +10,7 @@ const pizzaCondimenti = [
   '*Salsiccia di pollo 🍗*','*Salsiccia di tacchino 🍗*','*Carne macinata 🍖*',
   '*Pollo 🍗*','*Kebab 🍖*','*Tonno 🐟*','*Acciughe 🐟*','*Salmone 🐟*',
   '*Gamberetti 🍤*','*Frutti di mare 🦑*','*Funghi 🍄*','*Funghi porcini 🍄*',
-  '*Champignon 🍄*','*Olive nere 🫒*','*Olive verdi 🫒*','*Peperoni 🌶️*',
+  '*Champignon 🍄*','*Olive nere 🫒*','*Olive verdi 🫒','*Peperoni 🌶️*',
   '*Peperoncino 🔥*','*Jalapeño 🌶️*','*Melanzane 🍆*','*Zucchine 🥒*',
   '*Cipolla 🧅*','*Cipolla rossa 🧅*','*Aglio 🧄*','*Spinaci 🥬*','*Rucola 🥗*',
   '*Carciofi 🌿*','*Asparagi 🌿*','*Broccoli 🥦*','*Mais 🌽*',
@@ -25,6 +25,14 @@ const pizzaCondimenti = [
   '*Olio piccante 🌶️*','*Origano 🌿*','*Basilico 🌿*','*Ananas 🍍*'
 ];
 
+const ingredientiRari = [
+  { nome: '*Tartufo Bianco Prezioso 🍄*', prezzo: 50 },
+  { nome: '*Bufala DOP 🐃*', prezzo: 40 },
+  { nome: '*Burrata Gourmet 🧀*', prezzo: 35 },
+  { nome: '*Gambero Rosso 🍤*', prezzo: 45 },
+  { nome: '*Oro Alimentare ✨*', prezzo: 100 }
+];
+
 const giudiziPizza = [
   '🍕 Pizza perfetta!',
   '🔥 Questa spacca!',
@@ -35,97 +43,98 @@ const giudiziPizza = [
   '😎 Interessante scelta!'
 ];
 
-const playAgainButtons = () => [{
-  name: 'quick_reply',
-  buttonParamsJson: JSON.stringify({
-    display_text: 'Ordina un\'altra pizza! 🍕',
-    id: `.pizza`
-  })
-}];
-
-function calcolaPunteggio(condimenti) {
+function calcolaPunteggio(condimenti){
   let punti = condimenti.length;
-
-  if (condimenti.includes('*Mozzarella 🧀*') && condimenti.includes('*Salsa di pomodoro 🍅*'))
-    punti += 3;
-
-  if (condimenti.includes('*Ananas 🍍*') && condimenti.includes('*Salame piccante 🔥*'))
-    punti -= 2;
-
-  if (condimenti.length >= 3 && condimenti.length <= 6)
-    punti += 5;
-
-  if (condimenti.length > 12)
-    punti -= 3;
-
-  return punti < 0 ? 0 : punti;
+  if(condimenti.includes('*Mozzarella 🧀*') && condimenti.includes('*Salsa di pomodoro 🍅*')) punti+=3;
+  if(condimenti.includes('*Ananas 🍍*') && condimenti.includes('*Salame piccante 🔥*')) punti-=2;
+  if(condimenti.includes('*Ananas 🍍*') && condimenti.includes('*Tonno 🐟*')) punti-=4;
+  if(condimenti.includes('*Tartufo nero 🍄*') && condimenti.includes('*Stracciatella 🧀*')) punti+=5;
+  if(condimenti.length>=3 && condimenti.length<=6) punti+=5;
+  if(condimenti.length>12) punti-=3;
+  if(Math.random()<0.05) punti+=10;
+  if(Math.random()<0.03) punti-=5;
+  return punti<0?0:punti;
 }
 
-let handler = async (m, { conn }) => {
+let handler = async (m,{conn})=>{
+  global.pizzaGame=global.pizzaGame||{};
+  global.pizzaScore=global.pizzaScore||{};
+  global.pizzaUser=global.pizzaUser||{};
 
-  if (global.pizzaGame?.[m.chat])
-    return m.reply('⚠️ C\'è già una partita attiva!');
+  if(global.pizzaGame[m.chat]) return m.reply('⚠️ C\'è già una partita attiva!');
 
-  let messaggio = '*SCEGLI I CONDIMENTI:*\n\n';
-  pizzaCondimenti.forEach((c, i) => {
-    messaggio += `${i + 1}. ${c}\n`;
-  });
+  let messaggio=`🍕 *COMANDI DISPONIBILI* 🍕
+  
+.pizza → Inizia a creare la pizza
+.fine → Termina la pizza e calcola punti
+.shop → Mostra ingredienti rari
+.buy NUMERO → Compra ingrediente raro
+.pizzascore → Mostra classifica
+.challenge @utente → Sfida un altro utente
 
-  messaggio += '\nRispondi con numeri separati da virgola\nScrivi *fine* per terminare';
+*SCEGLI I CONDIMENTI:*\n\n`;
 
-  let msg = await conn.sendMessage(m.chat, { text: messaggio }, { quoted: m });
+  pizzaCondimenti.forEach((c,i)=> messaggio+=`${i+1}. ${c}\n`);
+  messaggio+='\nRispondi con numeri separati da virgola\nScrivi *fine* per terminare';
 
-  global.pizzaGame = global.pizzaGame || {};
-  global.pizzaGame[m.chat] = {
-    id: msg.key.id,
-    condimenti: [],
-    utente: m.sender
-  };
+  let msg=await conn.sendMessage(m.chat,{text:messaggio},{quoted:m});
+  global.pizzaGame[m.chat]={id:msg.key.id,condimenti:[],utente:m.sender};
 };
 
-handler.before = async (m, { conn }) => {
-  const game = global.pizzaGame?.[m.chat];
-  if (!game || !m.quoted || m.quoted.id !== game.id || m.sender !== game.utente)
-    return;
+// Gestione pizza
+handler.before=async(m,{conn})=>{
+  const game=global.pizzaGame?.[m.chat];
+  if(!game||!m.quoted||m.quoted.id!==game.id||m.sender!==game.utente) return;
+  global.pizzaUser[m.chat]=global.pizzaUser[m.chat]||{};
+  global.pizzaUser[m.chat][m.sender]=global.pizzaUser[m.chat][m.sender]||{level:1,xp:0,money:0,inventory:[]};
+  const user=global.pizzaUser[m.chat][m.sender];
 
-  if (m.text.toLowerCase() === 'fine') {
-
-    const pizza = game.condimenti.join(', ');
-    const punti = calcolaPunteggio(game.condimenti);
-    const giudizio = giudiziPizza[Math.floor(Math.random() * giudiziPizza.length)];
-    const utente = `@${m.sender.split('@')[0]}`;
-
-    global.pizzaScore = global.pizzaScore || {};
-    global.pizzaScore[m.chat] = global.pizzaScore[m.chat] || {};
-    global.pizzaScore[m.chat][m.sender] =
-      (global.pizzaScore[m.chat][m.sender] || 0) + punti;
-
-    await conn.sendMessage(m.chat, {
-      text:
-`🍕 *PIZZA CREATA DA* ${utente}
+  if(m.text.toLowerCase()==='fine'){
+    const pizza=game.condimenti.join(', ')||'Nessun ingrediente scelto 😢';
+    const punti=calcolaPunteggio(game.condimenti.concat(user.inventory||[]));
+    const giudizio=giudiziPizza[Math.floor(Math.random()*giudiziPizza.length)];
+    const utente=`@${m.sender.split('@')[0]}`;
+    global.pizzaScore[m.chat]=global.pizzaScore[m.chat]||{};
+    global.pizzaScore[m.chat][m.sender]=(global.pizzaScore[m.chat][m.sender]||0)+punti;
+    user.xp+=punti;
+    user.money+=Math.floor(punti/2);
+    const newLevel=Math.floor(user.xp/20)+1;
+    if(newLevel>user.level) user.level=newLevel;
+    await conn.sendMessage(m.chat,{
+      text:`🍕 *PIZZA CREATA DA* ${utente}
 
 ${pizza}
 
+📦 Ingredienti: ${game.condimenti.length} + ${user.inventory.length} rari
 🏆 Punteggio: ${punti} punti
-${giudizio}`
-    }, { quoted: m });
-
+💰 Soldi guadagnati: ${Math.floor(punti/2)}
+⭐ Livello attuale: ${user.level}
+${giudizio}`,
+      mentions:[m.sender]
+    },{quoted:m});
     delete global.pizzaGame[m.chat];
     return;
   }
 
-  const scelte = m.text.split(',').map(x => x.trim());
-  for (let s of scelte) {
-    if (pizzaCondimenti[parseInt(s) - 1])
-      game.condimenti.push(pizzaCondimenti[parseInt(s) - 1]);
+  const scelte=m.text.split(',').map(x=>x.trim());
+  for(let s of scelte){
+    if(!/^\d+$/.test(s)) continue;
+    const index=parseInt(s)-1;
+    if(!pizzaCondimenti[index]) continue;
+    const ingrediente=pizzaCondimenti[index];
+    if(!game.condimenti.includes(ingrediente)) game.condimenti.push(ingrediente);
   }
 
-  await conn.sendMessage(m.chat, {
-    text: `Hai scelto:\n${game.condimenti.join(', ')}\nScrivi *fine* per terminare`
+  await conn.sendMessage(m.chat,{
+    text:`Hai scelto (${game.condimenti.length} ingredienti):
+
+${game.condimenti.join(', ')}
+
+Scrivi *fine* per terminare`
   });
 };
 
-handler.command = /^pizza$/i;
-handler.group = true;
-handler.register = true;
+handler.command=/^(pizza|pizzascore|shop|buy|menu|challenge)$/i;
+handler.group=true;
+handler.register=true;
 export default handler;
