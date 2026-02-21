@@ -65,7 +65,10 @@ let handler = async (m,{conn})=>{
 
   // --- Comando .pizza ---
   if(m.command === 'pizza'){
-    if(global.pizzaGame[m.chat]) return conn.sendMessage(m.chat,{text:'⚠️ *C\'è già una partita attiva!*'},{quoted:m});
+    if(global.pizzaGame[m.chat]) {
+      await conn.sendMessage(m.chat,{text:'⚠️ *C\'è già una partita attiva!*'},{quoted:m});
+      return;
+    }
 
     let messaggio = `🍕 *COMANDI DISPONIBILI* 🍕
 .pizza → Inizia a creare la pizza
@@ -73,7 +76,6 @@ let handler = async (m,{conn})=>{
 .shop → Mostra ingredienti rari
 .buy NUMERO → Compra ingrediente raro
 .pizzascore → Mostra classifica
-.challenge @utente → Sfida un altro utente
 
 *SCEGLI I CONDIMENTI:*\n\n`;
 
@@ -89,23 +91,31 @@ let handler = async (m,{conn})=>{
   if(m.command === 'shop'){
     let lista = '*INGREDIENTI RARI DISPONIBILI:*\n\n';
     ingredientiRari.forEach((i,index) => lista += `${index+1}. ${i.nome} - ${i.prezzo} 💰\n`);
-    return conn.sendMessage(m.chat,{text:lista});
+    await conn.sendMessage(m.chat,{text:lista});
+    return;
   }
 
   // --- Comando .buy ---
   if(m.command === 'buy'){
     const num = parseInt(m.text.split(' ')[1])-1;
-    if(isNaN(num) || !ingredientiRari[num]) return conn.sendMessage(m.chat,{text:'*Ingrediente non valido!*'},{quoted:m});
+    if(isNaN(num) || !ingredientiRari[num]) {
+      await conn.sendMessage(m.chat,{text:'*Ingrediente non valido!*'},{quoted:m});
+      return;
+    }
 
     global.pizzaUser[m.chat] = global.pizzaUser[m.chat] || {};
     global.pizzaUser[m.chat][m.sender] = global.pizzaUser[m.chat][m.sender] || {level:1, xp:0, money:100, inventory:[]};
     const user = global.pizzaUser[m.chat][m.sender];
 
-    if(user.money < ingredientiRari[num].prezzo) return conn.sendMessage(m.chat,{text:'*Non hai abbastanza soldi!*'},{quoted:m});
+    if(user.money < ingredientiRari[num].prezzo) {
+      await conn.sendMessage(m.chat,{text:'*Non hai abbastanza soldi!*'},{quoted:m});
+      return;
+    }
 
     user.money -= ingredientiRari[num].prezzo;
     user.inventory.push(ingredientiRari[num].nome);
-    return conn.sendMessage(m.chat,{text:`*Hai acquistato* ${ingredientiRari[num].nome} 💰\n*Soldi rimasti:* ${user.money}`},{quoted:m});
+    await conn.sendMessage(m.chat,{text:`*Hai acquistato* ${ingredientiRari[num].nome} 💰\n*Soldi rimasti:* ${user.money}`},{quoted:m});
+    return;
   }
 
   // --- Comando .pizzascore ---
@@ -114,7 +124,8 @@ let handler = async (m,{conn})=>{
     let classifica = '*🏆 CLASSIFICA PIZZA 🏆*\n\n';
     let entries = Object.entries(scores).sort((a,b)=>b[1]-a[1]);
     entries.forEach(([user,score],i)=> classifica += `${i+1}. @${user.split('@')[0]} - ${score} punti\n`);
-    return conn.sendMessage(m.chat,{text:classifica, mentions:entries.map(e=>e[0])});
+    await conn.sendMessage(m.chat,{text:classifica, mentions:entries.map(e=>e[0])});
+    return;
   }
 };
 
