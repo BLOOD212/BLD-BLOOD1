@@ -1,13 +1,21 @@
 import fs from 'fs'
-import cron from 'node-cron'
 
 const dbPath = './database.json'
 
+// =========================
+// DATABASE
+// =========================
 function loadDB() {
   if (!fs.existsSync(dbPath)) {
-    fs.writeFileSync(dbPath, JSON.stringify({ users: {} }, null, 2))
+    fs.writeFileSync(dbPath, JSON.stringify({
+      users: {},
+      lastDailyReset: null,
+      lastWeeklyReset: null
+    }, null, 2))
   }
+
   let db = JSON.parse(fs.readFileSync(dbPath))
+
   if (!db.users) db.users = {}
   return db
 }
@@ -16,105 +24,162 @@ function saveDB(db) {
   fs.writeFileSync(dbPath, JSON.stringify(db, null, 2))
 }
 
-// Reset giornaliero
-function resetDailyRanking() {
-  let db = loadDB()
-  db.users = {}
+// =========================
+// RESET AUTOMATICO
+// =========================
+function checkResets(db) {
+  const now = new Date()
+  const today = now.toISOString().split('T')[0]
+  const week = `${now.getFullYear()}-W${Math.ceil((now.getDate()) / 7)}`
+
+  // Reset Giornaliero
+  if (db.lastDailyReset !== today) {
+    for (let u in db.users) {
+      db.users[u].daily = 0
+      db.users[u].notifiedTop3 = false
+    }
+    db.lastDailyReset = today
+  }
+
+  // Reset Settimanale
+  if (db.lastWeeklyReset !== week) {
+    for (let u in db.users) {
+      db.users[u].weekly = 0
+    }
+    db.lastWeeklyReset = week
+  }
+
   saveDB(db)
-  console.log('🕛 Classifica giornaliera resettata alle 00:00')
 }
 
-// Cron job: ogni giorno a mezzanotte
-cron.schedule('0 0 * * *', () => {
-  resetDailyRanking()
-})
+// =========================
+// XP + LEVEL SYSTEM
+// =========================
+function calculateLevel(xp) {
+  return Math.floor(0.1 * Math.sqrt(xp))
+}
 
-function getRanking(db) {
+function getBadge(level) {
+  if (level >= 30) return "👑 Re del Gruppo"
+  if (level >= 15) return "🔥 Spammer Leggendario"
+  if (level >= 5) return "💬 Chiacchierone"
+  return "🐣 Newbie"
+}
+
+// =========================
+// RANKING
+// =========================
+function getRanking(db, type) {
   return Object.entries(db.users)
-    .map(([jid, data]) => [jid, data?.messaggi || data?.messages || 0])
+    .map(([jid, data]) => [jid, data[type] || 0])
     .filter(([_, total]) => total > 0)
     .sort((a, b) => b[1] - a[1])
 }
 
-function generaTop(ranking, limit, userPosition, medals = []) {
-  let text = `🏆 *TOP ${limit} ATTIVITÀ DEL GRUPPO*\n\n`
-  let mentions = []
-
-  ranking.slice(0, limit).forEach(([jid, total], i) => {
-    mentions.push(jid)
-    let medal = medals[i] || `${i + 1}°`
-    text += `${medal} @${jid.split('@')[0]}\n   💬 Messaggi: ${total}\n\n`
-  })
-
-  text += `📍 La tua posizione: ${userPosition || 'Non classificato'}\n`
-  text += `⏰ La classifica si resetta ogni 24h da mezzanotte in poi (nerd style 😎)`
-  return { text, mentions }
-}
-
 // =========================
-// Handler comandi e aggiornamento messaggi
+// HANDLER
 // =========================
 let handler = async (m, { conn, command, usedPrefix }) => {
   if (!m.isGroup)
-    return m.reply('❌ Questo comando funziona solo nei gruppi nerd 😅')
+    return m.reply('❌ Solo nei gruppi 😅')
 
   let db = loadDB()
-  if (!db.users[m.sender]) db.users[m.sender] = { messaggi: 0 }
+  checkResets(db)
 
-  // 🔹 Incremento messaggi dell’utente
-  db.users[m.sender].messaggi += 1
-  saveDB(db)
+  if (!db.users[m.sender]) {
+    db.users[m.sender] = {
+      xp: 0,
+      level: 0,
+      daily: 0,
+      weekly: 0,
+      global: 0,
+      lastMessage: 0,
+      notifiedTop3: false
+    }
+  }
 
-  let ranking = getRanking(db)
-  let userIndex = ranking.findIndex(([jid]) => jid === m.sender)
-  let userPosition = userIndex !== -1 ? userIndex + 1 : null
+  let user = db.users[m.sender]
+  const now = Date.now()
 
-  // 🔹 Notifica se entra nella Top 3
-  if (userPosition && userPosition <= 3 && db.users[m.sender].notifiedTop3 !== true) {
+  // =========================
+  // ANTI SPAM (10 sec)
+  // =========================
+  if (now - user.lastMessage > 10000) {
+    user.xp += 5
+    user.daily += 1
+    user.weekly += 1
+    user.global += 1
+    user.lastMessage = now
+  }
+
+  // =========================
+  // LEVEL UP
+  // =========================
+  const newLevel = calculateLevel(user.xp)
+
+  if (newLevel > user.level) {
+    user.level = newLevel
     await conn.sendMessage(m.chat, {
-      text: `🎉 Wow! @${m.sender.split('@')[0]} è entrato nella TOP 3 del gruppo! 🏆\nKeep spamming those messages 😎`,
+      text: `🎉 @${m.sender.split('@')[0]} è salito al livello ${newLevel}!\n🎖 Badge: ${getBadge(newLevel)}`,
       mentions: [m.sender]
     })
-    db.users[m.sender].notifiedTop3 = true
-    saveDB(db)
   }
 
+  saveDB(db)
+
   // =========================
-  // Comandi: resoconto / top5 / top10
+  // COMANDI
   // =========================
-  if (command === 'resoconto') {
-    let totalGroupMessages = ranking.reduce((acc, [, total]) => acc + total, 0)
-    let text =
-`📊 *MESSAGGI TOTALI GRUPPO*
+  if (command === 'rank') {
+    return m.reply(
+`📊 *IL TUO PROFILO*
 
-💬 *Totale messaggi:* ${totalGroupMessages}
-📍 *La tua posizione:* ${userPosition || 'Non classificato'}
-💡 Nerd tip: la top si resetta ogni giorno alle 00:00 🕛`
+⭐ XP: ${user.xp}
+🏅 Livello: ${user.level}
+🎖 Badge: ${getBadge(user.level)}
 
-    const buttons = [
-      { buttonId: `${usedPrefix}top5`, buttonText: { displayText: '🏆 Top 5' }, type: 1 },
-      { buttonId: `${usedPrefix}top10`, buttonText: { displayText: '🔟 Top 10' }, type: 1 }
-    ]
-
-    return await conn.sendMessage(m.chat, {
-      text,
-      footer: '📊 Statistiche Gruppo nerd style 😎',
-      buttons
-    }, { quoted: m })
+💬 Oggi: ${user.daily}
+📅 Settimana: ${user.weekly}
+🌍 Totale: ${user.global}`
+    )
   }
 
-  if (command === 'top5' || command === 'top10') {
-    const limit = command === 'top5' ? 5 : 10
-    const medals = ['🥇', '🥈', '🥉', '🏅', '🏅']
-    const { text, mentions } = generaTop(ranking, limit, userPosition, medals)
+  if (command === 'topday' || command === 'topweek' || command === 'topglobal') {
 
-    return await conn.sendMessage(m.chat, { text, mentions }, { quoted: m })
+    const type =
+      command === 'topday' ? 'daily' :
+      command === 'topweek' ? 'weekly' :
+      'global'
+
+    const ranking = getRanking(db, type)
+
+    let text = `🏆 *TOP ${type.toUpperCase()}*\n\n`
+    let mentions = []
+    const medals = ['🥇', '🥈', '🥉']
+
+    ranking.slice(0, 10).forEach(([jid, total], i) => {
+      mentions.push(jid)
+      text += `${medals[i] || (i + 1) + '°'} @${jid.split('@')[0]}\n`
+      text += `   💬 ${total}\n\n`
+    })
+
+    return await conn.sendMessage(m.chat, { text, mentions })
   }
 }
 
-// Comandi
-handler.command = ['resoconto', 'top5', 'top10']
-handler.tags = ['stats']
-handler.help = ['stats']
+handler.command = [
+  'rank',
+  'topday',
+  'topweek',
+  'topglobal'
+]
+
+handler.tags = ['xp']
+handler.help = [
+  'rank',
+  'topday',
+  'topweek',
+  'topglobal'
+]
 
 export default handler
