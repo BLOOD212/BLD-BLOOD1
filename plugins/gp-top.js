@@ -11,18 +11,15 @@ function loadDB() {
   try {
     if (!fs.existsSync(dbPath)) {
       console.log('📁 Creo database...')
-      fs.writeFileSync(dbPath, JSON.stringify({
-        users: {},
-        lastDailyReset: null,
-        lastWeeklyReset: null
-      }, null, 2))
+      fs.writeFileSync(
+        dbPath,
+        JSON.stringify({ users: {}, lastDailyReset: null, lastWeeklyReset: null }, null, 2)
+      )
     }
 
     const raw = fs.readFileSync(dbPath, 'utf8')
     let db = JSON.parse(raw)
-
     if (!db.users) db.users = {}
-
     return db
   } catch (err) {
     console.error('❌ Errore loadDB:', err)
@@ -39,12 +36,15 @@ function saveDB(db) {
 }
 
 // =========================
-// CALCOLO SETTIMANA CORRETTO
+// CALCOLO SETTIMANA ISO
 // =========================
-function getWeekNumber(date) {
-  const firstDay = new Date(date.getFullYear(), 0, 1)
-  const pastDays = (date - firstDay) / 86400000
-  return Math.ceil((pastDays + firstDay.getDay() + 1) / 7)
+function getISOWeekNumber(date) {
+  const tmp = new Date(date.valueOf())
+  const dayNum = (date.getDay() + 6) % 7
+  tmp.setDate(tmp.getDate() - dayNum + 3)
+  const firstThursday = new Date(tmp.getFullYear(), 0, 4)
+  const diff = tmp - firstThursday
+  return 1 + Math.round(diff / 604800000) // 7*24*60*60*1000
 }
 
 // =========================
@@ -53,9 +53,9 @@ function getWeekNumber(date) {
 function checkResets(db) {
   const now = new Date()
   const today = now.toISOString().split('T')[0]
-  const week = `${now.getFullYear()}-W${getWeekNumber(now)}`
+  const week = `${now.getFullYear()}-W${getISOWeekNumber(now)}`
 
-  // Reset Giornaliero
+  // Reset giornaliero
   if (db.lastDailyReset !== today) {
     console.log('🔄 Reset giornaliero')
     for (let u in db.users) {
@@ -65,7 +65,7 @@ function checkResets(db) {
     db.lastDailyReset = today
   }
 
-  // Reset Settimanale
+  // Reset settimanale
   if (db.lastWeeklyReset !== week) {
     console.log('🔄 Reset settimanale')
     for (let u in db.users) {
@@ -85,10 +85,10 @@ function calculateLevel(xp) {
 }
 
 function getBadge(level) {
-  if (level >= 30) return "👑 Re del Gruppo"
-  if (level >= 15) return "🔥 Spammer Leggendario"
-  if (level >= 5) return "💬 Chiacchierone"
-  return "🐣 Newbie"
+  if (level >= 30) return '👑 Re del Gruppo'
+  if (level >= 15) return '🔥 Spammer Leggendario'
+  if (level >= 5) return '💬 Chiacchierone'
+  return '🐣 Newbie'
 }
 
 // =========================
@@ -106,49 +106,41 @@ function getRanking(db, type) {
 // =========================
 async function sendResoconto(conn, db, chatId) {
   const ranking = getRanking(db, 'global')
+  if (!ranking.length) return
 
-  if (ranking.length === 0) return
-
-  let text = `📊 *RESOCONTO AUTOMATICO*\n`
-  text += `🏆 Top 10 utenti più attivi:\n\n`
-
+  let text = `📊 *RESOCONTO AUTOMATICO*\n🏆 Top 10 utenti più attivi:\n\n`
   let mentions = []
   const medals = ['🥇', '🥈', '🥉']
 
   ranking.slice(0, 10).forEach(([jid, total], i) => {
     mentions.push(jid)
-    text += `${medals[i] || (i + 1) + '°'} @${jid.split('@')[0]}\n`
-    text += `   💬 ${total} messaggi\n\n`
+    text += `${medals[i] || (i + 1) + '°'} @${jid.split('@')[0]}\n   💬 ${total} messaggi\n\n`
   })
 
   await conn.sendMessage(chatId, { text, mentions })
 }
 
-// Pianificazione giornaliera alle 23:59
-async function scheduleResoconto() {
+// =========================
+// SCHEDULING RESOCONTO
+// =========================
+async function scheduleResoconto(conn) {
   const now = new Date()
   const next = new Date()
   next.setHours(23, 59, 0, 0)
-
   if (now > next) next.setDate(next.getDate() + 1)
 
   const delay = next - now
 
   setTimeout(async () => {
     const db = loadDB()
-
-    // Scorre tutte le chat dove il bot è attivo
-    const chats = Object.keys(global.conn.chats)
+    const chats = Object.keys(conn.chats || {})
     for (let chatId of chats) {
-      if (!chatId.endsWith('@g.us')) continue // solo gruppi
-      await sendResoconto(global.conn, db, chatId)
+      if (!chatId.endsWith('@g.us')) continue
+      await sendResoconto(conn, db, chatId)
     }
-
-    scheduleResoconto() // ripeti domani
+    scheduleResoconto(conn)
   }, delay)
 }
-
-scheduleResoconto()
 
 // =========================
 // HANDLER
@@ -156,8 +148,6 @@ scheduleResoconto()
 let handler = async (m, { conn, command }) => {
   try {
     if (!m.isGroup) return
-
-    console.log('📩 Messaggio ricevuto da:', m.sender)
 
     let db = loadDB()
     checkResets(db)
@@ -178,7 +168,7 @@ let handler = async (m, { conn, command }) => {
     const nowTime = Date.now()
 
     // =========================
-    // ANTI SPAM (10 sec)
+    // ANTI-SPAM (10 sec)
     // =========================
     if (nowTime - user.lastMessage > 10000) {
       user.xp += 5
@@ -192,7 +182,6 @@ let handler = async (m, { conn, command }) => {
     // LEVEL UP
     // =========================
     const newLevel = calculateLevel(user.xp)
-
     if (newLevel > user.level) {
       user.level = newLevel
       await conn.sendMessage(m.chat, {
@@ -220,13 +209,8 @@ let handler = async (m, { conn, command }) => {
       )
     }
 
-    if (['topday','topweek','topglobal'].includes(command)) {
-
-      const type =
-        command === 'topday' ? 'daily' :
-        command === 'topweek' ? 'weekly' :
-        'global'
-
+    if (['topday', 'topweek', 'topglobal'].includes(command)) {
+      const type = command === 'topday' ? 'daily' : command === 'topweek' ? 'weekly' : 'global'
       const ranking = getRanking(db, type)
 
       let text = `🏆 *TOP ${type.toUpperCase()}*\n\n`
@@ -235,8 +219,7 @@ let handler = async (m, { conn, command }) => {
 
       ranking.slice(0, 10).forEach(([jid, total], i) => {
         mentions.push(jid)
-        text += `${medals[i] || (i + 1) + '°'} @${jid.split('@')[0]}\n`
-        text += `   💬 ${total}\n\n`
+        text += `${medals[i] || (i + 1) + '°'} @${jid.split('@')[0]}\n   💬 ${total}\n\n`
       })
 
       return await conn.sendMessage(m.chat, { text, mentions })
@@ -245,14 +228,18 @@ let handler = async (m, { conn, command }) => {
     if (command === 'resoconto') {
       await sendResoconto(conn, db, m.chat)
     }
-
   } catch (err) {
     console.error('❌ Errore nel plugin XP:', err)
   }
 }
 
-handler.command = ['rank','topday','topweek','topglobal','resoconto']
+handler.command = ['rank', 'topday', 'topweek', 'topglobal', 'resoconto']
 handler.tags = ['xp']
-handler.help = ['rank','topday','topweek','topglobal','resoconto']
+handler.help = ['rank', 'topday', 'topweek', 'topglobal', 'resoconto']
+
+// =========================
+// AVVIO RESOCONTO AUTOMATICO
+// =========================
+if (global.conn) scheduleResoconto(global.conn)
 
 export default handler
