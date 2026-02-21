@@ -105,7 +105,7 @@ let handler = async (m, { conn, args }) => {
   pizzaCondimenti.forEach((condimento, index) => {
     messaggio += `${index + 1}. ${condimento}\n`;
   });
-  messaggio += '\n*Rispondi con il numero del condimento (es. 1, 2, 3)*';
+  messaggio += '\n*Rispondi con i numeri dei condimenti separati da virgola (es. 1, 2, 3)*';
 
   try {
     let msg = await conn.sendMessage(m.chat, { text: messaggio, footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙' }, { quoted: m });
@@ -135,7 +135,7 @@ handler.before = async (m, { conn }) => {
 
   if (!game || !m.quoted || m.quoted.id !== game.id || m.key.fromMe || m.sender !== game.utente) return;
 
-  const scelte = m.text.trim().split(' ');
+  const scelte = m.text.trim().split(',').map(s => s.trim());
   for (const scelta of scelte) {
     if (pizzaCondimenti[parseInt(scelta) - 1]) {
       game.condimenti.push(pizzaCondimenti[parseInt(scelta) - 1]);
@@ -148,9 +148,10 @@ handler.before = async (m, { conn }) => {
       return;
     } else {
       await conn.sendMessage(m.chat, { text: '*Scelta non valida. Riprova.*' });
+      return;
     }
   }
-  await conn.sendMessage(m.chat, { text: `*Hai scelto ${game.condimenti.join(', ')}.* *Vuoi aggiungere altro? (rispondi con il numero del condimento o "fine")*` });
+  await conn.sendMessage(m.chat, { text: `*Hai scelto ${game.condimenti.join(', ')}.* *Vuoi aggiungere altro? (rispondi con i numeri dei condimenti separati da virgola o "fine")*` });
 };
 
 handler.help = ['pizza'];
