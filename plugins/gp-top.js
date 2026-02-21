@@ -185,6 +185,7 @@ let handler = async (m, { conn, command }) => {
     let db = loadDB()
     checkResets(db, conn)
 
+    // ✅ Inizializza utente se non esiste
     if (!db.users[m.sender]) {
       db.users[m.sender] = {
         xp: 0,
@@ -203,15 +204,15 @@ let handler = async (m, { conn, command }) => {
     // =========================
     // ANTI-SPAM per XP (3 sec)
     // =========================
-    if (nowTime - user.lastMessage > 3000) {
+    if (!user.lastMessage || nowTime - user.lastMessage > 3000) {
       user.xp += 5
       user.lastMessage = nowTime
     }
 
-    // daily/weekly/global sempre incrementati
-    user.daily += 1
-    user.weekly += 1
-    user.global += 1
+    // ✅ Incrementa sempre i contatori
+    user.daily = (user.daily || 0) + 1
+    user.weekly = (user.weekly || 0) + 1
+    user.global = (user.global || 0) + 1
 
     // =========================
     // LEVEL UP
@@ -265,6 +266,7 @@ let handler = async (m, { conn, command }) => {
     if (command === 'resoconto') {
       await sendResoconto(conn, db, m.chat)
     }
+
   } catch (err) {
     console.error('❌ Errore nel plugin XP:', err)
   }
