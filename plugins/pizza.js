@@ -61,12 +61,13 @@ let handler = async (m,{conn})=>{
   global.pizzaScore = global.pizzaScore || {};
   global.pizzaUser = global.pizzaUser || {};
 
+  console.log('Comando ricevuto:', m.command);
+
   // --- Comando .pizza ---
   if(m.command === 'pizza'){
-    if(global.pizzaGame[m.chat]) return m.reply('⚠️ *C\'è già una partita attiva!*');
+    if(global.pizzaGame[m.chat]) return conn.sendMessage(m.chat,{text:'⚠️ *C\'è già una partita attiva!*'},{quoted:m});
 
     let messaggio = `🍕 *COMANDI DISPONIBILI* 🍕
-    
 .pizza → Inizia a creare la pizza
 .fine → Termina la pizza e calcola punti
 .shop → Mostra ingredienti rari
@@ -79,7 +80,7 @@ let handler = async (m,{conn})=>{
     pizzaCondimenti.forEach((c,i)=> messaggio += `${i+1}. ${c}\n`);
     messaggio += '\nRispondi con numeri separati da virgola\nScrivi *fine* per terminare';
 
-    let msg = await conn.sendMessage(m.chat,{text:messaggio},{quoted:m});
+    let msg = await conn.sendMessage(m.chat, { text: messaggio }, { quoted: m });
     global.pizzaGame[m.chat] = {id:msg.key.id, condimenti:[], utente:m.sender};
     return;
   }
@@ -93,19 +94,18 @@ let handler = async (m,{conn})=>{
 
   // --- Comando .buy ---
   if(m.command === 'buy'){
-    if(!m.text.split(' ')[1]) return m.reply('*Specifica il numero dell\'ingrediente da comprare!*');
     const num = parseInt(m.text.split(' ')[1])-1;
-    if(!ingredientiRari[num]) return m.reply('*Ingrediente non valido!*');
+    if(isNaN(num) || !ingredientiRari[num]) return conn.sendMessage(m.chat,{text:'*Ingrediente non valido!*'},{quoted:m});
 
     global.pizzaUser[m.chat] = global.pizzaUser[m.chat] || {};
-    global.pizzaUser[m.chat][m.sender] = global.pizzaUser[m.chat][m.sender] || {level:1, xp:0, money:0, inventory:[]};
+    global.pizzaUser[m.chat][m.sender] = global.pizzaUser[m.chat][m.sender] || {level:1, xp:0, money:100, inventory:[]};
     const user = global.pizzaUser[m.chat][m.sender];
 
-    if(user.money < ingredientiRari[num].prezzo) return m.reply('*Non hai abbastanza soldi!*');
+    if(user.money < ingredientiRari[num].prezzo) return conn.sendMessage(m.chat,{text:'*Non hai abbastanza soldi!*'},{quoted:m});
 
     user.money -= ingredientiRari[num].prezzo;
     user.inventory.push(ingredientiRari[num].nome);
-    return m.reply(`*Hai acquistato* ${ingredientiRari[num].nome} 💰\n*Soldi rimasti:* ${user.money}`);
+    return conn.sendMessage(m.chat,{text:`*Hai acquistato* ${ingredientiRari[num].nome} 💰\n*Soldi rimasti:* ${user.money}`},{quoted:m});
   }
 
   // --- Comando .pizzascore ---
@@ -121,10 +121,10 @@ let handler = async (m,{conn})=>{
 // --- Gestione scelte ingredienti e fine pizza ---
 handler.before = async (m,{conn})=>{
   const game = global.pizzaGame?.[m.chat];
-  if(!game || !m.quoted || m.quoted.id !== game.id || m.sender !== game.utente) return;
+  if(!game || m.sender !== game.utente) return;
 
   global.pizzaUser[m.chat] = global.pizzaUser[m.chat] || {};
-  global.pizzaUser[m.chat][m.sender] = global.pizzaUser[m.chat][m.sender] || {level:1, xp:0, money:0, inventory:[]};
+  global.pizzaUser[m.chat][m.sender] = global.pizzaUser[m.chat][m.sender] || {level:1, xp:0, money:100, inventory:[]};
   const user = global.pizzaUser[m.chat][m.sender];
 
   if(m.text.toLowerCase() === 'fine'){
@@ -152,7 +152,7 @@ ${pizza}
 ⭐ Livello attuale: ${user.level}
 ${giudizio}`,
       mentions:[m.sender]
-    },{quoted:m});
+    });
 
     delete global.pizzaGame[m.chat];
     return;
