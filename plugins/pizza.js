@@ -193,4 +193,4 @@ let handler = async (m, { conn, args }) => {
 
   try {
     let msg = await conn.sendMessage(m.chat, { text: messaggio, footer: '🍕 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🍕' }, { quoted: m });
-    global.pizzaGame =
+    global.p
