@@ -114,6 +114,14 @@ let handler = async (m, { conn, args }) => {
       id: msg.key.id,
       condimenti: [],
       utente: m.sender,
+      timeout: setTimeout(async () => {
+        if (global.pizzaGame?.[m.chat]) {
+          const pizza = global.pizzaGame[m.chat].condimenti.join(', ');
+          const utente = `@${global.pizzaGame[m.chat].utente.split('@')[0]}`;
+          await conn.sendMessage(m.chat, { text: `*PIZZA CREATA DA* ${utente}\n\n*Questa è la tua pizza:* ${pizza}`, footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙', interactiveButtons: playAgainButtons() }, { quoted: msg });
+          delete global.pizzaGame[m.chat];
+        }
+      }, 120000)
     };
   } catch (error) {
     console.error('Errore nel gioco pizza:', error);
@@ -125,20 +133,24 @@ handler.before = async (m, { conn }) => {
   const chat = m.chat;
   const game = global.pizzaGame?.[chat];
 
-  if (!game || !m.quoted || m.quoted.id !== game.id || m.key.fromMe) return;
+  if (!game || !m.quoted || m.quoted.id !== game.id || m.key.fromMe || m.sender !== game.utente) return;
 
-  const scelta = m.text.trim();
-  if (pizzaCondimenti[parseInt(scelta) - 1]) {
-    game.condimenti.push(pizzaCondimenti[parseInt(scelta) - 1]);
-    await conn.sendMessage(m.chat, { text: `*Hai scelto ${pizzaCondimenti[parseInt(scelta) - 1]}.* *Vuoi aggiungere altro? (rispondi con il numero del condimento o "fine")*` });
-  } else if (scelta.toLowerCase() === 'fine') {
-    const pizza = game.condimenti.join(', ');
-    const utente = `@${game.utente.split('@')[0]}`;
-    await conn.sendMessage(m.chat, { text: `*PIZZA CREATA DA* ${utente}\n\n*Questa è la tua pizza:* ${pizza}`, footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙', interactiveButtons: playAgainButtons() }, { quoted: m });
-    delete global.pizzaGame[m.chat];
-  } else {
-    await conn.sendMessage(m.chat, { text: '*Scelta non valida. Riprova.*' });
+  const scelte = m.text.trim().split(' ');
+  for (const scelta of scelte) {
+    if (pizzaCondimenti[parseInt(scelta) - 1]) {
+      game.condimenti.push(pizzaCondimenti[parseInt(scelta) - 1]);
+    } else if (scelta.toLowerCase() === 'fine') {
+      clearTimeout(game.timeout);
+      const pizza = game.condimenti.join(', ');
+      const utente = `@${game.utente.split('@')[0]}`;
+      await conn.sendMessage(m.chat, { text: `*PIZZA CREATA DA* ${utente}\n\n*Questa è la tua pizza:* ${pizza}`, footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙', interactiveButtons: playAgainButtons() }, { quoted: m });
+      delete global.pizzaGame[m.chat];
+      return;
+    } else {
+      await conn.sendMessage(m.chat, { text: '*Scelta non valida. Riprova.*' });
+    }
   }
+  await conn.sendMessage(m.chat, { text: `*Hai scelto ${game.condimenti.join(', ')}.* *Vuoi aggiungere altro? (rispondi con il numero del condimento o "fine")*` });
 };
 
 handler.help = ['pizza'];
