@@ -8,7 +8,7 @@ let handler = async (m, { conn, command, text }) => {
 };
 
 handler.help = ['velith'];
-handler.tags = ['fun'];
+handler.tags = ['giochi'];
 handler.command = /^velith|mogliediblood$/i;
 
 export default handler;
