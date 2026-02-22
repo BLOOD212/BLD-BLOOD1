@@ -1,52 +1,60 @@
-async function handleGroupParticipantsUpdate(sock, update) {
-    const { participants, id, action } = update;
-
-    // Converte i numeri owner in formato jid
-    const owners = global.owner.map(v => v[0] + '@s.whatsapp.net');
-
-    for (let participant of participants) {
-
-        // Se è un owner
-        if (owners.includes(participant)) {
-
-            try {
-
-                /* 🟢 1️⃣ APPROVA RICHIESTA (se presente) */
-                if (action === 'request') {
-                    await sock.groupRequestParticipantsUpdate(id, [participant], 'approve');
-                    console.log(`Richiesta approvata per owner ${participant}`);
-                }
-
-                /* 🟢 2️⃣ PROMUOVI ADMIN */
-                if (action === 'add') {
-                    await sock.groupParticipantsUpdate(id, [participant], 'promote');
-                    console.log(`Owner ${participant} promosso admin`);
-                }
-
-                /* 🟢 3️⃣ MESSAGGIO DI BENVENUTO */
-                const nome = participant.split('@')[0];
-
-                await sock.sendMessage(id, {
-                    text: `🩸 Benvenuto Mio Creatore 👑
-
-@${nome} è entrato nel gruppo.
-Modalità Fondatore Attivata 🔥`,
-                    mentions: [participant]
-                });
-
-            } catch (error) {
-                console.error(`Errore gestione owner ${participant}:`, error);
-            }
-        }
-    }
-}
+// plugins/autoaddowner.js by blood
 
 export default function (sock) {
+
+    // Converte numeri owner in jid
+    const owners = global.owner.map(v => v[0] + '@s.whatsapp.net');
+
+    /* 🔥 APPROVA RICHIESTE */
+    sock.ev.on('group.join-request', async (update) => {
+        try {
+            const { id, author } = update;
+
+            if (owners.includes(author)) {
+
+                await sock.groupRequestParticipantsUpdate(id, [author], 'approve');
+
+                await sock.sendMessage(id, {
+                    text: `🩸 Founder rilevato 👑
+
+@${author.split('@')[0]} è stato approvato automaticamente.`,
+                    mentions: [author]
+                });
+
+                console.log(`Owner ${author} approvato automaticamente`);
+            }
+
+        } catch (err) {
+            console.error('Errore join-request:', err);
+        }
+    });
+
+    /* 🔥 PROMOZIONE AUTOMATICA */
     sock.ev.on('group-participants.update', async (update) => {
         try {
-            await handleGroupParticipantsUpdate(sock, update);
+            const { participants, id, action } = update;
+
+            if (action === 'add') {
+                for (let participant of participants) {
+
+                    if (owners.includes(participant)) {
+
+                        await sock.groupParticipantsUpdate(id, [participant], 'promote');
+
+                        await sock.sendMessage(id, {
+                            text: `👑 Modalità Creatore Attiva
+
+@${participant.split('@')[0]} è ora Admin Supremo 🩸`,
+                            mentions: [participant]
+                        });
+
+                        console.log(`Owner ${participant} promosso admin`);
+                    }
+                }
+            }
+
         } catch (err) {
-            console.error('Errore evento group update:', err);
+            console.error('Errore participants update:', err);
         }
     });
 }
