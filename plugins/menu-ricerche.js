@@ -7,13 +7,13 @@ import fs from 'fs'
 
 const defaultMenu = {
   before: ``.trimStart(),
-  header: 'ㅤㅤ⋆｡˚『 ╭ \`MENU RICERCHE\` ╯ 』˚｡⋆\n╭',
+  header: 'ㅤㅤ⋆｡˚『 ╭ `MENU RICERCHE` ╯ 』˚｡⋆\n╭',
   body: '│ ➤『🔍』 %cmd\n',
   footer: '*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n',
   after: ``,
 }
 
-// Gestione del comando handler
+// Gestione del comando
 let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
   let tags = {
     'ricerca': 'Ricerche',
@@ -38,26 +38,12 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     let d = new Date(new Date + 3600000);
     let locale = 'it';
     let week = d.toLocaleDateString(locale, { weekday: 'long' });
-    let date = d.toLocaleDateString(locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    });
-
+    let date = d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' });
     // Estrazione del mittente e gestione della data islamica
     let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.fromMe ? conn.user.jid : m.sender;
     let weton = ['Pahing', 'Pon', 'Wage', 'Kliwon', 'Legi'][Math.floor(d / 84600000) % 5];
-    let dateIslamic = Intl.DateTimeFormat(locale + '-TN-u-ca-islamic', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    }).format(d);
-    let time = d.toLocaleTimeString(locale, {
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric'
-    });
-
+    let dateIslamic = Intl.DateTimeFormat(locale + '-TN-u-ca-islamic', { day: 'numeric', month: 'long', year: 'numeric' }).format(d);
+    let time = d.toLocaleTimeString(locale, { hour: 'numeric', minute: 'numeric', second: 'numeric' });
     // Gestione degli uptime
     let _uptime = process.uptime() * 1000;
     let _muptime;
@@ -79,7 +65,6 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       }) * 1000;
     }
     let mpt = clockString(_mpt);
-
     // Dati utente
     let usrs = db.data.users[m.sender];
     let wib = moment.tz('Europe/Rome').format('HH:mm:ss');
@@ -89,7 +74,6 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     let wit = moment.tz('Asia/Jayapura').format('HH:mm:ss');
     let wita = moment.tz('Asia/Makassar').format('HH:mm:ss');
     let wktuwib = `${wibh} H ${wibm} M ${wibs} S`;
-
     // Modalità e versione del pacchetto
     let mode = global.opts['self'] ? 'Privato' : 'Pubblico';
     let _package = JSON.parse(await promises.readFile(join(__dirname, '../package.json')).catch(_ => ({}))) || {};
@@ -99,10 +83,8 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     let premium = global.db.data.users[m.sender].premiumTime;
     let prems = `${premium > 0 ? 'Premium' : 'Utente comune'}`;
     let platform = os.platform();
-
     let totalreg = Object.keys(global.db.data.users).length;
     let rtotalreg = Object.values(global.db.data.users).filter(user => user.registered == true).length;
-
     // Preparazione delle opzioni di menu
     let help = Object.values(global.plugins).filter(plugin => !plugin.disabled).map(plugin => {
       return {
@@ -128,9 +110,8 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     let header = conn.menu.header || defaultMenu.header;
     let body = conn.menu.body || defaultMenu.body;
     let footer = conn.menu.footer || defaultMenu.footer;
-    let after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? '' : `Powered by https://wa.me/${global.conn.user.jid.split`@`[0]}`) + defaultMenu.after;
+    let after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? '' : `Powered by https:                                                                  
 
-    // Costruzione del testo
     let _text = [
       before,
       ...Object.keys(tags).map(tag => {
@@ -149,11 +130,11 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       after
     ].join('\n');
 
-    // Sostituzione dei segnaposti nel testo
     let text = typeof conn.menu == 'string' ? conn.menu : typeof conn.menu == 'object' ? _text : '';
     let replace = {
       '%': '%',
-      p: uptime, muptime,
+      p: _p,
+      muptime,
       me: conn.getName(conn.user.jid),
       npmname: _package.name,
       npmdesc: _package.description,
@@ -163,9 +144,133 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       totalexp: exp,
       xp4levelup: max - exp,
       github: _package.homepage ? _package.homepage.url || _package.homepage : '[unknown github url]',
-      tag, dash, m1, m2, m3, m4, cc, c1, c2, c3, c4, lprem, llim,
-      ucpn, platform, wib, mode, _p, eris, age, tag, name, prems, level, limit, name, weton, week, date, dateIslamic, time, totalreg, rtotalreg, role,
+      tag,
+      dash,
+      m1,
+      m2,
+      m3,
+      m4,
+      cc,
+      c1,
+      c2,
+      c3,
+      c4,
+      lprem,
+      llim,
+      ucpn,
+      platform,
+      wib,
+      mode,
+      _p,
+      eris,
+      age,
+      tag,
+      name,
+      prems,
+      level,
+      limit,
+      name,
+      weton,
+      week,
+      date,
+      dateIslamic,
+      time,
+      totalreg,
+      rtotalreg,
+      role,
       readmore: readMore
     };
+    text = text.replace(new RegExp(`//wa.me/${global.conn.user.jid.split`@`[0]}`) + defaultMenu.after;
 
-    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a
+    let _text = [
+      before,
+      ...Object.keys(tags).map(tag => {
+        return header.replace(/%category/g, tags[tag]) + '\n' + [
+          ...help.filter(menu => menu.tags && menu.tags.includes(tag) && menu.help).map(menu => {
+            return menu.help.map(help => {
+              return body.replace(/%cmd/g, menu.prefix ? help : '%_p' + help)
+                .replace(/%islimit/g, menu.limit ? llim : '')
+                .replace(/%isPremium/g, menu.premium ? lprem : '')
+                .trim();
+            }).join('\n');
+          }),
+          footer
+        ].join('\n');
+      }),
+      after
+    ].join('\n');
+
+    let text = typeof conn.menu == 'string' ? conn.menu : typeof conn.menu == 'object' ? _text : '';
+    let replace = {
+      '%': '%',
+      p: _p,
+      muptime,
+      me: conn.getName(conn.user.jid),
+      npmname: _package.name,
+      npmdesc: _package.description,
+      version: _package.version,
+      exp: exp - min,
+      maxexp: xp,
+      totalexp: exp,
+      xp4levelup: max - exp,
+      github: _package.homepage ? _package.homepage.url || _package.homepage : '[unknown github url]',
+      tag,
+      dash,
+      m1,
+      m2,
+      m3,
+      m4,
+      cc,
+      c1,
+      c2,
+      c3,
+      c4,
+      lprem,
+      llim,
+      ucpn,
+      platform,
+      wib,
+      mode,
+      _p,
+      eris,
+      age,
+      tag,
+      name,
+      prems,
+      level,
+      limit,
+      name,
+      weton,
+      week,
+      date,
+      dateIslamic,
+      time,
+      totalreg,
+      rtotalreg,
+      role,
+      readmore: readMore
+    };
+    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name])
+    await conn.sendMessage(m.chat, { text: text.trim(), mentions: [m.sender] }, { quoted: m })
+    await m.react('🔍')
+  } catch (e) {
+    console.error(e)
+    conn.reply(m.chat, '❌ Errore nel menu ricerche:\n' + e.message, m)
+  }
+}
+
+// ------------------- HANDLER -------------------
+handler.help = ['menuricerche']
+handler.tags = ['menu']
+handler.command = ['menuricerche', 'menur']
+
+export default handler
+
+// ------------------- UTILS -------------------
+const more = String.fromCharCode(8206)
+const readMore = more.repeat(4001)
+
+function clockString(ms) {
+  let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000)
+  let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60
+  let s = is
