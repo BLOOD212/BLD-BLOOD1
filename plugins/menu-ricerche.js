@@ -13,17 +13,14 @@ const defaultMenu = {
   after: ``,
 }
 
+// Gestione del comando handler
 let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
-  // Inizializza global.fake se non esiste
-  global.fake = global.fake || {};
-  global.fake.error = global.fake.error || "Si è verificato un errore, riprova più tardi.";
-
   let tags = {
     'ricerca': 'Ricerche',
   }
 
   try {
-    // Dati di configurazione
+    // Definizione delle variabili globali
     let dash = global.dashmenu;
     let m1 = global.dmenut;
     let m2 = global.dmenub;
@@ -47,7 +44,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       year: 'numeric'
     });
 
-    // Estrazione dati utente
+    // Estrazione del mittente e gestione della data islamica
     let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.fromMe ? conn.user.jid : m.sender;
     let weton = ['Pahing', 'Pon', 'Wage', 'Kliwon', 'Legi'][Math.floor(d / 84600000) % 5];
     let dateIslamic = Intl.DateTimeFormat(locale + '-TN-u-ca-islamic', {
@@ -61,7 +58,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       second: 'numeric'
     });
 
-    // Uptime
+    // Gestione degli uptime
     let _uptime = process.uptime() * 1000;
     let _muptime;
     if (process.send) {
@@ -83,7 +80,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     }
     let mpt = clockString(_mpt);
 
-    // Dati aggiuntivi dell'utente
+    // Dati utente
     let usrs = db.data.users[m.sender];
     let wib = moment.tz('Europe/Rome').format('HH:mm:ss');
     let wibh = moment.tz('Europe/Rome').format('HH');
@@ -93,7 +90,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     let wita = moment.tz('Asia/Makassar').format('HH:mm:ss');
     let wktuwib = `${wibh} H ${wibm} M ${wibs} S`;
 
-    // Impostazioni modalità
+    // Modalità e versione del pacchetto
     let mode = global.opts['self'] ? 'Privato' : 'Pubblico';
     let _package = JSON.parse(await promises.readFile(join(__dirname, '../package.json')).catch(_ => ({}))) || {};
     let { age, exp, limit, level, role, registered, eris } = global.db.data.users[m.sender];
@@ -106,6 +103,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     let totalreg = Object.keys(global.db.data.users).length;
     let rtotalreg = Object.values(global.db.data.users).filter(user => user.registered == true).length;
 
+    // Preparazione delle opzioni di menu
     let help = Object.values(global.plugins).filter(plugin => !plugin.disabled).map(plugin => {
       return {
         help: Array.isArray(plugin.tags) ? plugin.help : [plugin.help],
@@ -117,7 +115,6 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       }
     });
 
-    // Raggruppa i comandi per tag
     let groups = {};
     for (let tag in tags) {
       groups[tag] = [];
@@ -133,7 +130,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     let footer = conn.menu.footer || defaultMenu.footer;
     let after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? '' : `Powered by https://wa.me/${global.conn.user.jid.split`@`[0]}`) + defaultMenu.after;
 
-    // Costruzione del testo per il menu
+    // Costruzione del testo
     let _text = [
       before,
       ...Object.keys(tags).map(tag => {
@@ -152,7 +149,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       after
     ].join('\n');
 
-    // Sostituzione delle variabili nel testo
+    // Sostituzione dei segnaposti nel testo
     let text = typeof conn.menu == 'string' ? conn.menu : typeof conn.menu == 'object' ? _text : '';
     let replace = {
       '%': '%',
@@ -173,4 +170,4 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
 
     text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name]);
 
-    let fkon = { key: { fromMe: false, participant: `${m.sender.split`@`[0]}@s.whatsapp.net`, ...(m.chat ? { remoteJid: '393514357738@s.whatsapp.net' } : {}) }, message: { contactMessage: { displayName: `${name}`, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:;a,;;;\nFN:${name}\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-
+    let fkon = { key: { fromMe: false, participant: `${m.sender.split`@`[0]}@s.whatsapp.net`, ...(m.chat ? { remoteJid: '393514357738@s.whatsapp.net' } : {}) }, message: { contactMessage: { displayName: `${name}`,
