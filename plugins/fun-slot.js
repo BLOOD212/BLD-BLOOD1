@@ -97,11 +97,13 @@ let handler = async (m, { conn }) => {
     )
 }
 
-handler.help = ['slot']
-handler.tags = ['game']
-handler.command = ['slot']
-
-export default handler
+handler.help = ['slot',];
+handler.tags = ['giochi'];
+handler.command = /^(slot)$/i;
+handler.group = true;
+handler.botAdmin = false;
+handler.fail = null;
+export default handler;
 
 function xpRange(level, multiplier = 1) {
     if (level < 0) level = 0
