@@ -20,7 +20,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
   }
 
   try {
-    // Definizione delle variabili globali
+    // Definizione delle variabili globali senza riferimenti a global.fake
     let dash = global.dashmenu;
     let m1 = global.dmenut;
     let m2 = global.dmenub;
@@ -168,4 +168,4 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       readmore: readMore
     };
 
-    text = text.replace(new RegExp(`%(${Object.keys(re
+    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a
