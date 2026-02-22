@@ -13,6 +13,10 @@ const defaultMenu = {
   after: ``,
 }
 
+// Inizializza `global.fake` se non esiste ancora
+global.fake = global.fake || {};  // Se non esiste, inizializza come oggetto vuoto
+global.fake.error = global.fake.error || "Si è verificato un errore, riprova più tardi.";  // Imposta un messaggio di errore predefinito
+
 // Gestione del comando handler
 let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
   let tags = {
@@ -162,4 +166,6 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       maxexp: xp,
       totalexp: exp,
       xp4levelup: max - exp,
-      github: _package.homepage ? _package.homepage.url || _package.homepage :
+      github: _package.homepage ? _package.homepage.url || _package.homepage : '[unknown github url]',
+      tag, dash, m1, m2, m3, m4, cc, c1, c2, c3, c4, lprem, llim,
+      ucpn, platform, wib
