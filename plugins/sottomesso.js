@@ -73,7 +73,10 @@ ${progressBar}
   }
 };
 
+handler.help = ['sottomesso', 'sottomessa'];
+handler.tags = ['giochi'];
 handler.command = /^(sottomesso|sottomessa)$/i;
 handler.group = true;
-
+handler.botAdmin = false;
+handler.fail = null;
 export default handler;
