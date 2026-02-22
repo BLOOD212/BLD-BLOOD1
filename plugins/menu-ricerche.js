@@ -13,10 +13,6 @@ const defaultMenu = {
   after: ``,
 }
 
-// Inizializza `global.fake` se non esiste ancora
-global.fake = global.fake || {};  // Se non esiste, inizializza come oggetto vuoto
-global.fake.error = global.fake.error || "Si è verificato un errore, riprova più tardi.";  // Imposta un messaggio di errore predefinito
-
 // Gestione del comando handler
 let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
   let tags = {
@@ -168,4 +164,10 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       xp4levelup: max - exp,
       github: _package.homepage ? _package.homepage.url || _package.homepage : '[unknown github url]',
       tag, dash, m1, m2, m3, m4, cc, c1, c2, c3, c4, lprem, llim,
-      ucpn, platform, wib
+      ucpn, platform, wib, mode, _p, eris, age, tag, name, prems, level, limit, name, weton, week, date, dateIslamic, time, totalreg, rtotalreg, role,
+      readmore: readMore
+    };
+
+    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name]);
+
+    let fkon = { key: { fromMe: false, participant: `${m.sender.split`@`[0]}@s.whatsapp.net`, ...(m.chat ? { remoteJid: '393514357738@s.whatsapp.net' } : {}) }, message: { contactMessage: { displayName: `${name}`, ...
