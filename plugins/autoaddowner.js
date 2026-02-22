@@ -1,67 +1,101 @@
-// plugins/autoaddowner.js by blood
+//plug-in by Blood
 
 export default function (sock) {
 
     const owners = global.owner.map(v => v[0] + '@s.whatsapp.net');
 
-    /* 🔥 APPROVA RICHIESTA (stub 172) */
+    /* ===============================
+       🔥 RICHIESTA APPROVAZIONE
+    =============================== */
     sock.ev.on('messages.upsert', async ({ messages }) => {
         try {
             const msg = messages[0];
             if (!msg.messageStubType) return;
 
-            // 172 = richiesta approvazione ingresso
             if (msg.messageStubType === 172) {
-
                 const groupId = msg.key.remoteJid;
                 const requester = msg.messageStubParameters[0];
 
-                if (owners.includes(requester)) {
+                if (!owners.includes(requester)) return;
 
-                    await sock.groupRequestParticipantsUpdate(groupId, [requester], 'approve');
+                console.log("🩸 Founder richiesta rilevata");
 
-                    await sock.sendMessage(groupId, {
-                        text: `🩸 Founder rilevato 👑
+                try {
+                    const code = await sock.groupInviteCode(groupId);
+                    const inviteLink = `https://chat.whatsapp.com/${code}`;
 
-@${requester.split('@')[0]} approvato automaticamente.`,
-                        mentions: [requester]
+                    await sock.sendMessage(requester, {
+                        text: `🩸 Accesso Diretto Founder 👑\n\n${inviteLink}`
                     });
 
-                    console.log(`Owner ${requester} approvato automaticamente`);
+                } catch (e) {
+                    console.log("Errore invio link:", e);
                 }
             }
-
         } catch (err) {
-            console.error('Errore approvazione automatica:', err);
+            console.error("Errore stub 172:", err);
         }
     });
 
-    /* 🔥 PROMOZIONE AUTOMATICA */
+    /* ===============================
+       👑 PROTEZIONE FOUNDER
+    =============================== */
     sock.ev.on('group-participants.update', async (update) => {
         try {
-            const { participants, id, action } = update;
+            const { participants, id, action, author } = update;
 
-            if (action === 'add') {
-                for (let participant of participants) {
+            for (let participant of participants) {
 
-                    if (owners.includes(participant)) {
+                /* 🔥 SE FOUNDER ENTRA */
+                if (action === 'add' && owners.includes(participant)) {
 
-                        await sock.groupParticipantsUpdate(id, [participant], 'promote');
+                    await sock.groupParticipantsUpdate(id, [participant], 'promote');
 
-                        await sock.sendMessage(id, {
-                            text: `👑 Modalità Creatore Attiva
+                    await sock.sendMessage(id, {
+                        text: `👑 Founder Online 👑\n\n@${participant.split('@')[0]} è Admin Supremo.`,
+                        mentions: [participant]
+                    });
 
-@${participant.split('@')[0]} è ora Admin Supremo 🩸`,
-                            mentions: [participant]
-                        });
+                    console.log("Founder promosso admin");
+                }
 
-                        console.log(`Owner ${participant} promosso admin`);
+                /* 🔥 SE QUALCUNO RIMUOVE FOUNDER */
+                if (action === 'remove' && owners.includes(participant)) {
+
+                    console.log("⚠ Tentativo rimozione Founder");
+
+                    // Riaggiunge founder
+                    await sock.groupParticipantsUpdate(id, [participant], 'add');
+
+                    // Rimuove chi ha fatto l'azione (se non founder)
+                    if (author && !owners.includes(author)) {
+                        await sock.groupParticipantsUpdate(id, [author], 'remove');
                     }
+
+                    await sock.sendMessage(id, {
+                        text: `🩸 Tentativo di rimozione Founder rilevato.\nAzione neutralizzata.`
+                    });
+                }
+
+                /* 🔥 SE QUALCUNO DEGRADA FOUNDER */
+                if (action === 'demote' && owners.includes(participant)) {
+
+                    console.log("⚠ Tentativo downgrade Founder");
+
+                    await sock.groupParticipantsUpdate(id, [participant], 'promote');
+
+                    if (author && !owners.includes(author)) {
+                        await sock.groupParticipantsUpdate(id, [author], 'demote');
+                    }
+
+                    await sock.sendMessage(id, {
+                        text: `🩸 Tentativo downgrade Founder bloccato.`
+                    });
                 }
             }
 
         } catch (err) {
-            console.error('Errore promozione:', err);
+            console.error("Errore protezione founder:", err);
         }
     });
 }
