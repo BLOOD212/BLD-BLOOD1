@@ -38,7 +38,7 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 };
 
 handler.help = ['nonemix'];
-handler.tags = ['fun'];
+handler.tags = ['giochi'];
 handler.command = /^(nomemix)$/i;
 
 export default handler;
