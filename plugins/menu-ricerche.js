@@ -166,4 +166,9 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       gifPlayback: true,
       ...fake
     })
-  } catch (
+  } catch (e) {
+    console.error("Errore:", e)
+    // Gestisci l'errore, ad esempio inviando un messaggio
+    await m.reply(global.fake.error)
+  }
+}
