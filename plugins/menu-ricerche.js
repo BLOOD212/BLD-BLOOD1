@@ -168,4 +168,4 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       readmore: readMore
     };
 
-    text =
+    text = text.replace(new RegExp(`%(${Object.keys(re
