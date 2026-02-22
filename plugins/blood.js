@@ -6,7 +6,7 @@ let handler = async (m, { conn, command, text }) => {
 };
 
 handler.help = ['blood'];
-handler.tags = ['fun'];
+handler.tags = ['giochi'];
 handler.command = /^blood|maritodivelith$/i;
 
 export default handler;
