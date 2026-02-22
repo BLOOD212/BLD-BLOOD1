@@ -40,8 +40,10 @@ let handler = async (m, { conn }) => {
 
 };
 
-handler.help = ['stupra @utente'];
-handler.tags = ['fun'];
-handler.command = ['stupra'];
-
+handler.help = ['stupra',];
+handler.tags = ['giochi'];
+handler.command = /^(stupra)$/i;
+handler.group = true;
+handler.botAdmin = false;
+handler.fail = null;
 export default handler;
