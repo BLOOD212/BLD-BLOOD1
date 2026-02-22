@@ -39,9 +39,11 @@ let handler = async (m, { conn }) => {
     console.log('[ANALISI] Nuovo ID non riconosciuto:', msgID);
   }
 
-  const messaggio = `╭━━━ [ *Ora se devi mandargli i trava sai il dispositivo* ] ━━━╮
-                     ┃ 👤 𝐔𝐭𝐞𝐧𝐭𝐞: *@${tagUtente}*
-                     ┃ 💽 𝐃𝐢𝐬𝐩𝐨𝐬𝐢𝐭𝐢𝐯𝐨: ${device}
+  const messaggio = ` *Ora se devi mandargli i trava sai il dispositivo* 
+ ┃ 👤 𝐔𝐭𝐞𝐧𝐭𝐞: 
+*@${tagUtente}*
+ ┃ 💽 𝐃𝐢𝐬𝐩𝐨𝐬𝐢𝐭𝐢𝐯𝐨:
+ ${device}
                      ╰━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━╯`;
 
   await conn.sendMessage(m.chat, {
