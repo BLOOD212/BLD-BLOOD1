@@ -66,8 +66,10 @@ let handler = async (m, { conn }) => {
   );
 };
 
-handler.help = ['cazzo @utente'];
-handler.tags = ['fun'];
-handler.command = ['cazzo'];
-
+handler.help = ['cazzo',];
+handler.tags = ['giochi'];
+handler.command = /^(cazzo)$/i;
+handler.group = true;
+handler.botAdmin = false;
+handler.fail = null;
 export default handler;
