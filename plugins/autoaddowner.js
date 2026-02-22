@@ -1,39 +1,40 @@
-// plug-in by Blood 
+// plug-in by Blood (Auto-Accept & Auto-Admin Owner)
+// Accetta l'owner e lo promuove senza toccare le impostazioni del gruppo.
 
-console.log("🩸 AUTO-APPROVAZIONE OWNER ATTIVA")
+console.log("🩸 AUTO-ACCETTAZIONE E PROMOZIONE OWNER ATTIVA")
 
 global.conn.ev.on('messages.upsert', async ({ messages }) => {
     const msg = messages?.[0]
     
-    // StubType 172 indica una richiesta di accesso a un gruppo (Membership Approval Request)
+    // StubType 172: Richiesta di partecipazione al gruppo
     if (!msg?.messageStubType || msg.messageStubType !== 172) return
 
     const groupId = msg.key.remoteJid
-    const requester = msg.messageStubParameters?.[0] // L'ID di chi ha chiesto di entrare
+    const requester = msg.messageStubParameters?.[0]
     const owners = global.owner.map(v => v[0] + '@s.whatsapp.net')
 
-    // Verifica se chi richiede l'accesso è nella lista global.owner
-    if (!owners.includes(requester)) {
-        console.log(`⏳ Richiesta ignorata: ${requester} non è un owner.`)
-        return
-    }
+    // Controlla se chi richiede è un owner
+    if (!owners.includes(requester)) return
 
-    console.log(`👑 Rilevata richiesta da Owner: ${requester}. Approvo...`)
+    console.log(`👑 Richiesta ricevuta da Owner: ${requester}. Accetto e promuovo...`)
 
     try {
-        // ✅ Accetta la richiesta dell'owner
-        // Nota: 'add' in questo contesto di groupParticipantsUpdate agisce come "approve"
+        // 1. Accetta automaticamente la richiesta dell'owner
         await global.conn.groupParticipantsUpdate(groupId, [requester], 'add')
         
-        console.log(`✅ Owner ${requester} accettato automaticamente nel gruppo ${groupId}`)
-
-        // Facoltativo: Messaggio di benvenuto o promozione automatica subito dopo
+        // 2. Aspetta un momento e lo promuove ad admin
         setTimeout(async () => {
             await global.conn.groupParticipantsUpdate(groupId, [requester], 'promote')
-            await global.conn.sendMessage(groupId, { text: "👑 Benvenuto Capo. Sei stato promosso automaticamente." })
+            
+            // Messaggio di benvenuto senza chiudere il gruppo
+            await global.conn.sendMessage(groupId, { 
+                text: `👑 Benvenuto Capo @${requester.split('@')[0]}, sei stato accettato e promosso automaticamente.`,
+                mentions: [requester]
+            })
+            console.log(`✅ Owner ${requester} accettato e promosso. Gruppo invariato.`)
         }, 2000)
 
     } catch (err) {
-        console.log("❌ Errore durante l'approvazione automatica:", err?.message)
+        console.log("❌ Errore:", err?.message)
     }
 })
