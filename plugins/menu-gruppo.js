@@ -1,4 +1,3 @@
-
 import { promises } from 'fs'
 import { join } from 'path'
 import { xpRange } from '../lib/levelling.js'
@@ -12,25 +11,26 @@ const defaultMenu = {
   footer: '*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n',
   after: ``,                   
 }
+
 let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command}) => {
-let tags = {
-'gruppo': 'Menu Gruppo',
-}
+  let tags = {
+    'gruppo': 'Menu Gruppo',
+  }
 
   try {
-      let dash = global.dashmenu
-          let m1 = global.dmenut
-      let m2 = global.dmenub
-      let m3 = global.dmenuf
-      let m4 = global.dmenub2
-      let cc = global.cmenut
-      let c1 = global.cmenuh
-      let c2 = global.cmenub
-      let c3 = global.cmenuf
-      let c4 = global.cmenua
-      let lprem = global.lopr
-      let llim = global.lolm
-      let tag = `@${m.sender.split('@')[0]}`
+    let dash = global.dashmenu
+    let m1 = global.dmenut
+    let m2 = global.dmenub
+    let m3 = global.dmenuf
+    let m4 = global.dmenub2
+    let cc = global.cmenut
+    let c1 = global.cmenuh
+    let c2 = global.cmenub
+    let c3 = global.cmenuf
+    let c4 = global.cmenua
+    let lprem = global.lopr
+    let llim = global.lolm
+    let tag = `@${m.sender.split('@')[0]}`
     let ucpn = `${ucapan()}`
     let d = new Date(new Date + 3600000)
     let locale = 'it'
@@ -92,7 +92,8 @@ let tags = {
       for (let plugin of help)
         if (plugin.tags && plugin.tags.includes(tag))
           if (plugin.help) groups[tag].push(plugin)
-          }
+    }
+
     conn.menu = conn.menu ? conn.menu : {}
     let before = conn.menu.before || defaultMenu.before
     let header = conn.menu.header || defaultMenu.header
@@ -130,11 +131,14 @@ let tags = {
       totalexp: exp,
       xp4levelup: max - exp,
       github: _package.homepage ? _package.homepage.url || _package.homepage : '[unknown github url]',
-  dash,m1,m2,m3,m4,cc, c1, c2, c3, c4,lprem,llim,
-  ucpn,platform, wib, mode, _p, eris, age, name, prems, level, limit, weton, week, date, dateIslamic, time, totalreg, rtotalreg, role,
+      dash,m1,m2,m3,m4,cc, c1, c2, c3, c4,lprem,llim,
+      ucpn,platform, wib, mode, _p, eris, age, name, prems, level, limit, weton, week, date, dateIslamic, time, totalreg, rtotalreg, role,
       readmore: readMore
     }
     text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name])
+
+    // Definisci 'fake' come oggetto vuoto se non è già definito
+    let fake = global.fake || {}; // Se global.fake non è definito, usa un oggetto vuoto di default
 
     await m.react('🕊️')
     await conn.sendMessage(m.chat, {
@@ -148,7 +152,7 @@ let tags = {
         ...fake.contextInfo, // Mantieni il contesto del fake
         mentionedJid: [m.sender],
         forwardedNewsletterMessageInfo: {
-            ...fake.contextInfo.forwardedNewsletterMessageInfo,
+            ...fake.contextInfo?.forwardedNewsletterMessageInfo, // Usa l'operatore di optional chaining per evitare errori se 'contextInfo' è undefined
             newsletterName: "ᰔᩚ . ˚ Menu Gruppo ☆˒˒"
         }
       }
@@ -159,6 +163,7 @@ let tags = {
     throw `${global.errore}`
   }
 }
+
 handler.help = ['menugruppo']
 handler.tags = ['menu']
 handler.command = ['menugruppo', 'menugp', 'menuadmin']
@@ -174,6 +179,7 @@ function clockString(ms) {
   let s = isNaN(ms) ? '--' : Math.floor(ms / 1000) % 60
   return [h, ' H ', m, ' M ', s, ' S '].map(v => v.toString().padStart(2, 0)).join('')
 }
+
 function ucapan() {
   const time = moment.tz('Europe/Rome').format('HH')
   let res = "Sveglio così presto? 🥱"
@@ -186,8 +192,4 @@ function ucapan() {
   if (time >= 15) {
     res = "Pomeriggio 🌇"
   }
-  if (time >= 18) {
-    res = "Sera 🌙"
-  }
-  return res
-}
+  if
