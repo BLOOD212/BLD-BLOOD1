@@ -193,4 +193,10 @@ function ucapan() {
     res = "Pomeriggio 🌇"
   }
   if (time >= 18) {
-    res =
+    res = "Sera 🌙"
+  }
+  if (time >= 21) {
+    res = "Notte 🌌"
+  }
+  return res
+}
