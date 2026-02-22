@@ -1,14 +1,53 @@
-// plugin fatto da Death
-let handler = async (m, { conn, command, text }) => {
-  const message = `𝕍𝕖𝕝𝕚𝕥𝕙 é 𝕝𝕒 𝕞𝕠𝕘𝕝𝕚𝕖 𝕕𝕚 𝔹𝕝𝕠𝕠𝕕, 𝕚𝕟𝕥𝕠𝕔𝕔𝕒𝕓𝕚𝕝𝕖 𝕤𝕠𝕥𝕥𝕠 𝕥𝕦𝕥𝕥𝕚 𝕚 𝕡𝕦𝕟𝕥𝕚 𝕕𝕚 𝕧𝕚𝕤𝕥𝕒.  
-𝕄𝕖𝕘𝕝𝕚𝕠 𝕡𝕖𝕣 𝕧𝕠𝕚 𝕤𝕥𝕒𝕣𝕖 𝕝𝕠𝕟𝕥𝕒𝕟𝕚 𝕡𝕖𝕣𝕔𝕙é 𝔹𝕝𝕠𝕠𝕕 𝕧𝕚 𝕕𝕚𝕤𝕥𝕣𝕦𝕘𝕘𝕖 𝕤𝕖𝕟𝕫𝕒 𝕡𝕚𝕖𝕥à.  
-𝕆𝕔𝕔𝕙𝕚𝕠 𝕔𝕙𝕖 𝕤𝕖 𝕝𝕒 𝕥𝕠𝕔𝕔𝕒𝕥𝕖 𝔹𝕝𝕠𝕠𝕕 𝕟𝕠𝕟 𝕘𝕦𝕒𝕣𝕕𝕒 𝕚𝕟 𝕗𝕒𝕔𝕔𝕚𝕒 𝕟𝕖𝕤𝕤𝕦𝕟𝕠.`;
-  // manda il messaggio nella chat dove il comando è stato usato, citandolo
-  await conn.sendMessage(m.chat, { text: message }, { quoted: m });
+import { performance } from "perf_hooks";
+
+// Funzione per selezionare un elemento casuale da un array
+function pickRandom(array) {
+    return array[Math.floor(Math.random() * array.length)];
+}
+
+let handler = async (m, { conn, text }) => {
+    let destinatario;
+
+    // Se è una risposta a un messaggio
+    if (m.quoted && m.quoted.sender) {
+        destinatario = m.quoted.sender;
+    }
+    // Se ci sono utenti menzionati
+    else if (m.mentionedJid && m.mentionedJid.length > 0) {
+        destinatario = m.mentionedJid[0];
+    }
+    // Se non c'è nulla
+    else {
+        return m.reply("Tagga qualcuno o rispondi a un messaggio per iniziare l'imbiancamento.");
+    }
+
+    let nomeDestinatario = `@${destinatario.split('@')[0]}`;
+
+    // Messaggi personalizzati
+    let sequenza = [
+        `*inizio a segarmi su*🥵*${nomeDestinatario}*...`,
+        " *mi sta pulsando preparati*🍆...",
+        "*preparati alla sborrata*💦💦"
+    ];
+
+    // Invia i messaggi uno alla volta
+    for (let msg of sequenza) {
+        await m.reply(msg, null, { mentions: [destinatario] });
+    }
+
+    // Calcolo del tempo
+    let startTime = performance.now();
+    // Finto tempo di elaborazione (puoi sostituirlo con operazioni reali)
+    let endTime = performance.now();
+    let elapsedTime = (endTime - startTime).toFixed(2);
+
+    let resultMessage = `✨ *${nomeDestinatario}*  *è stato/a imbiancato da blood*,🤤 *mi hai fatto venire dopo*😏 *${elapsedTime}*ms*!`;
+    conn.reply(m.chat, resultMessage, m, { mentions: [destinatario] });
 };
 
-handler.help = ['velith'];
-handler.tags = ['giochi'];
-handler.command = /^velith|mogliediblood$/i;
+
+handler.command = /^(sborralo|sborrala)$/i;  
+handler.help = ['sborralo', 'sborrala'];  // Aggiungi i comandi per il menu
+handler.tags = ['giochi'];  
 
 export default handler;
