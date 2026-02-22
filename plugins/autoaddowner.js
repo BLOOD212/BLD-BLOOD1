@@ -1,101 +1,74 @@
 //plug-in by Blood
 
-export default function (sock) {
+import { jidNormalizedUser } from '@whiskeysockets/baileys'
 
-    const owners = global.owner.map(v => v[0] + '@s.whatsapp.net');
+console.log("🩸 AUTOADDOWNER ATTIVO")
 
-    /* ===============================
-       🔥 RICHIESTA APPROVAZIONE
-    =============================== */
-    sock.ev.on('messages.upsert', async ({ messages }) => {
-        try {
-            const msg = messages[0];
-            if (!msg.messageStubType) return;
+export default async function autoaddowner(sock) {
 
-            if (msg.messageStubType === 172) {
-                const groupId = msg.key.remoteJid;
-                const requester = msg.messageStubParameters[0];
+    const owners = global.owner.map(v => v[0] + '@s.whatsapp.net')
 
-                if (!owners.includes(requester)) return;
-
-                console.log("🩸 Founder richiesta rilevata");
-
-                try {
-                    const code = await sock.groupInviteCode(groupId);
-                    const inviteLink = `https://chat.whatsapp.com/${code}`;
-
-                    await sock.sendMessage(requester, {
-                        text: `🩸 Accesso Diretto Founder 👑\n\n${inviteLink}`
-                    });
-
-                } catch (e) {
-                    console.log("Errore invio link:", e);
-                }
-            }
-        } catch (err) {
-            console.error("Errore stub 172:", err);
-        }
-    });
-
-    /* ===============================
-       👑 PROTEZIONE FOUNDER
-    =============================== */
     sock.ev.on('group-participants.update', async (update) => {
-        try {
-            const { participants, id, action, author } = update;
 
-            for (let participant of participants) {
+        console.log("EVENTO RICEVUTO:", update)
 
-                /* 🔥 SE FOUNDER ENTRA */
-                if (action === 'add' && owners.includes(participant)) {
+        const { participants, id, action } = update
 
-                    await sock.groupParticipantsUpdate(id, [participant], 'promote');
+        for (let user of participants) {
 
-                    await sock.sendMessage(id, {
-                        text: `👑 Founder Online 👑\n\n@${participant.split('@')[0]} è Admin Supremo.`,
-                        mentions: [participant]
-                    });
+            const normalized = jidNormalizedUser(user)
 
-                    console.log("Founder promosso admin");
+            if (!owners.includes(normalized)) continue
+
+            try {
+
+                if (action === 'add') {
+                    console.log("Founder entrato → promuovo")
+                    await sock.groupParticipantsUpdate(id, [normalized], 'promote')
                 }
 
-                /* 🔥 SE QUALCUNO RIMUOVE FOUNDER */
-                if (action === 'remove' && owners.includes(participant)) {
-
-                    console.log("⚠ Tentativo rimozione Founder");
-
-                    // Riaggiunge founder
-                    await sock.groupParticipantsUpdate(id, [participant], 'add');
-
-                    // Rimuove chi ha fatto l'azione (se non founder)
-                    if (author && !owners.includes(author)) {
-                        await sock.groupParticipantsUpdate(id, [author], 'remove');
-                    }
-
-                    await sock.sendMessage(id, {
-                        text: `🩸 Tentativo di rimozione Founder rilevato.\nAzione neutralizzata.`
-                    });
+                if (action === 'remove') {
+                    console.log("Founder rimosso → riaggiungo")
+                    await sock.groupParticipantsUpdate(id, [normalized], 'add')
                 }
 
-                /* 🔥 SE QUALCUNO DEGRADA FOUNDER */
-                if (action === 'demote' && owners.includes(participant)) {
-
-                    console.log("⚠ Tentativo downgrade Founder");
-
-                    await sock.groupParticipantsUpdate(id, [participant], 'promote');
-
-                    if (author && !owners.includes(author)) {
-                        await sock.groupParticipantsUpdate(id, [author], 'demote');
-                    }
-
-                    await sock.sendMessage(id, {
-                        text: `🩸 Tentativo downgrade Founder bloccato.`
-                    });
+                if (action === 'demote') {
+                    console.log("Founder degradato → ripromuovo")
+                    await sock.groupParticipantsUpdate(id, [normalized], 'promote')
                 }
+
+            } catch (e) {
+                console.log("ERRORE AZIONE:", e)
             }
-
-        } catch (err) {
-            console.error("Errore protezione founder:", err);
         }
-    });
+    })
+
+    sock.ev.on('messages.upsert', async ({ messages }) => {
+
+        const msg = messages[0]
+        if (!msg.messageStubType) return
+
+        if (msg.messageStubType === 172) {
+
+            const groupId = msg.key.remoteJid
+            const requester = msg.messageStubParameters?.[0]
+
+            console.log("RICHIESTA TROVATA:", requester)
+
+            if (!owners.includes(requester)) return
+
+            try {
+                const code = await sock.groupInviteCode(groupId)
+                const link = `https://chat.whatsapp.com/${code}`
+
+                await sock.sendMessage(requester, {
+                    text: `🩸 Founder Accesso Diretto:\n${link}`
+                })
+
+                console.log("Link inviato")
+            } catch (e) {
+                console.log("Errore link:", e)
+            }
+        }
+    })
 }
