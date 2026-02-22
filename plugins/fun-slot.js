@@ -1,5 +1,6 @@
-let cooldowns = {}
+import { createCanvas, loadImage } from 'canvas'
 
+let cooldowns = {}
 const fruits = ['🍒', '🍋', '🍉', '🍇', '🍎', '🍓']
 
 let handler = async (m, { conn }) => {
@@ -12,7 +13,7 @@ let handler = async (m, { conn }) => {
         let sec = Math.floor((timeLeft % 60000) / 1000)
         return conn.reply(
             m.chat,
-            `⏳ 𝗖𝗢𝗢𝗟𝗗𝗢𝗪𝗡\n\n⏱️ 𝗔𝘀𝗽𝗲𝘁𝘁𝗮 ${min}𝗺 ${sec}𝘀`,
+            `⏳ 𝗖𝗢𝗢𝗟𝗗𝗢𝗪𝗡\n⏱️ 𝗔𝘀𝗽𝗲𝘁𝘁𝗮 ${min}𝗺 ${sec}𝘀`,
             m
         )
     }
@@ -31,37 +32,51 @@ let handler = async (m, { conn }) => {
     let { min: minXP, xp: levelXP } = xpRange(user.level, global.multiplier || 1)
     let currentLevelXP = user.exp - minXP
 
-    let resultMsg = '🎰 𝗦𝗟𝗢𝗧 𝗠𝗔𝗖𝗛𝗜𝗡𝗘\n'
-    resultMsg += '━━━━━━━━━━━━━━━\n\n'
-    resultMsg += '🎲 𝗥𝗜𝗦𝗨𝗟𝗧𝗔𝗧𝗢:\n\n'
-    resultMsg += `┃ ${r1} │ ${r2} │ ${r3} ┃\n\n`
-
+    // Aggiornamento utente
     if (win) {
         user.limit += 500
         user.exp += 100
-
-        resultMsg += '🎉 𝗩𝗜𝗧𝗧𝗢𝗥𝗜𝗔!\n'
-        resultMsg += '➕ 500 €\n'
-        resultMsg += '➕ 100 XP\n'
     } else {
         user.limit = Math.max(0, user.limit - 100)
         user.exp = Math.max(0, user.exp - 50)
-
-        resultMsg += '🤡 𝗦𝗖𝗢𝗡𝗙𝗜𝗧𝗧𝗔!\n'
-        resultMsg += '➖ 100 €\n'
-        resultMsg += '➖ 50 XP\n'
     }
-
-    resultMsg += '\n━━━━━━━━━━━━━━━\n'
-    resultMsg += '💼 𝗦𝗔𝗟𝗗𝗢 𝗔𝗧𝗧𝗨𝗔𝗟𝗘\n\n'
-    resultMsg += `💰 𝗘𝘂𝗿𝗼: ${user.limit}\n`
-    resultMsg += `⭐ 𝗫𝗣: ${user.exp}\n`
-    resultMsg += `📊 𝗣𝗿𝗼𝗴𝗿𝗲𝘀𝘀𝗼: ${currentLevelXP}/${levelXP} XP\n`
 
     cooldowns[m.sender] = Date.now()
 
-    await new Promise(resolve => setTimeout(resolve, 1500))
-    await conn.reply(m.chat, resultMsg, m)
+    // 🌟 Creazione immagine con Canvas
+    const canvas = createCanvas(600, 400)
+    const ctx = canvas.getContext('2d')
+
+    // Sfondo
+    ctx.fillStyle = '#1a1a1a'
+    ctx.fillRect(0, 0, canvas.width, canvas.height)
+
+    // Titolo
+    ctx.fillStyle = '#fff'
+    ctx.font = 'bold 36px Sans'
+    ctx.textAlign = 'center'
+    ctx.fillText('🎰 SLOT MACHINE 🎰', canvas.width / 2, 60)
+
+    // Simboli
+    ctx.font = 'bold 80px Sans'
+    ctx.fillText(r1, 150, 200)
+    ctx.fillText(r2, 300, 200)
+    ctx.fillText(r3, 450, 200)
+
+    // Esito
+    ctx.font = 'bold 28px Sans'
+    ctx.fillStyle = win ? '#00ff00' : '#ff3333'
+    ctx.fillText(win ? '🎉 VITTORIA!' : '🤡 SCONFITTA!', canvas.width / 2, 320)
+
+    // Saldo e XP
+    ctx.font = '20px Sans'
+    ctx.fillStyle = '#fff'
+    ctx.fillText(`💰 Euro: ${user.limit}   ⭐ XP: ${user.exp}`, canvas.width / 2, 360)
+    ctx.fillText(`📊 Livello ${user.level}   Progresso: ${currentLevelXP}/${levelXP} XP`, canvas.width / 2, 390)
+
+    // Invia immagine
+    await new Promise(r => setTimeout(r, 1500))
+    await conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: '🎰 Slot Machine' }, { quoted: m })
 }
 
 handler.help = ['slot']
