@@ -1,37 +1,35 @@
-const handler = async (m, { conn, isOwner, isAdmin, usedPrefix, command }) => {
-  // Controllo permessi
-  if (!isOwner && !isAdmin) return m.reply('⛔ *Solo gli amministratori possono usare questo comando.*')
-  if (!m.isGroup) return 
+const handler = async (m, { conn, isOwner, isAdmin }) => {
+  if (!isOwner && !isAdmin) return m.reply('⛔ *Solo admin*')
+  if (!m.isGroup) return
 
   try {
-    // Recupera la lista delle richieste pendenti
     const res = await conn.groupRequestParticipantsList(m.chat)
 
     if (!res || res.length === 0) {
-      return m.reply('✅ *Non ci sono richieste di accesso pendenti.*')
+      return m.reply('✅ *Nessuna richiesta pendente.*')
     }
 
-    // Estraiamo solo i JID (ID degli utenti)
-    const jids = res.map(user => user.jid)
+    m.reply(`⏳ *Elaborazione di ${res.length} richieste in corso...*`)
 
-    // Eseguiamo l'approvazione per tutti i JID in una volta sola (più efficiente)
-    // Se la tua versione richiede un ciclo, usa for...of con await
-    await conn.groupRequestParticipantsUpdate(
-      m.chat, 
-      jids, 
-      'approve'
-    )
+    for (let user of res) {
+      // Usiamo user.jid esplicitamente e aggiungiamo un piccolo delay
+      await conn.groupRequestParticipantsUpdate(
+        m.chat,
+        [user.jid],
+        'approve'
+      )
+      // Delay di 1 secondo tra una richiesta e l'altra per stabilità
+      await new Promise(resolve => setTimeout(resolve, 1000))
+    }
 
-    m.reply(`✅ *Operazione completata:* sono state accettate ${jids.length} richieste di ingresso.`)
+    m.reply(`✅ *Tutte le ${res.length} richieste sono state accettate con successo!*`)
 
   } catch (e) {
-    console.error(e)
-    m.reply('❌ *Errore:* Assicurati che il bot sia amministratore e che l\'approvazione dei membri sia attiva nelle impostazioni del gruppo.')
+    console.error("ERRORE ACCETTA:", e)
+    m.reply('❌ *Errore critico:* Il bot non riesce a leggere le richieste. Verifica che l\'approvazione membri sia ATTIVA nelle impostazioni del gruppo.')
   }
 }
 
-handler.help = ['accetta']
-handler.tags = ['group']
 handler.command = /^(accetta|accept)$/i
 handler.group = true
 handler.admin = true
