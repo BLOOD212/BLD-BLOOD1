@@ -1,4 +1,3 @@
-
 import { xpRange } from '../lib/levelling.js'
 
 const defaultMenu = {
@@ -6,7 +5,7 @@ const defaultMenu = {
   header: 'ㅤㅤ⋆｡˚『 ╭ \`MENU PREMIUM\` ╯ 』˚｡⋆\n╭',
   body: '│ ➤ 『 🉐 』 %cmd', 
   footer: '*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n',
-  after: `> ⋆｡°✩ 𝖛𝖆𝖗𝖊𝖇𝖔𝖙 ✩°｡⋆`.trimEnd()
+  after: `> ⋆｡°✩ BLOODBOT ✩°｡⋆`.trimEnd()
 }
 
 let handler = async (m, { conn, usedPrefix: _p }) => {
@@ -29,6 +28,10 @@ let handler = async (m, { conn, usedPrefix: _p }) => {
       help: Array.isArray(plugin.help) ? plugin.help : [plugin.help],
       prefix: 'customPrefix' in plugin,
     }))
+    
+    // Definire fake come oggetto vuoto se non è definito
+    let fake = global.fake || {};  // Aggiungi questa riga
+
     let text = [
       defaultMenu.before,
       defaultMenu.header.replace(/%category/g, tags['premium']),
@@ -38,6 +41,7 @@ let handler = async (m, { conn, usedPrefix: _p }) => {
       defaultMenu.footer,
       defaultMenu.after
     ].join('\n')
+    
     text = text.replace(/%name/g, name)
       .replace(/%level/g, level || 0)
       .replace(/%exp/g, exp || 0)
@@ -47,6 +51,7 @@ let handler = async (m, { conn, usedPrefix: _p }) => {
       .replace(/%time/g, time)
       .replace(/%uptime/g, uptime)
       .replace(/%totalreg/g, totalreg)
+    
     await conn.sendMessage(m.chat, {
       video: { url: './media/menu/menu9.mp4' },
       caption: text.trim(),
@@ -58,7 +63,7 @@ let handler = async (m, { conn, usedPrefix: _p }) => {
         ...fake.contextInfo, // Mantieni il contesto del fake
         mentionedJid: [m.sender],
         forwardedNewsletterMessageInfo: {
-          ...fake.contextInfo.forwardedNewsletterMessageInfo,
+          ...fake.contextInfo?.forwardedNewsletterMessageInfo, // Usa l'operatore di optional chaining per evitare errori se 'contextInfo' è undefined
           newsletterName: " ⋆｡°✩ Menu Premium ✩°｡⋆"
         }
       }
