@@ -1,17 +1,16 @@
 import { createCanvas, loadImage } from 'canvas'
-import fs from 'fs'
 
 let cooldowns = {}
 const fruits = ['🍒', '🍋', '🍉', '🍇', '🍎', '🍓']
 
-// Associa ogni emoji a un’immagine PNG (metti queste immagini nella cartella ./img)
-const fruitImages = {
-    '🍒': './img/cherry.png',
-    '🍋': './img/lemon.png',
-    '🍉': './img/watermelon.png',
-    '🍇': './img/grape.png',
-    '🍎': './img/apple.png',
-    '🍓': './img/strawberry.png'
+// URL Twemoji per ogni frutto
+const fruitURLs = {
+    '🍒': 'https://twemoji.maxcdn.com/v/latest/72x72/1f352.png',
+    '🍋': 'https://twemoji.maxcdn.com/v/latest/72x72/1f34b.png',
+    '🍉': 'https://twemoji.maxcdn.com/v/latest/72x72/1f349.png',
+    '🍇': 'https://twemoji.maxcdn.com/v/latest/72x72/1f347.png',
+    '🍎': 'https://twemoji.maxcdn.com/v/latest/72x72/1f34e.png',
+    '🍓': 'https://twemoji.maxcdn.com/v/latest/72x72/1f353.png'
 }
 
 let handler = async (m, { conn }) => {
@@ -54,7 +53,7 @@ let handler = async (m, { conn }) => {
 
     cooldowns[m.sender] = Date.now()
 
-    // 🌟 Creazione immagine Canvas
+    // 🌟 Creazione Canvas
     const canvas = createCanvas(600, 400)
     const ctx = canvas.getContext('2d')
 
@@ -68,10 +67,10 @@ let handler = async (m, { conn }) => {
     ctx.textAlign = 'center'
     ctx.fillText('🎰 SLOT MACHINE 🎰', canvas.width / 2, 50)
 
-    // Caricamento immagini frutta
-    const img1 = await loadImage(fruitImages[r1])
-    const img2 = await loadImage(fruitImages[r2])
-    const img3 = await loadImage(fruitImages[r3])
+    // Caricamento immagini frutta da Twemoji
+    const img1 = await loadImage(fruitURLs[r1])
+    const img2 = await loadImage(fruitURLs[r2])
+    const img3 = await loadImage(fruitURLs[r3])
 
     // Disegna frutta
     ctx.drawImage(img1, 100, 120, 100, 100)
