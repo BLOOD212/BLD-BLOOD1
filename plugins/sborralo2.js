@@ -96,6 +96,14 @@ let handler = async (m, { conn, text }) => {
 // Aggiungi il comando al menu o ai comandi disponibili
 handler.command = /^(sborralo|sborrala)$/i;  // Questo comando verrà attivato con "sborralo" o "sborrala"
 handler.tags = ["giochi"];  // Questa è la categoria, puoi personalizzarla se necessario
-handler.help = ["sborralo", "sborrala"]; // Comandi che saranno mostrati nel menu del bot
+let helpHandler = async (m, { conn }) => {
+    let helpMessage = `
+Comandi disponibili:
+- sborralo
+- sborrala
+    `;
+    conn.reply(m.chat, helpMessage, m);
+};
 
-export default handler;
+helpHandler.command = /^(help)$/i; // Comando che risponde a "help"
+export default helpHandler;
