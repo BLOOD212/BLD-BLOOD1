@@ -1,7 +1,18 @@
 import { createCanvas, loadImage } from 'canvas'
+import fs from 'fs'
 
 let cooldowns = {}
 const fruits = ['🍒', '🍋', '🍉', '🍇', '🍎', '🍓']
+
+// Associa ogni emoji a un’immagine PNG (metti queste immagini nella cartella ./img)
+const fruitImages = {
+    '🍒': './img/cherry.png',
+    '🍋': './img/lemon.png',
+    '🍉': './img/watermelon.png',
+    '🍇': './img/grape.png',
+    '🍎': './img/apple.png',
+    '🍓': './img/strawberry.png'
+}
 
 let handler = async (m, { conn }) => {
     let user = global.db.data.users[m.sender]
@@ -18,7 +29,7 @@ let handler = async (m, { conn }) => {
         )
     }
 
-    // 🎰 Estrazione
+    // 🎰 Estrazione simboli
     let r1 = fruits[Math.floor(Math.random() * fruits.length)]
     let r2 = fruits[Math.floor(Math.random() * fruits.length)]
     let r3 = fruits[Math.floor(Math.random() * fruits.length)]
@@ -32,7 +43,7 @@ let handler = async (m, { conn }) => {
     let { min: minXP, xp: levelXP } = xpRange(user.level, global.multiplier || 1)
     let currentLevelXP = user.exp - minXP
 
-    // Aggiornamento utente
+    // Aggiornamento saldo e XP
     if (win) {
         user.limit += 500
         user.exp += 100
@@ -43,7 +54,7 @@ let handler = async (m, { conn }) => {
 
     cooldowns[m.sender] = Date.now()
 
-    // 🌟 Creazione immagine con Canvas
+    // 🌟 Creazione immagine Canvas
     const canvas = createCanvas(600, 400)
     const ctx = canvas.getContext('2d')
 
@@ -55,28 +66,36 @@ let handler = async (m, { conn }) => {
     ctx.fillStyle = '#fff'
     ctx.font = 'bold 36px Sans'
     ctx.textAlign = 'center'
-    ctx.fillText('🎰 SLOT MACHINE 🎰', canvas.width / 2, 60)
+    ctx.fillText('🎰 SLOT MACHINE 🎰', canvas.width / 2, 50)
 
-    // Simboli
-    ctx.font = 'bold 80px Sans'
-    ctx.fillText(r1, 150, 200)
-    ctx.fillText(r2, 300, 200)
-    ctx.fillText(r3, 450, 200)
+    // Caricamento immagini frutta
+    const img1 = await loadImage(fruitImages[r1])
+    const img2 = await loadImage(fruitImages[r2])
+    const img3 = await loadImage(fruitImages[r3])
+
+    // Disegna frutta
+    ctx.drawImage(img1, 100, 120, 100, 100)
+    ctx.drawImage(img2, 250, 120, 100, 100)
+    ctx.drawImage(img3, 400, 120, 100, 100)
 
     // Esito
     ctx.font = 'bold 28px Sans'
     ctx.fillStyle = win ? '#00ff00' : '#ff3333'
-    ctx.fillText(win ? '🎉 VITTORIA!' : '🤡 SCONFITTA!', canvas.width / 2, 320)
+    ctx.fillText(win ? '🎉 VITTORIA!' : '🤡 SCONFITTA!', canvas.width / 2, 300)
 
     // Saldo e XP
     ctx.font = '20px Sans'
     ctx.fillStyle = '#fff'
-    ctx.fillText(`💰 Euro: ${user.limit}   ⭐ XP: ${user.exp}`, canvas.width / 2, 360)
-    ctx.fillText(`📊 Livello ${user.level}   Progresso: ${currentLevelXP}/${levelXP} XP`, canvas.width / 2, 390)
+    ctx.fillText(`💰 Euro: ${user.limit}   ⭐ XP: ${user.exp}`, canvas.width / 2, 340)
+    ctx.fillText(`📊 Livello ${user.level}   Progresso: ${currentLevelXP}/${levelXP} XP`, canvas.width / 2, 370)
 
-    // Invia immagine
+    // Invio immagine su WhatsApp
     await new Promise(r => setTimeout(r, 1500))
-    await conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: '🎰 Slot Machine' }, { quoted: m })
+    await conn.sendMessage(
+        m.chat,
+        { image: canvas.toBuffer(), caption: '🎰 Slot Machine' },
+        { quoted: m }
+    )
 }
 
 handler.help = ['slot']
