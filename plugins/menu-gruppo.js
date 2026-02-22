@@ -192,4 +192,5 @@ function ucapan() {
   if (time >= 15) {
     res = "Pomeriggio 🌇"
   }
-  if
+  if (time >= 18) {
+    res =
