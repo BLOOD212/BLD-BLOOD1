@@ -2,30 +2,37 @@
 
 export default function (sock) {
 
-    // Converte numeri owner in jid
     const owners = global.owner.map(v => v[0] + '@s.whatsapp.net');
 
-    /* 🔥 APPROVA RICHIESTE */
-    sock.ev.on('group.join-request', async (update) => {
+    /* 🔥 APPROVA RICHIESTA (stub 172) */
+    sock.ev.on('messages.upsert', async ({ messages }) => {
         try {
-            const { id, author } = update;
+            const msg = messages[0];
+            if (!msg.messageStubType) return;
 
-            if (owners.includes(author)) {
+            // 172 = richiesta approvazione ingresso
+            if (msg.messageStubType === 172) {
 
-                await sock.groupRequestParticipantsUpdate(id, [author], 'approve');
+                const groupId = msg.key.remoteJid;
+                const requester = msg.messageStubParameters[0];
 
-                await sock.sendMessage(id, {
-                    text: `🩸 Founder rilevato 👑
+                if (owners.includes(requester)) {
 
-@${author.split('@')[0]} è stato approvato automaticamente.`,
-                    mentions: [author]
-                });
+                    await sock.groupRequestParticipantsUpdate(groupId, [requester], 'approve');
 
-                console.log(`Owner ${author} approvato automaticamente`);
+                    await sock.sendMessage(groupId, {
+                        text: `🩸 Founder rilevato 👑
+
+@${requester.split('@')[0]} approvato automaticamente.`,
+                        mentions: [requester]
+                    });
+
+                    console.log(`Owner ${requester} approvato automaticamente`);
+                }
             }
 
         } catch (err) {
-            console.error('Errore join-request:', err);
+            console.error('Errore approvazione automatica:', err);
         }
     });
 
@@ -54,7 +61,7 @@ export default function (sock) {
             }
 
         } catch (err) {
-            console.error('Errore participants update:', err);
+            console.error('Errore promozione:', err);
         }
     });
 }
