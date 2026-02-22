@@ -47,7 +47,7 @@ let handler = async (m, { conn }) => {
 }
 
 handler.help = ['sega @tag']
-handler.tags = ['fun']
+handler.tags = ['giochi']
 handler.command = /^(sega)$/i
 
 // 🔓 NESSUNA RESTRIZIONE
