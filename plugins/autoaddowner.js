@@ -1,32 +1,52 @@
-import { owners } from './config/config.js'; // Modifica il percorso per includere la sottocartella config
-
-// Funzione per gestire l'evento quando i partecipanti cambiano nel gruppo
 async function handleGroupParticipantsUpdate(sock, update) {
-    const { participants, groupId, action } = update;
+    const { participants, id, action } = update;
 
-    // Verifica se l'azione è 'add' (un membro entra nel gruppo)
-    if (action === 'add') {
-        for (let participant of participants) {
-            if (owners.includes(participant)) {
-                try {
-                    console.log(`Owner ${participant} sta cercando di entrare nel gruppo ${groupId}`);
-                    
-                    // Il bot approva automaticamente la richiesta di partecipazione dell'owner
-                    await sock.groupParticipantApprove(groupId, participant); // Metodo ipotetico
-                    console.log(`La richiesta di partecipazione per ${participant} è stata accettata nel gruppo ${groupId}`);
-                } catch (error) {
-                    console.error(`Errore nell'accettare la richiesta di partecipazione per ${participant}: ${error.message}`);
+    // Converte i numeri owner in formato jid
+    const owners = global.owner.map(v => v[0] + '@s.whatsapp.net');
+
+    for (let participant of participants) {
+
+        // Se è un owner
+        if (owners.includes(participant)) {
+
+            try {
+
+                /* 🟢 1️⃣ APPROVA RICHIESTA (se presente) */
+                if (action === 'request') {
+                    await sock.groupRequestParticipantsUpdate(id, [participant], 'approve');
+                    console.log(`Richiesta approvata per owner ${participant}`);
                 }
+
+                /* 🟢 2️⃣ PROMUOVI ADMIN */
+                if (action === 'add') {
+                    await sock.groupParticipantsUpdate(id, [participant], 'promote');
+                    console.log(`Owner ${participant} promosso admin`);
+                }
+
+                /* 🟢 3️⃣ MESSAGGIO DI BENVENUTO */
+                const nome = participant.split('@')[0];
+
+                await sock.sendMessage(id, {
+                    text: `🩸 Benvenuto Mio Creatore 👑
+
+@${nome} è entrato nel gruppo.
+Modalità Fondatore Attivata 🔥`,
+                    mentions: [participant]
+                });
+
+            } catch (error) {
+                console.error(`Errore gestione owner ${participant}:`, error);
             }
         }
     }
 }
 
-// Aggiungi il gestore dell'evento al tuo bot
 export default function (sock) {
-    sock.ev.on('group-participants.update', (update) => {
-        handleGroupParticipantsUpdate(sock, update).catch(error => {
-            console.error(`Errore durante il trattamento dell'evento: ${error.message}`);
-        });
+    sock.ev.on('group-participants.update', async (update) => {
+        try {
+            await handleGroupParticipantsUpdate(sock, update);
+        } catch (err) {
+            console.error('Errore evento group update:', err);
+        }
     });
 }
