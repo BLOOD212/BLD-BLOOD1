@@ -45,5 +45,5 @@ let handler = async (m, { conn, text }) => {
 };
 
 handler.command = ["sborralo", "sborrala"];
-handler.tags = ["fun"];
+handler.tags = ["giochi"];
 export default handler;
