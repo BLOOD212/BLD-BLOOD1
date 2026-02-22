@@ -45,6 +45,14 @@ let handler = async (m, { conn, text }) => {
     conn.reply(m.chat, resultMessage, m, { mentions: [destinatario] });
 };
 
-handler.command = ["ditalino"];
-handler.tags = ["giochi"];
+handler.help = ['ditalino'];
+handler.tags = ['giochi'];
+handler.command = /^(ditalino)$/i;
+
+handler.group = true;
+handler.admin = true;
+handler.botAdmin = false;
+
+handler.fail = null;
+
 export default handler;
