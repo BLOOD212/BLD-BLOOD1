@@ -165,3 +165,5 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       caption: text.trim(),
       gifPlayback: true,
       ...fake
+    })
+  } catch (
