@@ -9,24 +9,24 @@ if (!fs.existsSync(tmpDir)) {
 }
 
 const videoInfoCache = new Map();
-const CACHE_TTL = 15 * 60 * 1000;  // Tempo di validità della cache (15 minuti)
+const CACHE_TTL = 15 * 60 * 1000;  // Cache validity time (15 minutes)
 
 const A = [
-    '251', // Audio in formato WebM
-    '140', // Audio in formato MP4
-    '250', // Audio in formato WebM
-    '249', // Audio in formato WebM
-    '139', // Audio in formato M4A
-    'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio', // Formati audio di qualità
+    '251', // WebM audio format
+    '140', // MP4 audio format
+    '250', // WebM audio format
+    '249', // WebM audio format
+    '139', // M4A audio format
+    'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio', // Best quality audio formats
 ];
 
 const V = [
-    '22', // Video in formato MP4 (qualità 720p)
-    '136+140', // Video (qualità 720p + audio)
-    '298+140', // Video (qualità 1080p + audio)
-    '135+140', // Video (qualità 480p + audio)
-    '18', // Video (qualità 360p + audio)
-    'best[height<=1080][ext=mp4]/best[ext=mp4]/best[height<=720]' // Video di qualità migliore
+    '22', // MP4 video format (720p)
+    '136+140', // 720p video + audio
+    '298+140', // 1080p video + audio
+    '135+140', // 480p video + audio
+    '18', // 360p video + audio
+    'best[height<=1080][ext=mp4]/best[ext=mp4]/best[height<=720]', // Best quality video
 ];
 
 async function download(url, options) {
@@ -41,6 +41,7 @@ async function download(url, options) {
         concurrentFragments: 10,
         noPlaylist: true,
     };
+
     if (options.format) opts.format = options.format;
     if (options.output) opts.output = options.output;
     if (options.extractAudio) {
@@ -51,7 +52,12 @@ async function download(url, options) {
     }
     if (options.maxFilesize) opts.maxFilesize = options.maxFilesize;
     if (options.cookies) opts.cookies = options.cookies;
-    return await youtubedl(url, opts);
+
+    try {
+        return await youtubedl(url, opts);
+    } catch (error) {
+        throw new Error(`Failed to download video: ${error.message}`);
+    }
 }
 
 async function getVideoInfo(url) {
@@ -91,15 +97,16 @@ async function searchAndDownload(m, conn, command, text, prefix) {
         await conn.sendPresenceUpdate(command === 'play' ? 'composing' : 'recording', m.chat);
 
         let searchResults;
-        if (videoInfoCache.has(text.toLowerCase()) && (Date.now() - videoInfoCache.get(text.toLowerCase()).timestamp < CACHE_TTL)) {
-            searchResults = videoInfoCache.get(text.toLowerCase()).data;
+        const cacheKey = text.toLowerCase();
+        if (videoInfoCache.has(cacheKey) && (Date.now() - videoInfoCache.get(cacheKey).timestamp < CACHE_TTL)) {
+            searchResults = videoInfoCache.get(cacheKey).data;
         } else {
             const search = await ytSearch(text);
             if (!search.videos.length) {
-                throw '❌ *Nessun risultato trovato!*';
+                throw new Error('❌ *Nessun risultato trovato!*');
             }
             searchResults = search.videos.slice(0, 5);
-            videoInfoCache.set(text.toLowerCase(), { data: searchResults, timestamp: Date.now() });
+            videoInfoCache.set(cacheKey, { data: searchResults, timestamp: Date.now() });
         }
 
         const firstVideo = searchResults[0];
@@ -114,7 +121,7 @@ async function searchAndDownload(m, conn, command, text, prefix) {
             webpage_url: firstVideo.url,
         };
 
-        // Messaggio di anteprima del video
+        // Display video preview
         const captionMessage = `
         *╭─ׄ✦☾⋆⁺₊✧𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽✦─ׅ⭒*
         *├* *\`${videoInfo.title}\`*
@@ -131,7 +138,7 @@ async function searchAndDownload(m, conn, command, text, prefix) {
             footer: '> \`Bot musicale\`',
         }, { quoted: m });
 
-        // Scarica audio o video
+        // Prepare for download (audio/video)
         const tmpFile = path.join(tmpDir, `${command}_${Date.now()}.${command === 'playvideo' ? 'mp4' : 'mp3'}`);
         const downloadOptions = {
             output: tmpFile,
@@ -144,8 +151,9 @@ async function searchAndDownload(m, conn, command, text, prefix) {
         await download(firstVideo.url, downloadOptions);
 
         const buffer = await fs.promises.readFile(tmpFile);
-        await fs.promises.unlink(tmpFile);
+        await fs.promises.unlink(tmpFile); // Clean up the temporary file
 
+        // Send audio or video
         if (command === 'playvideo') {
             await conn.sendMessage(m.chat, {
                 video: buffer,
@@ -162,7 +170,7 @@ async function searchAndDownload(m, conn, command, text, prefix) {
             }, { quoted: m });
         }
     } catch (error) {
-        console.log(`[ERRORE] ${error}`);
+        console.log(`[ERRORE] ${error.message}`);
         await conn.reply(m.chat, '❌ *Errore durante il download, riprova!*', m);
     } finally {
         await conn.sendPresenceUpdate('paused', m.chat);
@@ -181,3 +189,6 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
         *├* *\`${prefix}playvideo\` _<nome/url>_
         *├* ↳ 『 🎥 』- *Scarica video*
         *╰⭒─ׄ─▢─
+        `;
+        await conn.reply(m.chat, helpMessage, m);
+        return;
