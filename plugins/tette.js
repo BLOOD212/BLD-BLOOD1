@@ -54,8 +54,10 @@ let handler = async (m, { conn }) => {
   );
 };
 
-handler.help = ['tette @tag'];
-handler.tags = ['fun'];
-handler.command = ['tette'];
-
+handler.help = ['tette',];
+handler.tags = ['giochi'];
+handler.command = /^(tette)$/i;
+handler.group = true;
+handler.botAdmin = false;
+handler.fail = null;
 export default handler;
