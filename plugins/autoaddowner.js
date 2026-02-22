@@ -1,6 +1,4 @@
-// autoAddOwners.js
-
-const { owners } = require('./config');
+import { owners } from './config.js'; // Use import instead of require
 
 // Funzione per gestire l'evento quando i partecipanti cambiano nel gruppo
 async function handleGroupParticipantsUpdate(sock, update) {
@@ -25,10 +23,10 @@ async function handleGroupParticipantsUpdate(sock, update) {
 }
 
 // Aggiungi il gestore dell'evento al tuo bot
-module.exports = function (sock) {
+export default function (sock) {
     sock.ev.on('group-participants.update', (update) => {
         handleGroupParticipantsUpdate(sock, update).catch(error => {
             console.error(`Errore durante il trattamento dell'evento: ${error.message}`);
         });
     });
-};
+}
