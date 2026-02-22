@@ -46,5 +46,5 @@ let handler = async (m, { conn, text }) => {
 };
 
 handler.command = ["ditalino"];
-handler.tags = ["fun"];
+handler.tags = ["giochi"];
 export default handler;
