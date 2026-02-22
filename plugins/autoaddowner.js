@@ -1,10 +1,10 @@
-//plug-in by Blood 
+//plug-in by Blood
 
 
-            console.log("🩸 AUTOADDOWNER STABLE MODE")
+console.log("🩸 AUTO OPEN/CLOSE FOUNDER ATTIVO")
 
 const owners = global.owner.map(v => v[0] + '@s.whatsapp.net')
-const cooldown = new Map() // anti spam per gruppo
+const openedGroups = new Set() // evita riaperture multiple
 
 global.conn.ev.on('messages.upsert', async ({ messages }) => {
 
@@ -16,35 +16,28 @@ global.conn.ev.on('messages.upsert', async ({ messages }) => {
     const requester = msg.messageStubParameters?.[0]
 
     if (!owners.includes(requester)) return
+    if (openedGroups.has(groupId)) return
 
-    // ⛔ BLOCCO ANTI RATE LIMIT (30 sec)
-    const now = Date.now()
-    const last = cooldown.get(groupId) || 0
-    if (now - last < 30000) {
-        console.log("⛔ Cooldown attivo, ignoro")
-        return
-    }
-    cooldown.set(groupId, now)
+    openedGroups.add(groupId)
 
-    console.log("🩸 Founder richiesta rilevata")
+    console.log("🩸 Founder richiesta rilevata → apro gruppo")
 
     try {
-        // Disattiva approvazione UNA SOLA VOLTA
+        // 🔓 Disattiva approvazione membri
         await global.conn.groupSettingUpdate(groupId, 'not_announcement')
-        console.log("✅ Approvazione disattivata")
+        console.log("✅ Gruppo aperto")
 
-        // Prende link senza revocarlo
+        // manda link attuale
         const inviteCode = await global.conn.groupInviteCode(groupId)
         const link = `https://chat.whatsapp.com/${inviteCode}`
 
         await global.conn.sendMessage(requester, {
-            text: `🩸 Accesso Founder 👑\n\nEntra ora:\n${link}`
+            text: `👑 Founder Accesso Diretto\n\nEntra ora:\n${link}`
         })
 
-        console.log("✅ Link inviato al founder")
-
     } catch (err) {
-        console.log("❌ Errore gestione richiesta:", err?.message)
+        console.log("❌ Errore apertura:", err?.message)
+        openedGroups.delete(groupId)
     }
 })
 
@@ -58,15 +51,22 @@ global.conn.ev.on('group-participants.update', async (update) => {
 
         if (action === 'add') {
 
-            console.log("👑 Founder entrato")
+            console.log("👑 Founder entrato → chiudo gruppo")
 
             try {
+                // 👑 Promuove
                 await global.conn.groupParticipantsUpdate(id, [user], 'promote')
+
+                // 🔒 Riattiva approvazione
                 await global.conn.groupSettingUpdate(id, 'announcement')
-                console.log("✅ Founder promosso + approvazione riattivata")
+
+                console.log("✅ Gruppo richiuso + Founder promosso")
+
             } catch (err) {
-                console.log("❌ Errore post ingresso:", err?.message)
+                console.log("❌ Errore chiusura:", err?.message)
             }
+
+            openedGroups.delete(id)
         }
     }
 })
