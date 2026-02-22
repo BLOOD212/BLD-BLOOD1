@@ -25,22 +25,26 @@ let handler = async (m, { conn, usedPrefix: _p }) => {
       defmenu.footer,
       defmenu.after
     ].join('\n')
+
+    // Definisci fake come oggetto vuoto se non è definito
+    let fake = global.fake || {};  // Aggiungi questa riga
+
     await conn.sendMessage(m.chat, {
       video: { url: './media/menu/menu5.mp4' },
       caption: text.trim(),
       gifPlayback: true,
       gifAttribution: 2,
       mimetype: 'video/mp4',
-      ...fake,
+      ...fake,  // Usa il global.fake per il contesto
       contextInfo: {
-        ...fake.contextInfo,
+        ...fake.contextInfo, // Mantieni il contesto del fake
         mentionedJid: [m.sender],
         forwardedNewsletterMessageInfo: {
-            ...fake.contextInfo.forwardedNewsletterMessageInfo,
-            newsletterName: "ᰔᩚ . ˚ Menu Strumenti ☆˒˒"
+          ...fake.contextInfo?.forwardedNewsletterMessageInfo,
+          newsletterName: "ᰔᩚ . ˚ Menu Strumenti ☆˒˒"
         }
       }
-    }, { quoted: m });
+    }, { quoted: m })
 
   } catch (e) {
     console.error(e)
