@@ -12,30 +12,25 @@ const defaultMenu = {
   footer: '*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n',
   after: ``,
 }
-
-let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
-  let tags = {
-    'ricerca': 'Ricerche',
-  }
+let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command}) => {
+let tags = {
+'ricerca': 'Ricerche',
+}
 
   try {
-    // Inizializzazione di global.fake.error per evitare l'errore
-    global.fake = global.fake || {}
-    global.fake.error = global.fake.error || "Si è verificato un errore, riprova più tardi."
-
-    let dash = global.dashmenu
-    let m1 = global.dmenut
-    let m2 = global.dmenub
-    let m3 = global.dmenuf
-    let m4 = global.dmenub2
-    let cc = global.cmenut
-    let c1 = global.cmenuh
-    let c2 = global.cmenub
-    let c3 = global.cmenuf
-    let c4 = global.cmenua
-    let lprem = global.lopr
-    let llim = global.lolm
-    let tag = `@${m.sender.split('@')[0]}`
+      let dash = global.dashmenu
+          let m1 = global.dmenut
+      let m2 = global.dmenub
+      let m3 = global.dmenuf
+      let m4 = global.dmenub2
+      let cc = global.cmenut
+      let c1 = global.cmenuh
+      let c2 = global.cmenub
+      let c3 = global.cmenuf
+      let c4 = global.cmenua
+      let lprem = global.lopr
+      let llim = global.lolm
+      let tag = `@${m.sender.split('@')[0]}`
     let ucpn = `${ucapan()}`
     let d = new Date(new Date + 3600000)
     let locale = 'it'
@@ -89,11 +84,11 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
 
     let mode = global.opts['self'] ? 'Privato' : 'Pubblico'
     let _package = JSON.parse(await promises.readFile(join(__dirname, '../package.json')).catch(_ => ({}))) || {}
-    let { age, exp, limit, level, role, registered, eris } = global.db.data.users[m.sender]
+    let { age, exp, limit, level, role, registered, eris} = global.db.data.users[m.sender]
     let { min, xp, max } = xpRange(level, global.multiplier)
     let name = await conn.getName(m.sender)
     let premium = global.db.data.users[m.sender].premiumTime
-    let prems = `${premium > 0 ? 'Premium' : 'Utente comune'}`
+    let prems = `${premium > 0 ? 'Premium': 'Utente comune'}`
     let platform = os.platform()
 
     let totalreg = Object.keys(global.db.data.users).length
@@ -114,7 +109,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       for (let plugin of help)
         if (plugin.tags && plugin.tags.includes(tag))
           if (plugin.help) groups[tag].push(plugin)
-    }
+          }
     conn.menu = conn.menu ? conn.menu : {}
     let before = conn.menu.before || defaultMenu.before
     let header = conn.menu.header || defaultMenu.header
@@ -151,24 +146,78 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       totalexp: exp,
       xp4levelup: max - exp,
       github: _package.homepage ? _package.homepage.url || _package.homepage : '[unknown github url]',
-      tag, dash, m1, m2, m3, m4, cc, c1, c2, c3, c4, lprem, llim,
-      ucpn, platform, wib, mode, _p, eris, age, tag, name, prems, level, limit, name, weton, week, date, dateIslamic, time, totalreg, rtotalreg, role,
+      tag, dash,m1,m2,m3,m4,cc, c1, c2, c3, c4,lprem,llim,
+      ucpn,platform, wib, mode, _p, eris, age, tag, name, prems, level, limit, name, weton, week, date, dateIslamic, time, totalreg, rtotalreg, role,
       readmore: readMore
     }
     text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name])
 
-    let fkon = { key: { fromMe: false, participant: `${m.sender.split`@`[0]}@s.whatsapp.net`, ...(m.chat ? { remoteJid: '393514357738@s.whatsapp.net' } : {}) }, message: { contactMessage: { displayName: `${name}`, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:;a,;;;\nFN:${name}\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`}}}
-    await m.react('🔦')
+ let fkon = { key: { fromMe: false, participant: `${m.sender.split`@`[0]}@s.whatsapp.net`, ...(m.chat ? { remoteJid: '393514357738@s.whatsapp.net' } : {}) }, message: { contactMessage: { displayName: `${name}`, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:;a,;;;\nFN:${name}\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`}}}
+await m.react('🔦') 
 
-    conn.sendMessage(m.chat, {
-      video: fs.readFileSync('./media/menu/menu7.mp4'),
-      caption: text.trim(),
-      gifPlayback: true,
-      ...fake
-    })
+ conn.sendMessage(m.chat, {
+    video: fs.readFileSync('./media/menu/menu7.mp4'),
+    caption: text.trim(),
+    gifPlayback: true,
+    ...fake, // Usa il global.fake per il contesto
+    contextInfo: {
+        ...fake.contextInfo, // Mantieni il contesto del fake
+        mentionedJid: [m.sender],
+        forwardedNewsletterMessageInfo: {
+            ...fake.contextInfo.forwardedNewsletterMessageInfo,
+            newsletterName: "ᰔᩚ . ˚ Menu Ricerche ☆˒˒"
+        }
+    }
+}, { quoted: m })
+
   } catch (e) {
-    console.error("Errore:", e)
-    // Gestisci l'errore, ad esempio inviando un messaggio
-    await m.reply(global.fake.error)
+    console.error(e)
+    conn.reply(m.chat, global.fake.error, m)
+    throw e
   }
+}
+handler.help = ['menuricerche']
+handler.tags = ['menu']
+handler.command = ['menusearch', 'menuricerche', 'menuricerca']
+
+export default handler
+
+function pickRandom(list) {
+  return list[Math.floor(Math.random() * list.length)]
+}
+
+const more = String.fromCharCode(8206)
+const readMore = more.repeat(4001)
+
+function clockString(ms) {
+  let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000)
+  let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60
+  let s = isNaN(ms) ? '--' : Math.floor(ms / 1000) % 60
+  return [h, ' H ', m, ' M ', s, ' S '].map(v => v.toString().padStart(2, 0)).join('')
+}
+function clockStringP(ms) {
+  let ye = isNaN(ms) ? '--' : Math.floor(ms / 31104000000) % 10
+  let mo = isNaN(ms) ? '--' : Math.floor(ms / 2592000000) % 12
+  let d = isNaN(ms) ? '--' : Math.floor(ms / 86400000) % 30
+  let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000) % 24
+  let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60
+  let s = isNaN(ms) ? '--' : Math.floor(ms / 1000) % 60
+  return [ye, ' *Anni 🗓️*\n',  mo, ' *Mesi 🌙*\n', d, ' *Giorni ☀️*\n', h, ' *Ore 🕐*\n', m, ' *Minuti ⏰*\n', s, ' *Secondi ⏱️*'].map(v => v.toString().padStart(2, 0)).join('')
+}
+function ucapan() {
+  const time = moment.tz('Europe/Rome').format('HH')
+  let res = "Sveglio così presto? 🥱"
+  if (time >= 4) {
+    res = "Mattina 🌄"
+  }
+  if (time >= 10) {
+    res = "Mattina ☀️"
+  }
+  if (time >= 15) {
+    res = "Pomeriggio 🌇"
+  }
+  if (time >= 18) {
+    res = "Sera 🌙"
+  }
+  return res
 }
