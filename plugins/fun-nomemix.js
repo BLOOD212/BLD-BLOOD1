@@ -37,8 +37,10 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     await conn.reply(m.chat, response, m);
 };
 
-handler.help = ['nonemix'];
+handler.help = ['nomimix',];
 handler.tags = ['giochi'];
-handler.command = /^(nomemix)$/i;
-
+handler.command = /^(nomimix)$/i;
+handler.group = true;
+handler.botAdmin = false;
+handler.fail = null;
 export default handler;
