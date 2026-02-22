@@ -12,87 +12,100 @@ const defaultMenu = {
   footer: '*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n',
   after: ``,
 }
-let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command}) => {
-let tags = {
-'ricerca': 'Ricerche',
-}
+
+let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
+  // Inizializza global.fake se non esiste
+  global.fake = global.fake || {};
+  global.fake.error = global.fake.error || "Si è verificato un errore, riprova più tardi.";
+
+  let tags = {
+    'ricerca': 'Ricerche',
+  }
 
   try {
-      let dash = global.dashmenu
-          let m1 = global.dmenut
-      let m2 = global.dmenub
-      let m3 = global.dmenuf
-      let m4 = global.dmenub2
-      let cc = global.cmenut
-      let c1 = global.cmenuh
-      let c2 = global.cmenub
-      let c3 = global.cmenuf
-      let c4 = global.cmenua
-      let lprem = global.lopr
-      let llim = global.lolm
-      let tag = `@${m.sender.split('@')[0]}`
-    let ucpn = `${ucapan()}`
-    let d = new Date(new Date + 3600000)
-    let locale = 'it'
-    let week = d.toLocaleDateString(locale, { weekday: 'long' })
+    // Dati di configurazione
+    let dash = global.dashmenu;
+    let m1 = global.dmenut;
+    let m2 = global.dmenub;
+    let m3 = global.dmenuf;
+    let m4 = global.dmenub2;
+    let cc = global.cmenut;
+    let c1 = global.cmenuh;
+    let c2 = global.cmenub;
+    let c3 = global.cmenuf;
+    let c4 = global.cmenua;
+    let lprem = global.lopr;
+    let llim = global.lolm;
+    let tag = `@${m.sender.split('@')[0]}`;
+    let ucpn = `${ucapan()}`;
+    let d = new Date(new Date + 3600000);
+    let locale = 'it';
+    let week = d.toLocaleDateString(locale, { weekday: 'long' });
     let date = d.toLocaleDateString(locale, {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
-    })
-    let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.fromMe ? conn.user.jid : m.sender
-    let weton = ['Pahing', 'Pon', 'Wage', 'Kliwon', 'Legi'][Math.floor(d / 84600000) % 5]
+    });
+
+    // Estrazione dati utente
+    let who = m.mentionedJid && m.mentionedJid[0] ? m.mentionedJid[0] : m.fromMe ? conn.user.jid : m.sender;
+    let weton = ['Pahing', 'Pon', 'Wage', 'Kliwon', 'Legi'][Math.floor(d / 84600000) % 5];
     let dateIslamic = Intl.DateTimeFormat(locale + '-TN-u-ca-islamic', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
-    }).format(d)
+    }).format(d);
     let time = d.toLocaleTimeString(locale, {
       hour: 'numeric',
       minute: 'numeric',
       second: 'numeric'
-    })
-    let _uptime = process.uptime() * 1000
-    let _muptime
+    });
+
+    // Uptime
+    let _uptime = process.uptime() * 1000;
+    let _muptime;
     if (process.send) {
-      process.send('uptime')
+      process.send('uptime');
       _muptime = await new Promise(resolve => {
-        process.once('message', resolve)
-        setTimeout(resolve, 1000)
-      }) * 1000
+        process.once('message', resolve);
+        setTimeout(resolve, 1000);
+      }) * 1000;
     }
-    let muptime = clockString(_muptime)
-    let uptime = clockString(_uptime)
-    let _mpt
+    let muptime = clockString(_muptime);
+    let uptime = clockString(_uptime);
+    let _mpt;
     if (process.send) {
-      process.send('uptime')
+      process.send('uptime');
       _mpt = await new Promise(resolve => {
-        process.once('message', resolve)
-        setTimeout(resolve, 1000)
-      }) * 1000
+        process.once('message', resolve);
+        setTimeout(resolve, 1000);
+      }) * 1000;
     }
-    let mpt = clockString(_mpt)
-    let usrs = db.data.users[m.sender]
+    let mpt = clockString(_mpt);
 
-    let wib = moment.tz('Europe/Rome').format('HH:mm:ss')
-    let wibh = moment.tz('Europe/Rome').format('HH')
-    let wibm = moment.tz('Europe/Rome').format('mm')
-    let wibs = moment.tz('Europe/Rome').format('ss')
-    let wit = moment.tz('Asia/Jayapura').format('HH:mm:ss')
-    let wita = moment.tz('Asia/Makassar').format('HH:mm:ss')
-    let wktuwib = `${wibh} H ${wibm} M ${wibs} S`
+    // Dati aggiuntivi dell'utente
+    let usrs = db.data.users[m.sender];
+    let wib = moment.tz('Europe/Rome').format('HH:mm:ss');
+    let wibh = moment.tz('Europe/Rome').format('HH');
+    let wibm = moment.tz('Europe/Rome').format('mm');
+    let wibs = moment.tz('Europe/Rome').format('ss');
+    let wit = moment.tz('Asia/Jayapura').format('HH:mm:ss');
+    let wita = moment.tz('Asia/Makassar').format('HH:mm:ss');
+    let wktuwib = `${wibh} H ${wibm} M ${wibs} S`;
 
-    let mode = global.opts['self'] ? 'Privato' : 'Pubblico'
-    let _package = JSON.parse(await promises.readFile(join(__dirname, '../package.json')).catch(_ => ({}))) || {}
-    let { age, exp, limit, level, role, registered, eris} = global.db.data.users[m.sender]
-    let { min, xp, max } = xpRange(level, global.multiplier)
-    let name = await conn.getName(m.sender)
-    let premium = global.db.data.users[m.sender].premiumTime
-    let prems = `${premium > 0 ? 'Premium': 'Utente comune'}`
-    let platform = os.platform()
+    // Impostazioni modalità
+    let mode = global.opts['self'] ? 'Privato' : 'Pubblico';
+    let _package = JSON.parse(await promises.readFile(join(__dirname, '../package.json')).catch(_ => ({}))) || {};
+    let { age, exp, limit, level, role, registered, eris } = global.db.data.users[m.sender];
+    let { min, xp, max } = xpRange(level, global.multiplier);
+    let name = await conn.getName(m.sender);
+    let premium = global.db.data.users[m.sender].premiumTime;
+    let prems = `${premium > 0 ? 'Premium' : 'Utente comune'}`;
+    let platform = os.platform();
 
-    let totalreg = Object.keys(global.db.data.users).length
-    let rtotalreg = Object.values(global.db.data.users).filter(user => user.registered == true).length
+    let totalreg = Object.keys(global.db.data.users).length;
+    let rtotalreg = Object.values(global.db.data.users).filter(user => user.registered == true).length;
+
     let help = Object.values(global.plugins).filter(plugin => !plugin.disabled).map(plugin => {
       return {
         help: Array.isArray(plugin.tags) ? plugin.help : [plugin.help],
@@ -102,20 +115,25 @@ let tags = {
         premium: plugin.premium,
         enabled: !plugin.disabled,
       }
-    })
-    let groups = {}
+    });
+
+    // Raggruppa i comandi per tag
+    let groups = {};
     for (let tag in tags) {
-      groups[tag] = []
+      groups[tag] = [];
       for (let plugin of help)
         if (plugin.tags && plugin.tags.includes(tag))
-          if (plugin.help) groups[tag].push(plugin)
-          }
-    conn.menu = conn.menu ? conn.menu : {}
-    let before = conn.menu.before || defaultMenu.before
-    let header = conn.menu.header || defaultMenu.header
-    let body = conn.menu.body || defaultMenu.body
-    let footer = conn.menu.footer || defaultMenu.footer
-    let after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? '' : `Powered by https://wa.me/${global.conn.user.jid.split`@`[0]}`) + defaultMenu.after
+          if (plugin.help) groups[tag].push(plugin);
+    }
+
+    conn.menu = conn.menu ? conn.menu : {};
+    let before = conn.menu.before || defaultMenu.before;
+    let header = conn.menu.header || defaultMenu.header;
+    let body = conn.menu.body || defaultMenu.body;
+    let footer = conn.menu.footer || defaultMenu.footer;
+    let after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? '' : `Powered by https://wa.me/${global.conn.user.jid.split`@`[0]}`) + defaultMenu.after;
+
+    // Costruzione del testo per il menu
     let _text = [
       before,
       ...Object.keys(tags).map(tag => {
@@ -125,15 +143,17 @@ let tags = {
               return body.replace(/%cmd/g, menu.prefix ? help : '%_p' + help)
                 .replace(/%islimit/g, menu.limit ? llim : '')
                 .replace(/%isPremium/g, menu.premium ? lprem : '')
-                .trim()
-            }).join('\n')
+                .trim();
+            }).join('\n');
           }),
           footer
-        ].join('\n')
+        ].join('\n');
       }),
       after
-    ].join('\n')
-    let text = typeof conn.menu == 'string' ? conn.menu : typeof conn.menu == 'object' ? _text : ''
+    ].join('\n');
+
+    // Sostituzione delle variabili nel testo
+    let text = typeof conn.menu == 'string' ? conn.menu : typeof conn.menu == 'object' ? _text : '';
     let replace = {
       '%': '%',
       p: uptime, muptime,
@@ -146,78 +166,11 @@ let tags = {
       totalexp: exp,
       xp4levelup: max - exp,
       github: _package.homepage ? _package.homepage.url || _package.homepage : '[unknown github url]',
-      tag, dash,m1,m2,m3,m4,cc, c1, c2, c3, c4,lprem,llim,
-      ucpn,platform, wib, mode, _p, eris, age, tag, name, prems, level, limit, name, weton, week, date, dateIslamic, time, totalreg, rtotalreg, role,
+      tag, dash, m1, m2, m3, m4, cc, c1, c2, c3, c4, lprem, llim,
+      ucpn, platform, wib, mode, _p, eris, age, tag, name, prems, level, limit, name, weton, week, date, dateIslamic, time, totalreg, rtotalreg, role,
       readmore: readMore
-    }
-    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name])
+    };
 
- let fkon = { key: { fromMe: false, participant: `${m.sender.split`@`[0]}@s.whatsapp.net`, ...(m.chat ? { remoteJid: '393514357738@s.whatsapp.net' } : {}) }, message: { contactMessage: { displayName: `${name}`, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:;a,;;;\nFN:${name}\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-ABLabel:Ponsel\nEND:VCARD`}}}
-await m.react('🔦') 
+    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name]);
 
- conn.sendMessage(m.chat, {
-    video: fs.readFileSync('./media/menu/menu7.mp4'),
-    caption: text.trim(),
-    gifPlayback: true,
-    ...fake, // Usa il global.fake per il contesto
-    contextInfo: {
-        ...fake.contextInfo, // Mantieni il contesto del fake
-        mentionedJid: [m.sender],
-        forwardedNewsletterMessageInfo: {
-            ...fake.contextInfo.forwardedNewsletterMessageInfo,
-            newsletterName: "ᰔᩚ . ˚ Menu Ricerche ☆˒˒"
-        }
-    }
-}, { quoted: m })
-
-  } catch (e) {
-    console.error(e)
-    conn.reply(m.chat, global.fake.error, m)
-    throw e
-  }
-}
-handler.help = ['menuricerche']
-handler.tags = ['menu']
-handler.command = ['menusearch', 'menuricerche', 'menuricerca']
-
-export default handler
-
-function pickRandom(list) {
-  return list[Math.floor(Math.random() * list.length)]
-}
-
-const more = String.fromCharCode(8206)
-const readMore = more.repeat(4001)
-
-function clockString(ms) {
-  let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000)
-  let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60
-  let s = isNaN(ms) ? '--' : Math.floor(ms / 1000) % 60
-  return [h, ' H ', m, ' M ', s, ' S '].map(v => v.toString().padStart(2, 0)).join('')
-}
-function clockStringP(ms) {
-  let ye = isNaN(ms) ? '--' : Math.floor(ms / 31104000000) % 10
-  let mo = isNaN(ms) ? '--' : Math.floor(ms / 2592000000) % 12
-  let d = isNaN(ms) ? '--' : Math.floor(ms / 86400000) % 30
-  let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000) % 24
-  let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60
-  let s = isNaN(ms) ? '--' : Math.floor(ms / 1000) % 60
-  return [ye, ' *Anni 🗓️*\n',  mo, ' *Mesi 🌙*\n', d, ' *Giorni ☀️*\n', h, ' *Ore 🕐*\n', m, ' *Minuti ⏰*\n', s, ' *Secondi ⏱️*'].map(v => v.toString().padStart(2, 0)).join('')
-}
-function ucapan() {
-  const time = moment.tz('Europe/Rome').format('HH')
-  let res = "Sveglio così presto? 🥱"
-  if (time >= 4) {
-    res = "Mattina 🌄"
-  }
-  if (time >= 10) {
-    res = "Mattina ☀️"
-  }
-  if (time >= 15) {
-    res = "Pomeriggio 🌇"
-  }
-  if (time >= 18) {
-    res = "Sera 🌙"
-  }
-  return res
-}
+    let fkon = { key: { fromMe: false, participant: `${m.sender.split`@`[0]}@s.whatsapp.net`, ...(m.chat ? { remoteJid: '393514357738@s.whatsapp.net' } : {}) }, message: { contactMessage: { displayName: `${name}`, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:;a,;;;\nFN:${name}\nitem1.TEL;waid=${m.sender.split('@')[0]}:${m.sender.split('@')[0]}\nitem1.X-
