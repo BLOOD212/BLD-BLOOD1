@@ -201,16 +201,4 @@ function ucapan() {
   const time = moment.tz('Europe/Rome').format('HH')
   let res = "Sveglio così presto? 🥱"
   if (time >= 4) {
-    res = "Mattina 🌄"
-  }
-  if (time >= 10) {
-    res = "Mattina ☀️"
-  }
-  if (time >= 15) {
-    res = "Pomeriggio 🌇"
-  }
-  if (time >= 18) {
-    res = "Sera 🌙"
-  }
-  return res
-}
+    res = "
