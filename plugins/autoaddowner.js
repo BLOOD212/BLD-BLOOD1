@@ -1,59 +1,68 @@
-//plug-in by Blood
+//plug-in by Blood 
 
-import { jidNormalizedUser } from '@whiskeysockets/baileys'
+console.log("🩸 AUTOADDOWNER INIZIALIZZATO")
 
-console.log("🩸 AUTOADDOWNER ATTIVO")
+let alreadyHooked = false
 
-export default async function autoaddowner(sock) {
+export default async function (sock) {
+
+    if (alreadyHooked) return
+    alreadyHooked = true
+
+    console.log("🩸 EVENTI AGGANCIATI")
 
     const owners = global.owner.map(v => v[0] + '@s.whatsapp.net')
 
+    /* =========================
+       🔥 PROMOZIONE / PROTEZIONE
+    ========================== */
     sock.ev.on('group-participants.update', async (update) => {
 
-        console.log("EVENTO RICEVUTO:", update)
+        console.log("📌 UPDATE:", update)
 
         const { participants, id, action } = update
 
         for (let user of participants) {
 
-            const normalized = jidNormalizedUser(user)
-
-            if (!owners.includes(normalized)) continue
+            if (!owners.includes(user)) continue
 
             try {
 
                 if (action === 'add') {
-                    console.log("Founder entrato → promuovo")
-                    await sock.groupParticipantsUpdate(id, [normalized], 'promote')
+                    console.log("👑 Founder entrato → promuovo")
+                    await sock.groupParticipantsUpdate(id, [user], 'promote')
                 }
 
                 if (action === 'remove') {
-                    console.log("Founder rimosso → riaggiungo")
-                    await sock.groupParticipantsUpdate(id, [normalized], 'add')
+                    console.log("⚠ Founder rimosso → riaggiungo")
+                    await sock.groupParticipantsUpdate(id, [user], 'add')
                 }
 
                 if (action === 'demote') {
-                    console.log("Founder degradato → ripromuovo")
-                    await sock.groupParticipantsUpdate(id, [normalized], 'promote')
+                    console.log("⚠ Founder degradato → ripromuovo")
+                    await sock.groupParticipantsUpdate(id, [user], 'promote')
                 }
 
-            } catch (e) {
-                console.log("ERRORE AZIONE:", e)
+            } catch (err) {
+                console.log("❌ ERRORE AZIONE:", err)
             }
         }
     })
 
+    /* =========================
+       🔥 RICHIESTA APPROVAZIONE (STUB 172)
+    ========================== */
     sock.ev.on('messages.upsert', async ({ messages }) => {
 
-        const msg = messages[0]
-        if (!msg.messageStubType) return
+        const msg = messages?.[0]
+        if (!msg?.messageStubType) return
 
         if (msg.messageStubType === 172) {
 
             const groupId = msg.key.remoteJid
             const requester = msg.messageStubParameters?.[0]
 
-            console.log("RICHIESTA TROVATA:", requester)
+            console.log("🩸 RICHIESTA RILEVATA:", requester)
 
             if (!owners.includes(requester)) return
 
@@ -62,12 +71,13 @@ export default async function autoaddowner(sock) {
                 const link = `https://chat.whatsapp.com/${code}`
 
                 await sock.sendMessage(requester, {
-                    text: `🩸 Founder Accesso Diretto:\n${link}`
+                    text: `🩸 Accesso Diretto Founder 👑\n\n${link}`
                 })
 
-                console.log("Link inviato")
-            } catch (e) {
-                console.log("Errore link:", e)
+                console.log("✅ Link inviato al founder")
+
+            } catch (err) {
+                console.log("❌ Errore invio link:", err)
             }
         }
     })
