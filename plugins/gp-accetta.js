@@ -1,108 +1,40 @@
-let richiestaInAttesa = {};
+const handler = async (m, { conn, isOwner, isAdmin, usedPrefix, command }) => {
+  // Controllo permessi
+  if (!isOwner && !isAdmin) return m.reply('⛔ *Solo gli amministratori possono usare questo comando.*')
+  if (!m.isGroup) return 
 
-let handler = async (m, { conn, isAdmin, isBotAdmin, args, usedPrefix, command }) => {
-  if (!m.isGroup) return;
+  try {
+    // Recupera la lista delle richieste pendenti
+    const res = await conn.groupRequestParticipantsList(m.chat)
 
-  const groupId = m.chat;
-
-  if (richiestaInAttesa[m.sender]) {
-    const pending = await conn.groupRequestParticipantsList(groupId);
-    const input = (m.text || '').trim();
-    delete richiestaInAttesa[m.sender];
-    if (/^\d+$/.test(input)) {
-      const numero = parseInt(input);
-      if (numero <= 0) return m.reply("❌ Numero non valido. Usa un numero > 0.");
-      const daAccettare = pending.slice(0, numero);
-      let accettati = 0;
-      try {
-        const jidList = daAccettare.map(p => p.jid);
-        console.log('jidList:', jidList);
-        await conn.groupRequestParticipantsUpdate(groupId, jidList, 'approve');
-        accettati = jidList.length;
-        console.log('Accettati:', accettati);
-      } catch (error) {
-        console.error('Errore:', error);
-      }
-      return m.reply(`✅ Accettate ${accettati} richieste.`);
+    if (!res || res.length === 0) {
+      return m.reply('✅ *Non ci sono richieste di accesso pendenti.*')
     }
-    if (input === '39' || input === '+39') {
-      const daAccettare = pending.filter(p => p.jid.startsWith('39'));
-      let accettati = 0;
-      try {
-        const jidList = daAccettare.map(p => p.jid);
-        await conn.groupRequestParticipantsUpdate(groupId, jidList, 'approve');
-        accettati = jidList.length;
-      } catch {}
-      return m.reply(`✅ Accettate ${accettati} richieste con prefisso 39.`);
-    }
-    return m.reply("❌ Input non valido. Invia un numero o '39'.");
+
+    // Estraiamo solo i JID (ID degli utenti)
+    const jids = res.map(user => user.jid)
+
+    // Eseguiamo l'approvazione per tutti i JID in una volta sola (più efficiente)
+    // Se la tua versione richiede un ciclo, usa for...of con await
+    await conn.groupRequestParticipantsUpdate(
+      m.chat, 
+      jids, 
+      'approve'
+    )
+
+    m.reply(`✅ *Operazione completata:* sono state accettate ${jids.length} richieste di ingresso.`)
+
+  } catch (e) {
+    console.error(e)
+    m.reply('❌ *Errore:* Assicurati che il bot sia amministratore e che l\'approvazione dei membri sia attiva nelle impostazioni del gruppo.')
   }
+}
 
-  if (!isBotAdmin) return m.reply("❌ Devo essere admin per gestire richieste.");
-  if (!isAdmin) return m.reply("❌ Solo admin del gruppo possono usare questo comando.");
-  const pending = await conn.groupRequestParticipantsList(groupId);
-  if (!pending.length) return m.reply("✅ Non ci sono richieste in sospeso.");
-  if (!args[0]) {
-    const text = `📨 Richieste in sospeso: ${pending.length}\nSeleziona un'opzione:`;
-    return conn.sendMessage(m.chat, { text, footer: 'Gestione richieste gruppo', buttons: [ { buttonId: `${usedPrefix}${command} accetta`, buttonText: { displayText: "✅ Accetta tutte" }, type: 1 }, { buttonId: `${usedPrefix}${command} rifiuta`, buttonText: { displayText: "❌ Rifiuta tutte" }, type: 1 }, { buttonId: `${usedPrefix}${command} accetta39`, buttonText: { displayText: "🇮🇹 Accetta +39" }, type: 1 }, { buttonId: `${usedPrefix}${command} gestisci`, buttonText: { displayText: "📥 Gestisci richieste" }, type: 1 } ], headerType: 1, viewOnce: true }, { quoted: m });
-  }
+handler.help = ['accetta']
+handler.tags = ['group']
+handler.command = /^(accetta|accept)$/i
+handler.group = true
+handler.admin = true
+handler.botAdmin = true
 
-  if (args[0] === 'accetta') {
-    const numero = parseInt(args[1]);
-    const daAccettare = isNaN(numero) || numero <= 0 ? pending : pending.slice(0, numero);
-    let accettati = 0;
-    try {
-      const jidList = daAccettare.map(p => p.jid);
-      await conn.groupRequestParticipantsUpdate(groupId, jidList, 'approve');
-      accettati = jidList.length;
-    } catch {}
-    return m.reply(`✅ Accettate ${accettati} richieste.`);
-  }
-
-  if (args[0] === 'accettane') {
-    const numero = parseInt(args[1]);
-    if (isNaN(numero) || numero <= 0) return m.reply("❌ Numero non valido. Usa un numero maggiore di 0.");
-    const daAccettare = pending.slice(0, numero);
-    let accettati = 0;
-    try {
-      const jidList = daAccettare.map(p => p.jid);
-      await conn.groupRequestParticipantsUpdate(groupId, jidList, 'approve');
-      accettati = jidList.length;
-    } catch {}
-    return m.reply(`✅ Accettate ${accettati} richieste su ${numero}.`);
-  }
-
-  if (args[0] === 'rifiuta') {
-    let rifiutati = 0;
-    try {
-      const jidList = pending.map(p => p.jid);
-      await conn.groupRequestParticipantsUpdate(groupId, jidList, 'reject');
-      rifiutati = jidList.length;
-    } catch {}
-    return m.reply(`❌ Rifiutate ${rifiutati} richieste.`);
-  }
-
-  if (args[0] === 'accetta0') {
-    const daAccettare = pending.filter(p => p.jid.startsWith('39'));
-    let accettati = 0;
-    try {
-      const jidList = daAccettare.map(p => p.jid);
-      await conn.groupRequestParticipantsUpdate(groupId, jidList, 'approve');
-      accettati = jidList.length;
-    } catch {}
-    return m.reply(`✅ Accettate ${accettati} richieste con prefisso 39.`);
-  }
-
-  if (args[0] === 'gestisci') {
-    return conn.sendMessage(m.chat, { text: `📥 Quante richieste vuoi accettare?\n\nScegli una quantità qui sotto oppure scrivi manualmente:\n\n*.${command} accettane <numero>*\nEsempio: *.${command} accettane 7*`, footer: 'Gestione personalizzata richieste', buttons: [ { buttonId: `${usedPrefix}${command} accettane 10`, buttonText: { displayText: "10" }, type: 1 }, { buttonId: `${usedPrefix}${command} accettane 20`, buttonText: { displayText: "20" }, type: 1 }, { buttonId: `${usedPrefix}${command} accettane 50`, buttonText: { displayText: "50" }, type: 1 }, { buttonId: `${usedPrefix}${command} accettane 100`, buttonText: { displayText: "100" }, type: 1 }, { buttonId: `${usedPrefix}${command} accettane 200`, buttonText: { displayText: "200" }, type: 1 }, ], headerType: 1, viewOnce: true }, { quoted: m });
-  }
-};
-
-handler.command = ['richieste'];
-handler.tags = ['gruppo'];
-handler.help = ['richieste'];
-handler.group = true;
-handler.admin = true;
-handler.botAdmin = true;
-
-export default handler;
+export default handler
