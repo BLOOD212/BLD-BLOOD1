@@ -12,12 +12,17 @@ const defaultMenu = {
   footer: '*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n',
   after: ``,
 }
+
 let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
   let tags = {
     'ricerca': 'Ricerche',
   }
 
   try {
+    // Inizializzazione di global.fake.error per evitare l'errore
+    global.fake = global.fake || {}
+    global.fake.error = global.fake.error || "Si è verificato un errore, riprova più tardi."
+
     let dash = global.dashmenu
     let m1 = global.dmenut
     let m2 = global.dmenub
@@ -159,10 +164,4 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       video: fs.readFileSync('./media/menu/menu7.mp4'),
       caption: text.trim(),
       gifPlayback: true,
-      ...fake, // Usa il global.fake per il contesto
-      contextInfo: {
-        ...fake.contextInfo, // Mantieni il contesto del fake
-        mentionedJid: [m.sender],
-        forwardedNewsletterMessageInfo: {
-          ...fake.contextInfo.forwardedNewsletterMessageInfo,
-          newsletterName: "ᰔᩚ . ˚ Menu
+      ...fake
