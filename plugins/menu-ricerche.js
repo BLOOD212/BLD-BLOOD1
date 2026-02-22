@@ -168,6 +168,4 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       readmore: readMore
     };
 
-    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name]);
-
-    let fkon = { key: { fromMe: false, participant: `${m.sender.split`@`[0]}@s.whatsapp.net`, ...(m.chat ? { remoteJid: '393514357738@s.whatsapp.net' } : {}) }, message: { contactMessage: { displayName: `${name}`, ...
+    text =
