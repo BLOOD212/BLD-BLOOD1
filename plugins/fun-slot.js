@@ -65,7 +65,7 @@ let handler = async (m, { conn }) => {
     ctx.fillStyle = '#fff'
     ctx.font = 'bold 36px Sans'
     ctx.textAlign = 'center'
-    ctx.fillText('🎰 SLOT MACHINE 🎰', canvas.width / 2, 50)
+    ctx.fillText(' SLOT MACHINE ', canvas.width / 2, 50)
 
     // Caricamento immagini frutta da Twemoji
     const img1 = await loadImage(fruitURLs[r1])
@@ -80,13 +80,13 @@ let handler = async (m, { conn }) => {
     // Esito
     ctx.font = 'bold 28px Sans'
     ctx.fillStyle = win ? '#00ff00' : '#ff3333'
-    ctx.fillText(win ? '🎉 VITTORIA!' : '🤡 SCONFITTA!', canvas.width / 2, 300)
+    ctx.fillText(win ? ' VITTORIA!' : ' SCONFITTA!', canvas.width / 2, 300)
 
     // Saldo e XP
     ctx.font = '20px Sans'
     ctx.fillStyle = '#fff'
-    ctx.fillText(`💰 Euro: ${user.limit}   ⭐ XP: ${user.exp}`, canvas.width / 2, 340)
-    ctx.fillText(`📊 Livello ${user.level}   Progresso: ${currentLevelXP}/${levelXP} XP`, canvas.width / 2, 370)
+    ctx.fillText(` Euro: ${user.limit}    XP: ${user.exp}`, canvas.width / 2, 340)
+    ctx.fillText(` Livello ${user.level}   Progresso: ${currentLevelXP}/${levelXP} XP`, canvas.width / 2, 370)
 
     // Invio immagine su WhatsApp
     await new Promise(r => setTimeout(r, 1500))
