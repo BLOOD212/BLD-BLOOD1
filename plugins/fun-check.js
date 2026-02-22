@@ -51,9 +51,11 @@ let handler = async (m, { conn }) => {
   }, { quoted: m });
 };
 
-handler.command = /^(check|device|perqisizione)$/i;
+handler.help = ['check', 'device', 'perqisizione'];  
+handler.tags = ['giochi'];  
+handler.command = /^(check|device|perqisizione)$/i; 
 handler.group = true;
-handler.owner = true;
+handler.admin = true;
 handler.botAdmin = false;
 
 handler.fail = null;
