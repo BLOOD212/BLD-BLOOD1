@@ -255,7 +255,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
     await m.react('🔍')
   } catch (e) {
     console.error(e)
-    conn.reply(m.chat, '❌ Errore nel menu ricerche:\n' + e.message, m)
+    conn.reply(m.chat, '❌ Errore nel menu ricerche:\n' + e, m)
   }
 }
 
@@ -273,4 +273,4 @@ const readMore = more.repeat(4001)
 function clockString(ms) {
   let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000)
   let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60
-  let s = is
+  let s = isNa
