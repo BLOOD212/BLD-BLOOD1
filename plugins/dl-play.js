@@ -1,194 +1,133 @@
-import youtubedl from 'youtube-dl-exec';
-import fs from 'fs';
-import path from 'path';
-import ytSearch from 'yt-search';
+import axios from 'axios';
 
-const tmpDir = path.join(process.cwd(), 'temp');
-if (!fs.existsSync(tmpDir)) {
-    fs.mkdirSync(tmpDir);
-}
+// --- CONFIGURAZIONE API ---
+// Usiamo un'API pubblica stabile per Spotify (Delirius API o simili)
+const SEARCH_API = 'https://delirius-api-oficial.vercel.app/api/search/spotify?q=';
+const DOWNLOAD_API = 'https://delirius-api-oficial.vercel.app/api/download/spotify?url=';
 
-const videoInfoCache = new Map();
-const CACHE_TTL = 15 * 60 * 1000;  // Cache validity time (15 minutes)
-
-const A = [
-    '251', // WebM audio format
-    '140', // MP4 audio format
-    '250', // WebM audio format
-    '249', // WebM audio format
-    '139', // M4A audio format
-    'bestaudio[ext=webm]/bestaudio[ext=m4a]/bestaudio', // Best quality audio formats
-];
-
-const V = [
-    '22', // MP4 video format (720p)
-    '136+140', // 720p video + audio
-    '298+140', // 1080p video + audio
-    '135+140', // 480p video + audio
-    '18', // 360p video + audio
-    'best[height<=1080][ext=mp4]/best[ext=mp4]/best[height<=720]', // Best quality video
-];
-
-async function download(url, options) {
-    const opts = {
-        noWarnings: true,
-        noCheckCertificate: true,
-        preferFreeFormats: false,
-        socketTimeout: 30,
-        retries: 5,
-        forceIpv4: true,
-        addHeader: ['referer:youtube.com', 'user-agent:googlebot'],
-        concurrentFragments: 10,
-        noPlaylist: true,
-    };
-
-    if (options.format) opts.format = options.format;
-    if (options.output) opts.output = options.output;
-    if (options.extractAudio) {
-        opts.extractAudio = true;
-        if (options.audioFormat) opts.audioFormat = options.audioFormat;
-        if (options.audioQuality) opts.audioQuality = options.audioQuality;
-        opts.keepVideo = false;
-    }
-    if (options.maxFilesize) opts.maxFilesize = options.maxFilesize;
-    if (options.cookies) opts.cookies = options.cookies;
+// --- FUNZIONE DI DOWNLOAD ---
+async function spotifyDownload(url, m, conn, title) {
+    // Messaggio di attesa
+    const waitMsg = await conn.sendMessage(m.chat, { text: `🎧 Scarico da Spotify: *${title}*...` }, { quoted: m });
 
     try {
-        return await youtubedl(url, opts);
-    } catch (error) {
-        throw new Error(`Failed to download video: ${error.message}`);
-    }
-}
+        // 1. Richiedi il link di download
+        const { data } = await axios.get(`${DOWNLOAD_API}${url}`);
 
-async function getVideoInfo(url) {
-    try {
-        const info = await youtubedl(url, {
-            dumpJson: true,
-            noDownload: true,
-            noWarnings: true,
-        });
-        return {
-            title: info.title || 'Video YouTube',
-            uploader: info.uploader || info.channel || 'Sconosciuto',
-            duration: info.duration_string || (info.duration ? new Date(info.duration * 1000).toISOString().substr(11, 8) : '?'),
-            view_count: info.view_count,
-            upload_date: info.upload_date,
-            thumbnail: info.thumbnail,
-            id: info.id,
-            webpage_url: info.webpage_url || url,
-        };
-    } catch (error) {
-        console.log(`[ERRORE] Impossibile ottenere info per ${url}: ${error.message}`);
-        return {
-            title: 'Video YouTube',
-            uploader: 'YouTube',
-            duration: '?',
-            view_count: null,
-            upload_date: null,
-            thumbnail: `https://img.youtube.com/vi/${url.split('v=')[1]}/maxresdefault.jpg`,
-            id: url.split('v=')[1],
-            webpage_url: url,
-        };
-    }
-}
-
-async function searchAndDownload(m, conn, command, text, prefix) {
-    try {
-        await conn.sendPresenceUpdate(command === 'play' ? 'composing' : 'recording', m.chat);
-
-        let searchResults;
-        const cacheKey = text.toLowerCase();
-        if (videoInfoCache.has(cacheKey) && (Date.now() - videoInfoCache.get(cacheKey).timestamp < CACHE_TTL)) {
-            searchResults = videoInfoCache.get(cacheKey).data;
-        } else {
-            const search = await ytSearch(text);
-            if (!search.videos.length) {
-                throw new Error('❌ *Nessun risultato trovato!*');
-            }
-            searchResults = search.videos.slice(0, 5);
-            videoInfoCache.set(cacheKey, { data: searchResults, timestamp: Date.now() });
+        // Verifica se l'API ha risposto correttamente
+        if (!data || !data.status || !data.data || !data.data.url) {
+            throw new Error("L'API non ha restituito un link valido.");
         }
 
-        const firstVideo = searchResults[0];
-        const videoInfo = {
-            title: firstVideo.title || 'Video YouTube',
-            uploader: firstVideo.author?.name || 'Sconosciuto',
-            duration: firstVideo.duration?.timestamp || firstVideo.duration || '?',
-            view_count: firstVideo.views,
-            upload_date: firstVideo.uploadedAt || null,
-            thumbnail: firstVideo.thumbnail || `https://img.youtube.com/vi/${firstVideo.videoId}/maxresdefault.jpg`,
-            id: firstVideo.videoId,
-            webpage_url: firstVideo.url,
-        };
+        const downloadUrl = data.data.url; // Link diretto MP3
+        const coverImage = data.data.image; // Copertina album
+        const artist = data.data.artist;
 
-        // Display video preview
-        const captionMessage = `
-        *╭─ׄ✦☾⋆⁺₊✧𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽✦─ׅ⭒*
-        *├* *\`${videoInfo.title}\`*
-        *├* 👤 \`Autore:\` *${videoInfo.uploader}*
-        *├* 👁️ \`Views:\` *${videoInfo.view_count}*
-        *├* ⏱️ \`Durata:\` *${videoInfo.duration}*
-        *├* 📅 \`Data di caricamento:\` *${videoInfo.upload_date || '?'}*
-        *╰⭒─ׄ─⋆─⭒─⭒─⭒*
-        `;
-
-        await conn.sendMessage(m.chat, {
-            image: { url: videoInfo.thumbnail },
-            caption: captionMessage.trim(),
-            footer: '> \`Bot musicale\`',
+        // 2. Invia l'audio
+        await conn.sendMessage(m.chat, { 
+            audio: { url: downloadUrl }, 
+            mimetype: "audio/mpeg",
+            fileName: `${title}.mp3`,
+            contextInfo: {
+                externalAdReply: {
+                    title: title,
+                    body: `Artista: ${artist}`,
+                    thumbnailUrl: coverImage,
+                    sourceUrl: url,
+                    mediaType: 1,
+                    renderLargerThumbnail: true
+                }
+            }
         }, { quoted: m });
 
-        // Prepare for download (audio/video)
-        const tmpFile = path.join(tmpDir, `${command}_${Date.now()}.${command === 'playvideo' ? 'mp4' : 'mp3'}`);
-        const downloadOptions = {
-            output: tmpFile,
-            format: command === 'playvideo' ? V[0] : A[0],
-            extractAudio: command !== 'playvideo',
-            audioFormat: 'mp3',
-            audioQuality: '1',
-        };
+        // Cancella messaggio di attesa (opzionale, o invia conferma)
+        await conn.sendMessage(m.chat, { text: `✅ *${title}* inviato!`, edit: waitMsg.key });
 
-        await download(firstVideo.url, downloadOptions);
-
-        const buffer = await fs.promises.readFile(tmpFile);
-        await fs.promises.unlink(tmpFile); // Clean up the temporary file
-
-        // Send audio or video
-        if (command === 'playvideo') {
-            await conn.sendMessage(m.chat, {
-                video: buffer,
-                mimetype: 'video/mp4',
-                fileName: `${videoInfo.title}.mp4`,
-                caption: 'Video scaricato con successo!',
-            }, { quoted: m });
-        } else {
-            await conn.sendMessage(m.chat, {
-                audio: buffer,
-                mimetype: 'audio/mpeg',
-                fileName: `${videoInfo.title}.mp3`,
-                ptt: false,
-            }, { quoted: m });
-        }
-    } catch (error) {
-        console.log(`[ERRORE] ${error.message}`);
-        await conn.reply(m.chat, '❌ *Errore durante il download, riprova!*', m);
-    } finally {
-        await conn.sendPresenceUpdate('paused', m.chat);
+    } catch (e) {
+        console.error(`[SpotifyDL] Errore: ${e.message}`);
+        await conn.sendMessage(m.chat, { text: `❌ Errore nel download da Spotify.\nRiprova più tardi.`, edit: waitMsg.key });
     }
 }
 
-let handler = async (m, { conn, command, text, usedprefix }) => {
-    const prefix = usedprefix || '.';
-    if (!text) {
-        const helpMessage = `
-        *╭─ׄ✦☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽✦─ׅ⭒*
-        *├* *\`${prefix}play\` _<nome/url>_
-        *├* ↳ 『 🎵 』- *Scarica audio veloce*
-        *├* *\`${prefix}playaudio\` _<nome/url>_
-        *├* ↳ 『 🎶 』- *Scarica solo l'audio*
-        *├* *\`${prefix}playvideo\` _<nome/url>_
-        *├* ↳ 『 🎥 』- *Scarica video*
-        *╰⭒─ׄ─▢─
-        `;
-        await conn.reply(m.chat, helpMessage, m);
-        return;
+// --- HANDLER PRINCIPALE ---
+const handler = async (m, { conn, text: rawText, usedPrefix }) => {
+    try {
+        // Parsing Input
+        const btnId = m?.message?.listResponseMessage?.singleSelectReply?.selectedRowId || "";
+        const text = m.text || btnId || rawText || "";
+
+        const command = text.replace(usedPrefix, "").trim().split(/\s+/)[0].toLowerCase();
+
+        // Permettiamo sia .play che .spotify
+        if (!['play', 'spotify', 'song'].includes(command)) return;
+
+        const argsString = text.replace(new RegExp(`^${usedPrefix}(play|spotify|song)\\s*`), "").trim();
+
+        // --- CASO 1: DOWNLOAD DIRETTO (Dal click della lista) ---
+        if (argsString.startsWith('sp_dl_')) {
+            // Formato ID: sp_dl_URL_TITOLO
+            const parts = argsString.substring('sp_dl_'.length).split('|||'); // Uso ||| come separatore sicuro
+            const url = parts[0];
+            const title = parts[1] || 'Canzone Spotify';
+
+            await spotifyDownload(url, m, conn, title);
+            return;
+        }
+
+        // --- CASO 2: RICERCA ---
+        if (!argsString) {
+            return m.reply(`💚 *Spotify Play*\nScrivi il titolo di una canzone.\n\nEsempio:\n*${usedPrefix}play* Blinding Lights`);
+        }
+
+        await m.reply(`🔍 Cerco "*${argsString}*" su Spotify...`);
+
+        // Chiamata API Ricerca
+        const { data } = await axios.get(`${SEARCH_API}${encodeURIComponent(argsString)}`);
+
+        if (!data || !data.status || !data.data || data.data.length === 0) {
+            return m.reply('❌ Nessun risultato trovato su Spotify.');
+        }
+
+        // Prendiamo i primi 8 risultati
+        const results = data.data.slice(0, 8);
+
+        const listRows = results.map((track, index) => ({
+            title: `${index + 1}. ${track.title}`,
+            description: `👤 ${track.artist} | ⏱ ${track.duration}`,
+            // ID univoco per il download:
+            rowId: `${usedPrefix}play sp_dl_${track.url}|||${track.title}`
+        }));
+
+        const infoMessage = `
+💚 *RISULTATI SPOTIFY* 💚
+━━━━━━━━━━━━━━━━━━━
+Ho trovato *${results.length}* brani.
+Scegli quale scaricare:
+━━━━━━━━━━━━━━━━━━━
+`;
+
+        const listSections = [{
+            title: "Top Risultati Spotify",
+            rows: listRows
+        }];
+
+        // Invio List Message
+        await conn.sendMessage(m.chat, {
+            text: infoMessage.trim(),
+            title: 'Spotify Player',
+            buttonText: '🎵 Apri Lista',
+            sections: listSections,
+            listType: 1
+        }, { quoted: m });
+
+    } catch (error) {
+        console.error("Errore Spotify Plugin:", error);
+        m.reply("⚠ Errore nel plugin Spotify.");
+    }
+};
+
+handler.command = ['play', 'spotify', 'song'];
+handler.tags = ['media'];
+handler.help = ['.play <titolo>'];
+
+export default handler;
