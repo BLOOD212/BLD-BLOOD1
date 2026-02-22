@@ -73,7 +73,7 @@ let handler = async (m, { conn, usedPrefix, text }) => {
 };
 
 handler.help = ['insultact'];
-handler.tags = ['fun'];
+handler.tags = ['giochi'];
 handler.command = /^(insultact)$/i;
 handler.group = true;
 
