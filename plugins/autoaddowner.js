@@ -1,4 +1,4 @@
-import { owners } from './config.js'; // Use import instead of require
+import { owners } from './config/config.js'; // Modifica il percorso per includere la sottocartella config
 
 // Funzione per gestire l'evento quando i partecipanti cambiano nel gruppo
 async function handleGroupParticipantsUpdate(sock, update) {
