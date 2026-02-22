@@ -162,12 +162,4 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command }) => {
       maxexp: xp,
       totalexp: exp,
       xp4levelup: max - exp,
-      github: _package.homepage ? _package.homepage.url || _package.homepage : '[unknown github url]',
-      tag, dash, m1, m2, m3, m4, cc, c1, c2, c3, c4, lprem, llim,
-      ucpn, platform, wib, mode, _p, eris, age, tag, name, prems, level, limit, name, weton, week, date, dateIslamic, time, totalreg, rtotalreg, role,
-      readmore: readMore
-    };
-
-    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name]);
-
-    let fkon = { key: { fromMe: false, participant: `${m.sender.split`@`[0]}@s.whatsapp.net`, ...(m.chat ? { remoteJid: '393514357738@s.whatsapp.net' } : {}) }, message: { contactMessage: { displayName: `${name}`,
+      github: _package.homepage ? _package.homepage.url || _package.homepage :
