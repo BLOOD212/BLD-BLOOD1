@@ -15,7 +15,6 @@ import pino from 'pino';
 import { makeWASocket, protoType, serialize } from './lib/simple.js';
 import { Low, JSONFile } from 'lowdb';
 import NodeCache from 'node-cache';
-import { ripristinaTimer } from './plugins/gp-configgruppo.js';
 
 const DisconnectReason = {
     connectionClosed: 428,
@@ -29,11 +28,14 @@ const DisconnectReason = {
     forbidden: 403,
     unavailableService: 503
 };
+
 const { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, getPerformanceConfig, setPerformanceConfig, Logger, makeInMemoryStore } = await import('@realvare/based');
 const { chain } = lodash;
 const PORT = process.env.PORT || process.env.SERVER_PORT || 3000;
+
 protoType();
 serialize();
+
 global.isLogoPrinted = false;
 global.qrGenerated = false;
 global.connectionMessagesPrinted = {};
@@ -42,6 +44,7 @@ let methodCode = process.argv.includes("code");
 let MethodMobile = process.argv.includes("mobile");
 let phoneNumber = global.botNumberCode;
 
+// --- UTILS ---
 function redefineConsoleMethod(methodName, filterStrings) {
     const originalConsoleMethod = console[methodName];
     console[methodName] = function () {
@@ -61,64 +64,26 @@ global.__dirname = function dirname(pathURL) {
     return path.dirname(global.__filename(pathURL, true));
 };
 
-global.__require = function require(dir = import.meta.url) {
-    return createRequire(dir);
-};
-
-global.API = (name, path = '/', query = {}, apikeyqueryname) => (name in global.APIs ? global.APIs[name] : name) + path + (query || apikeyqueryname ? '?' + new URLSearchParams(Object.entries({ ...query, ...(apikeyqueryname ? { [apikeyqueryname]: global.APIKeys[name in global.APIs ? global.APIs[name] : name] } : {}) })) : '');
-global.timestamp = { start: new Date };
 const __dirname = global.__dirname(import.meta.url);
-global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
-global.prefix = new RegExp('^[' + (opts['prefix'] || '*/!#$%+£¢€¥^°=¶∆×÷π√✓©®&.\\-.@').replace(/[|\\{}()[\]^$+*.\-\^]/g, '\\$&') + ']');
-global.db = new Low(/https?:\/\//.test(opts['db'] || '') ? new JSONFile('database.json') : new JSONFile('database.json'));
-global.DATABASE = global.db;
+const logger = pino({ level: 'silent' });
+global.store = makeInMemoryStore({ logger });
+
+// --- DATABASE ---
+global.db = new Low(new JSONFile('database.json'));
 global.loadDatabase = async function loadDatabase() {
-    if (global.db.READ) {
-        return new Promise((resolve) => setInterval(async function () {
-            if (!global.db.READ) {
-                clearInterval(this);
-                resolve(global.db.data == null ? global.loadDatabase() : global.db.data);
-            }
-        }, 1 * 1000));
-    }
-    if (global.db.data !== null) return;
+    if (global.db.READ) return;
     global.db.READ = true;
     await global.db.read().catch(console.error);
     global.db.READ = null;
-    global.db.data = {
-        users: {},
-        chats: {},
-        stats: {},
-        settings: {},
-        ...(global.db.data || {}),
-    };
-    global.db.chain = chain(global.db.data);
+    global.db.data = { users: {}, chats: {}, stats: {}, settings: {}, ...(global.db.data || {}) };
 };
-loadDatabase();
+await global.loadDatabase();
 
-if (global.conns instanceof Array) {
-} else {
-    global.conns = [];
-}
-
-global.creds = 'creds.json';
+// --- AUTH ---
 global.authFile = 'bloodsession';
-global.authFileJB = '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙-sub';
-
-setPerformanceConfig({
-    performance: {
-        enableCache: true,
-        enableMetrics: true
-    },
-    debug: {
-        enableLidLogging: true,
-        logLevel: 'debug'
-    }
-});
-
 const { state, saveCreds } = await useMultiFileAuthState(global.authFile);
-const msgRetryCounterMap = (MessageRetryMap) => { };
 const msgRetryCounterCache = new NodeCache();
+
 const question = (t) => {
     process.stdout.write(t);
     return new Promise((resolve) => {
@@ -128,163 +93,107 @@ const question = (t) => {
     });
 };
 
+// --- INTERFACCIA DI AVVIO ---
 let opzione;
-if (!methodCodeQR && !methodCode && !fs.existsSync(`./${authFile}/creds.json`)) {
+if (!methodCodeQR && !methodCode && !fs.existsSync(`./${global.authFile}/creds.json`)) {
     do {
-        const v1 = chalk.hex('#9d00ff'); // Deep Violet
-        const v2 = chalk.hex('#00e5ff'); // Electric Cyan
-        const v3 = chalk.hex('#ff00d4'); // Magenta Pop
+        const v1 = chalk.hex('#9d00ff'); 
+        const v2 = chalk.hex('#00e5ff'); 
+        const v3 = chalk.hex('#ff00d4'); 
         const softText = chalk.hex('#b0b0b0');
 
+        console.clear();
         const a = v1('╭━━━━━━━━━━━━━• ✧˚🩸BLD BLOOD🕊️˚✧ •━━━━━━━━━━━━━');
         const b = v1('╰━━━━━━━━━━━━━• ☾⋆₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⋆☽ •━━━━━━━━━━━━━');
         const linea = v2('   ✦━━━━━━✦✦━━━━━━༺༻━━━━━━༺༻━━━━━━✦✦━━━━━━✦');
-        const sm = v3('SELEZIONE METODO DI ACCESSO ✦');
-        const qr = v1(' ┌─⭓') + ' ' + chalk.bold.white('1. Scansione con QR Code');
-        const codice = v1(' └─⭓') + ' ' + chalk.bold.white('2. Codice di 8 cifre');
-        const istruzioni = [
-            v1(' ┌─⭓') + softText.italic(' Digita solo il numero corrispondente.'),
-            v1(' └─⭓') + softText.italic(' Premi Invio per confermare.'),
-            softText.italic(''),
-            v2.italic('                   by blood'),
-        ];
-        const prompt = v3.bold('\n⌯ Inserisci la tua scelta ---> ');
-
-        opzione = await question(`\n
+        
+        const menu = `
 ${a}
-
-          ${sm}
+          ${v3('SELEZIONE METODO DI ACCESSO ✦')}
 ${linea}
-
-${qr}
-${codice}
-
+${v1(' ┌─⭓')} ${chalk.bold.white('1. Scansione con QR Code')}
+${v1(' └─⭓')} ${chalk.bold.white('2. Codice di 8 cifre')}
 ${linea}
-${istruzioni.join('\n')}
+${v1(' ┌─⭓')} ${softText.italic('Digita il numero e premi Invio.')}
+${v2.italic('                   by blood')}
+${b}`;
 
-${b}
-${prompt}`);
-
-        if (!/^[1-2]$/.test(opzione)) {
-            console.log(`\n${chalk.hex('#ff3b3b').bold('✖ INPUT NON VALIDO')}
-
-${v1('━━━━━━━━━━━━━━𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙━━━━━━━━━━━━━')}
-${chalk.hex('#ff6e6e').bold('⚠️ Sono ammessi solo i numeri')} ${chalk.bold.hex('#00ff88')('1')} ${chalk.hex('#ff6e6e').bold('o')} ${chalk.bold.hex('#00ff88')('2')}
-${chalk.hex('#ffbaba')('┌─⭓ Nessuna lettera o simbolo')}
-${chalk.hex('#ffbaba')('└─⭓ Copia il numero dell\'opzione desiderata e incollalo')}
-${v2.italic('\n✧ Suggerimento: Se hai dubbi, scrivi al creatore +393476686131')}
-`);
-        }
-    } while ((opzione !== '1' && opzione !== '2') || fs.existsSync(`./${authFile}/creds.json`));
+        opzione = await question(menu + v3.bold('\n⌯ Inserisci la tua scelta ---> '));
+    } while (!/^[1-2]$/.test(opzione));
 }
 
-const filterStrings = ["Q2xvc2luZyBzdGFsZSBvcGVu", "Q2xvc2luZyBvcGVuIHNlc3Npb24=", "RmFpbGVkIHRvIGRlY3J5cHQ=", "U2Vzc2lvbiBlcnJvcg==", "RXJyb3I6IEJhZCBNQUM=", "RGVjcnlwdGVkIG1lc3NhZ2U="];
-console.info = () => {};
-console.debug = () => {};
-['log', 'warn', 'error'].forEach(methodName => redefineConsoleMethod(methodName, filterStrings));
-
+// --- CONNESSIONE ---
 const connectionOptions = {
     logger: logger,
-    mobile: MethodMobile,
-    browser: opzione === '1' ? Browsers.windows('Chrome') : methodCodeQR ? Browsers.windows('Chrome') : Browsers.macOS('Safari'),
+    browser: opzione === '1' ? Browsers.windows('Chrome') : Browsers.macOS('Safari'),
     auth: {
         creds: state.creds,
         keys: makeCacheableSignalKeyStore(state.keys, logger),
     },
     decodeJid: (jid) => {
         if (!jid) return jid;
-        const cached = global.jidCache.get(jid);
-        if (cached) return cached;
-        let decoded = jidNormalizedUser(jid);
-        global.jidCache.set(jid, decoded);
-        return decoded;
+        return jidNormalizedUser(jid);
     },
-    printQRInTerminal: opzione === '1' || methodCodeQR ? true : false,
+    printQRInTerminal: opzione === '1' || methodCodeQR,
     getMessage: async (key) => {
-        const jid = global.conn.decodeJid(key.remoteJid);
+        const jid = jidNormalizedUser(key.remoteJid);
         const msg = await global.store.loadMessage(jid, key.id);
         return msg?.message || undefined;
     },
-    msgRetryCounterCache,
-    msgRetryCounterMap,
+    msgRetryCounterCache
 };
 
 global.conn = makeWASocket(connectionOptions);
 global.store.bind(global.conn.ev);
 
-if (!fs.existsSync(`./${authFile}/creds.json`)) {
-    if (opzione === '2' || methodCode) {
-        if (!conn.authState.creds.registered) {
-            let addNumber;
-            if (phoneNumber) {
-                addNumber = phoneNumber.replace(/[^0-9]/g, '');
-            } else {
-                phoneNumber = await question(chalk.bgHex('#00e5ff').black.bold(` Inserisci il numero di WhatsApp. `) + `\n` + chalk.hex('#ff00d4')('━━► '));
-                addNumber = phoneNumber.replace(/\D/g, '');
-            }
-            setTimeout(async () => {
-                let codeBot = await conn.requestPairingCode(addNumber, 'BLOODBOT');
-                codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
-                console.log(chalk.bgHex('#9d00ff').white.bold('『 🔗 』– CODICE DI ABBINAMENTO:'), chalk.hex('#00e5ff').bold(codeBot));
-            }, 3000);
+// --- PAIRING CODE ---
+if (!fs.existsSync(`./${global.authFile}/creds.json`) && opzione === '2') {
+    if (!global.conn.authState.creds.registered) {
+        let addNumber = phoneNumber ? phoneNumber.replace(/[^0-9]/g, '') : '';
+        if (!addNumber) {
+            const input = await question(chalk.bgHex('#00e5ff').black.bold(` Inserisci il numero (es: 39347...) `) + '\n' + chalk.hex('#ff00d4')('━━► '));
+            addNumber = input.replace(/\D/g, '');
         }
+        setTimeout(async () => {
+            let codeBot = await global.conn.requestPairingCode(addNumber, 'BLOODBOT');
+            codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
+            console.log(chalk.bgHex('#9d00ff').white.bold('『 🔗 』– CODICE:'), chalk.hex('#00e5ff').bold(codeBot));
+        }, 3000);
     }
 }
 
+// --- HANDLERS ---
 async function connectionUpdate(update) {
     const { connection, lastDisconnect, qr } = update;
-    if (qr && (opzione === '1' || methodCodeQR) && !global.qrGenerated) {
-        console.log(chalk.hex('#00ff88').bold(`\n 🪐 SCANSIONA IL CODICE QR - SCADE TRA 45 SECONDI 🪐`));
+    
+    if (qr && !global.qrGenerated) {
+        console.log(chalk.hex('#00ff88').bold(`\n 🪐 SCANSIONA IL QR - SCADENZA 45s 🪐`));
         global.qrGenerated = true;
     }
     
     if (connection === 'open') {
-        global.qrGenerated = false;
-        if (!global.isLogoPrinted) {
-            const gradiente = ['#4d00ff', '#6a00ff', '#8600ff', '#a300ff', '#bf00ff', '#db00ff'];
-            const 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 = [
-                `██████╗ ██╗      ██████╗  ██████╗ ██████╗ ██████╗  ██████╗ ████████╗`,
-                `██╔══██╗██║     ██╔═══██╗██╔═══██╗██╔══██╗██╔══██╗██╔═══██╗╚══██╔══╝`,
-                `██████╔╝██║     ██║   ██║██║   ██║██║  ██║██████╔╝██║   ██║   ██║`,
-                `██╔══██╗██║     ██║   ██║██║   ██║██║  ██║██╔══██╗██║   ██║   ██║`,
-                `██████╔╝███████╗╚██████╔╝╚██████╔╝██████╔╝██████╔╝╚██████╔╝   ██║`,
-                `╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝`
-            ];
-            𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙.forEach((line, i) => console.log(chalk.hex(gradiente[i])(line)));
-            global.isLogoPrinted = true;
-        }
+        console.clear();
+        const gradiente = ['#4d00ff', '#6a00ff', '#8600ff', '#a300ff', '#bf00ff', '#db00ff'];
+        const logo = [
+            `██████╗ ██╗      ██████╗  ██████╗ ██████╗ ██████╗  ██████╗ ████████╗`,
+            `██╔══██╗██║     ██╔═══██╗██╔═══██╗██╔══██╗██╔══██╗██╔═══██╗╚══██╔══╝`,
+            `██████╔╝██║     ██║   ██║██║   ██║██║  ██║██████╔╝██║   ██║   ██║`,
+            `██╔══██╗██║     ██║   ██║██║   ██║██║  ██║██╔══██╗██║   ██║   ██║`,
+            `██████╔╝███████╗╚██████╔╝╚██████╔╝██████╔╝██████╔╝╚██████╔╝   ██║`,
+            `╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝`
+        ];
+        logo.forEach((line, i) => console.log(chalk.hex(gradiente[i])(line)));
+        console.log(chalk.hex('#00e5ff').bold(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 CONNESSO ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
     }
 
     if (connection === 'close') {
         const reason = lastDisconnect?.error?.output?.statusCode;
-        const vError = chalk.hex('#ff4500').bold;
-        if (reason === DisconnectReason.connectionLost) {
-            console.log(vError(`\n╭⭑⭒━━━✦❘༻ ⚠️ CONNESSIONE PERSA COL SERVER ༺❘✦━━━⭒⭑\n┃ 🔄 RICONNESSIONE IN CORSO... \n╰⭑⭒━━━✦❘༻☾⋆₊✧𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
-        } else if (reason === DisconnectReason.loggedOut) {
-            console.log(vError(`\n⚠️ DISCONNESSO, SESSIONE ELIMINATA. RIAVVIA IL BOT ⚠️`));
-            process.exit(1);
-        } else if (reason === DisconnectReason.timedOut) {
-            console.log(vError(`\n╭⭑⭒━━━✦❘༻ ⌛ TIMEOUT CONNESSIONE ༺❘✦━━━⭒⭑\n┃ 🔄 RICONNESSIONE IN CORSO...\n╰⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
-        }
-        await global.reloadHandler(true);
+        console.log(chalk.hex('#ff4500')(`\n⚠️ Connessione chiusa (Codice: ${reason}). Riavvio...`));
+        process.exit();
     }
 }
 
-async function connectSubBots() {
-    const subBotDirectory = './𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙-sub';
-    if (existsSync(subBotDirectory)) {
-        const subBotFolders = readdirSync(subBotDirectory).filter(file => statSync(join(subBotDirectory, file)).isDirectory());
-        if (subBotFolders.length === 0) {
-            console.log(chalk.hex('#b0b0b0')('- 🌑 | Nessun subbot collegato'));
-        } else {
-            console.log(chalk.hex('#00ff88').bold(`🌙 ${subBotFolders.length} Sub-Bot rilevati nel sistema.`));
-        }
-    }
-}
+global.conn.ev.on('connection.update', connectionUpdate);
+global.conn.ev.on('creds.update', saveCreds);
 
-(async () => {
-    conn.ev.on('connection.update', connectionUpdate);
-    conn.ev.on('creds.update', saveCreds);
-    console.log(chalk.hex('#00e5ff').bold(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 connesso correttamente ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
-    await connectSubBots();
-})();
+console.log(chalk.hex('#00e5ff').bold('✦ SISTEMA BLOOD BOT AVVIATO ✦'));
