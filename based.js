@@ -331,9 +331,8 @@ varebot.forEach((line, i) => {
     const color = finchevedotuttoviolaviola[i] 
         || finchevedotuttoviolaviola[finchevedotuttoviolaviola.length - 1];
 
-    console.log(chalk.hex(color)(line));
+  console.log(chalk.hex(color)(line));
 });
-            });
             global.isLogoPrinted = true;
             await bysamakavare();
         }
