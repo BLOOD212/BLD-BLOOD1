@@ -314,7 +314,7 @@ async function connectionUpdate(update) {
                 '#3b0d95', '#3b0d90', '#3b0d85', '#3b0d80', '#3b0d75',
                 '#3b0d70', '#3b0d65', '#3b0d60', '#3b0d55', '#3b0d50', '#3b0d45'
             ];
-            const varedbot = [
+            const varebot = [
 ` ██▓███   ██▓     ▒█████   ▒█████  ▓█████▄  ▄▄▄▄    ▒█████  ▄▄▄█████▓ `,
 `▓██░  ██▒▓██▒    ▒██▒  ██▒▒██▒  ██▒▒██▀ ██▌▓█████▄ ▒██▒  ██▒▓  ██▒ ▓▒ `,
 `▓██░ ██▓▒▒██░    ▒██░  ██▒▒██░  ██▒░██   █▌▒██▒ ▄██▒██░  ██▒▒ ▓██░ ▒░ `,
@@ -328,7 +328,9 @@ async function connectionUpdate(update) {
 ];
 
 varebot.forEach((line, i) => {
-    const color = finchevedotuttoviolaviola[i] || finchevedotuttoviolaviola[finchevedotuttoviolaviola.length - 1];
+    const color = finchevedotuttoviolaviola[i] 
+        || finchevedotuttoviolaviola[finchevedotuttoviolaviola.length - 1];
+
     console.log(chalk.hex(color)(line));
 });
             });
