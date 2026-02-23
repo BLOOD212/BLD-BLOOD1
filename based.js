@@ -109,7 +109,7 @@ global.reloadHandler = async function (restat) {
     } catch (e) { console.error(e); }
 };
 
-// --- 8. LISTENER MESSAGGI ---
+// --- 8. LISTENER MESSAGGI (FIX DEFINITIVO PROPERTY ID) ---
 global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     try {
         const m = chatUpdate.messages[0];
@@ -117,11 +117,13 @@ global.conn.ev.on('messages.upsert', async (chatUpdate) => {
         if (m.key.fromMe && !global.opts['self']) return;
         if (global.db.data == null) await global.loadDatabase();
 
-        let msgClone = { ...m };
-        if (m.message) msgClone.message = { ...m.message };
-        if (m.key) msgClone.key = { ...m.key };
+        // DEEP CLONE: Questo trasforma l'oggetto protetto in un oggetto JS puro e libero
+        let msgClone = JSON.parse(JSON.stringify(m));
 
+        // Passiamo il clone libero a serialize
         const msg = await serialize(global.conn, msgClone, global.store);
+        
+        // Passiamo il messaggio serializzato all'handler
         await handler.handler.call(global.conn, msg, chatUpdate);
     } catch (err) { 
         console.error(chalk.red('Errore nell\'elaborazione:'), err); 
