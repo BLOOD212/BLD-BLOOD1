@@ -16,7 +16,20 @@ import { makeWASocket, protoType, serialize } from './lib/simple.js';
 import { Low, JSONFile } from 'lowdb';
 import NodeCache from 'node-cache';
 
-// --- INIZIALIZZAZIONE OPZIONI & GLOBALS ---
+// --- 1. FUNZIONI GLOBALI (Devono essere in cima per handler.js) ---
+global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
+    return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
+};
+
+global.__dirname = function dirname(pathURL) {
+    return path.dirname(global.__filename(pathURL, true));
+};
+
+global.__require = function require(dir = import.meta.url) {
+    return createRequire(dir);
+};
+
+// --- 2. INIZIALIZZAZIONE OPZIONI & UTILS ---
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
 protoType();
 serialize();
@@ -24,8 +37,9 @@ serialize();
 const { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, makeInMemoryStore } = await import('@realvare/based');
 const logger = pino({ level: 'silent' });
 global.store = makeInMemoryStore({ logger });
+const __dirname = global.__dirname(import.meta.url);
 
-// --- DATABASE ---
+// --- 3. DATABASE ---
 global.db = new Low(new JSONFile('database.json'));
 global.loadDatabase = async function loadDatabase() {
     if (global.db.READ) return;
@@ -36,7 +50,7 @@ global.loadDatabase = async function loadDatabase() {
 };
 await global.loadDatabase();
 
-// --- AUTH & SESSION ---
+// --- 4. AUTH & SESSION ---
 global.authFile = 'bloodsession';
 const { state, saveCreds } = await useMultiFileAuthState(global.authFile);
 const msgRetryCounterCache = new NodeCache();
@@ -50,7 +64,7 @@ const question = (t) => {
     });
 };
 
-// --- LOGICA DI AVVIO ---
+// --- 5. LOGICA DI AVVIO ---
 let opzione;
 if (!fs.existsSync(`./${global.authFile}/creds.json`)) {
     console.clear();
@@ -58,20 +72,18 @@ if (!fs.existsSync(`./${global.authFile}/creds.json`)) {
     const v2 = chalk.hex('#00e5ff'); 
     const v3 = chalk.hex('#ff00d4'); 
     
-    const menu = `
+    console.log(`
 ${v1('╭━━━━━━━━━━━━━• ✧˚🩸BLD BLOOD🕊️˚✧ •━━━━━━━━━━━━━')}
           ${v3('SELEZIONE METODO DI ACCESSO ✦')}
 ${v2('   ✦━━━━━━✦✦━━━━━━༺༻━━━━━━༺༻━━━━━━✦✦━━━━━━✦')}
 ${v1(' ┌─⭓')} ${chalk.bold.white('1. Scansione con QR Code')}
 ${v1(' └─⭓')} ${chalk.bold.white('2. Codice di 8 cifre')}
 ${v2('   ✦━━━━━━✦✦━━━━━━༺༻━━━━━━༺༻━━━━━━✦✦━━━━━━✦')}
-${v1('╰━━━━━━━━━━━━━• ☾⋆₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⋆☽ •━━━━━━━━━━━━━')}`;
-
-    console.log(menu);
+${v1('╰━━━━━━━━━━━━━• ☾⋆₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⋆☽ •━━━━━━━━━━━━━')}`);
     opzione = await question(v3.bold('\n⌯ Inserisci la tua scelta (1 o 2) ---> '));
 }
 
-// --- CONNESSIONE SOCKET ---
+// --- 6. CONNESSIONE ---
 const connectionOptions = {
     logger: logger,
     browser: Browsers.macOS('Safari'),
@@ -92,43 +104,30 @@ const connectionOptions = {
 global.conn = makeWASocket(connectionOptions);
 global.store.bind(global.conn.ev);
 
-// --- IMPORTAZIONE DINAMICA HANDLER (Per vedere i messaggi) ---
+// --- 7. CARICAMENTO HANDLER ---
 let handler = await import('./handler.js');
 global.reloadHandler = async function (restat) {
     try {
-        const filePath = './handler.js';
         if (restat) {
-            const str = format(readFileSync(filePath));
             const newHandler = await import(`./handler.js?update=${Date.now()}`);
             handler = newHandler;
         }
-    } catch (e) {
-        console.error(e);
-    }
+    } catch (e) { console.error(e); }
 };
 
-// --- LISTENER MESSAGGI (Cruciale per i log in console) ---
+// --- 8. LISTENER MESSAGGI ---
 global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     try {
         const m = chatUpdate.messages[0];
         if (!m) return;
         if (m.key.fromMe && !global.opts['self']) return;
-        
-        // Carica il database se non è pronto
         if (global.db.data == null) await global.loadDatabase();
-        
-        // Trasforma il messaggio in un formato leggibile
         const msg = await serialize(global.conn, m, global.store);
-        
-        // Invia il messaggio all'handler per la stampa in console e l'esecuzione
         await handler.handler.call(global.conn, msg, chatUpdate);
-        
-    } catch (err) {
-        console.error(chalk.red('Errore Handler:'), err);
-    }
+    } catch (err) { console.error(chalk.red('Errore Handler:'), err); }
 });
 
-// --- PAIRING CODE (Opzione 2) ---
+// --- 9. PAIRING CODE ---
 if (!fs.existsSync(`./${global.authFile}/creds.json`) && opzione === '2') {
     let phoneNumber = await question(chalk.bgHex('#00e5ff').black.bold(` Inserisci il numero (es: 39347...) `) + '\n' + chalk.hex('#ff00d4')('━━► '));
     let addNumber = phoneNumber.replace(/\D/g, '');
@@ -139,12 +138,10 @@ if (!fs.existsSync(`./${global.authFile}/creds.json`) && opzione === '2') {
     }, 3000);
 }
 
-// --- STATO CONNESSIONE ---
+// --- 10. STATO CONNESSIONE ---
 global.conn.ev.on('connection.update', (update) => {
     const { connection, lastDisconnect, qr } = update;
-    
-    if (qr) console.log(chalk.hex('#00ff88').bold(`\n🪐 QR DISPONIBILE PER LA SCANSIONE 🪐`));
-    
+    if (qr) console.log(chalk.hex('#00ff88').bold(`\n🪐 QR DISPONIBILE 🪐`));
     if (connection === 'open') {
         console.clear();
         const gradiente = ['#4d00ff', '#6a00ff', '#8600ff', '#a300ff', '#bf00ff', '#db00ff'];
@@ -158,19 +155,9 @@ global.conn.ev.on('connection.update', (update) => {
         ];
         logo.forEach((line, i) => console.log(chalk.hex(gradiente[i])(line)));
         console.log(chalk.hex('#00e5ff').bold(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ATTIVO ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
-        console.log(chalk.hex('#00ff88')('  SISTEMA DI LOG ATTIVATO: I comandi appariranno ora...'));
     }
-
-    if (connection === 'close') {
-        const reason = lastDisconnect?.error?.output?.statusCode;
-        console.log(chalk.hex('#ff4500')(`\n⚠️ Connessione chiusa (${reason}). Riavvio automatico...`));
-        // Il riavvio viene gestito solitamente da PM2 o script shell, 
-        // ma puoi forzare l'uscita per far resettare il processo.
-        process.exit();
-    }
+    if (connection === 'close') process.exit();
 });
 
 global.conn.ev.on('creds.update', saveCreds);
-
-// Ricarica l'handler se il file viene modificato
 watch('./handler.js', () => global.reloadHandler(true));
