@@ -1,36 +1,34 @@
 const handler = async (m, { conn, isOwner, isAdmin }) => {
-  if (!isOwner && !isAdmin) return m.reply('⛔ *Solo admin*')
   if (!m.isGroup) return
+  if (!isOwner && !isAdmin) return m.reply('⛔ *Solo admin*')
 
   try {
-    // Sincronizza i metadati per aggiornare la lista pendenti
+    // 1. Refresh metadati
     await conn.groupMetadata(m.chat)
     
+    // 2. Recupero lista
     const res = await conn.groupRequestParticipantsList(m.chat)
 
     if (!res || res.length === 0) {
-      return m.reply('✅ *Nessuna richiesta da accettare*')
+      return m.reply('✅ *Nessuna richiesta pendente.*')
     }
 
-    const jids = res.map(user => user.jid)
+    // 3. Approvazione ciclica per evitare crash bulk
+    let count = 0
+    for (let user of res) {
+      await conn.groupRequestParticipantsUpdate(m.chat, [user.jid], 'approve')
+      count++
+    }
 
-    await conn.groupRequestParticipantsUpdate(
-      m.chat,
-      jids,
-      'approve'
-    )
-
-    m.reply(`✅ *Accettate ${jids.length} richieste*`)
+    m.reply(`✅ *Completato:* ${count} persone accettate.`)
 
   } catch (e) {
     console.error(e)
-    m.reply('❌ *Errore:* Assicurati che il bot sia Admin e che l\'approvazione membri sia attiva.')
+    m.reply('❌ *Errore di sistema:* Se il bot è admin, disattiva e riattiva l\'approvazione partecipanti nelle impostazioni del gruppo per sbloccare la lista.')
   }
 }
 
-handler.help = ['accetta']
-handler.tags = ['group']
-handler.command = /^(accetta|accept)$/i
+handler.command = /^(accetta)$/i
 handler.group = true
 handler.admin = true
 handler.botAdmin = true
