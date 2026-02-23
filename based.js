@@ -16,6 +16,9 @@ import { makeWASocket, protoType, serialize } from './lib/simple.js';
 import { Low, JSONFile } from 'lowdb';
 import NodeCache from 'node-cache';
 
+// --- INIZIALIZZAZIONE OPZIONI (FIX ERRORE LEGACY) ---
+global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
+
 const DisconnectReason = {
     connectionClosed: 428,
     connectionLost: 408,
@@ -43,18 +46,6 @@ let methodCodeQR = process.argv.includes("qr");
 let methodCode = process.argv.includes("code");
 let MethodMobile = process.argv.includes("mobile");
 let phoneNumber = global.botNumberCode;
-
-// --- UTILS ---
-function redefineConsoleMethod(methodName, filterStrings) {
-    const originalConsoleMethod = console[methodName];
-    console[methodName] = function () {
-        const message = arguments[0];
-        if (typeof message === 'string' && filterStrings.some(filterString => message.includes(atob(filterString)))) {
-            arguments[0] = "";
-        }
-        originalConsoleMethod.apply(console, arguments);
-    };
-}
 
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
     return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
