@@ -440,13 +440,12 @@ async function connectSubBots() {
     }
 }
 (async () => {
-    global.conns = [];
-    try {
-        conn.ev.on('connection.update', connectionUpdate);
-        conn.ev.on('creds.update', saveCreds);
-        console.log(chalk.bold.magenta(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 connesso correttamente ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
-        await connectSubBots();
-    } catch (err) {
-        console.error(chalk.bold.red('❌ Errore durante l\'avvio del bot:'), err);
-    }
-})();
+  global.conns = [];
+  try {
+    conn.ev.on('connection.update', connectionUpdate);
+    conn.ev.on('creds.update', saveCreds);
+    console.log(chalk.bold.magenta(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 connesso correttamente ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+    await connectSubBots();
+  } catch (error) {
+    console.error('Errore:', error);
+  }
