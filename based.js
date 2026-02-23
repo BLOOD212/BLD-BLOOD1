@@ -446,4 +446,7 @@ async function connectSubBots() {
         conn.ev.on('creds.update', saveCreds);
         console.log(chalk.bold.magenta(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 connesso correttamente ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
         await connectSubBots();
-    } catc
+    } catch (err) {
+        console.error(chalk.bold.red('❌ Errore durante l\'avvio del bot:'), err);
+    }
+})();
