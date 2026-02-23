@@ -16,7 +16,7 @@ import { makeWASocket, protoType, serialize } from './lib/simple.js';
 import { Low, JSONFile } from 'lowdb';
 import NodeCache from 'node-cache';
 
-// --- 1. FUNZIONI GLOBALI ---
+// --- 1. FUNZIONI GLOBALI (FIX ERROR __filename) ---
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
     return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
 };
@@ -47,7 +47,7 @@ global.loadDatabase = async function loadDatabase() {
 };
 await global.loadDatabase();
 
-// --- 4. AUTH ---
+// --- 4. AUTH & SESSION ---
 global.authFile = 'bloodsession';
 const { state, saveCreds } = await useMultiFileAuthState(global.authFile);
 
@@ -60,7 +60,7 @@ const question = (t) => {
     });
 };
 
-// --- 5. SELEZIONE METODO ---
+// --- 5. LOGICA DI AVVIO ---
 let opzione;
 if (!fs.existsSync(`./${global.authFile}/creds.json`)) {
     console.clear();
@@ -78,7 +78,7 @@ ${v1('╰━━━━━━━━━━━━━• ☾⋆₊✧ 𝖇𝖑𝖔�
     opzione = await question(v3.bold('\n⌯ Inserisci la tua scelta (1 o 2) ---> '));
 }
 
-// --- 6. SOCKET ---
+// --- 6. CONNESSIONE ---
 const connectionOptions = {
     logger: logger,
     browser: Browsers.macOS('Safari'),
@@ -98,7 +98,7 @@ const connectionOptions = {
 global.conn = makeWASocket(connectionOptions);
 global.store.bind(global.conn.ev);
 
-// --- 7. HANDLER ---
+// --- 7. CARICAMENTO HANDLER ---
 let handler = await import('./handler.js');
 global.reloadHandler = async function (restat) {
     try {
@@ -109,7 +109,7 @@ global.reloadHandler = async function (restat) {
     } catch (e) { console.error(e); }
 };
 
-// --- 8. MESSAGE LISTENER (FIX ERRORE PROPERTY ID) ---
+// --- 8. LISTENER MESSAGGI (FIX ERRORE PROPERTY ID) ---
 global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     try {
         const m = chatUpdate.messages[0];
@@ -117,19 +117,19 @@ global.conn.ev.on('messages.upsert', async (chatUpdate) => {
         if (m.key.fromMe && !global.opts['self']) return;
         if (global.db.data == null) await global.loadDatabase();
 
-        // FIX: Creiamo una copia "pulita" dell'oggetto m per evitare l'errore 'Cannot redefine property: id'
-        let msgCopied = JSON.parse(JSON.stringify(m));
-        
-        // Passiamo la copia alla serializzazione
-        const msg = await serialize(global.conn, msgCopied, global.store);
-        
+        // FIX: Creiamo una copia "de-strutturata" per evitare conflitti di proprietà (TypeError: Cannot redefine property: id)
+        let msgClone = { ...m };
+        if (m.message) msgClone.message = { ...m.message };
+        if (m.key) msgClone.key = { ...m.key };
+
+        const msg = await serialize(global.conn, msgClone, global.store);
         await handler.handler.call(global.conn, msg, chatUpdate);
     } catch (err) { 
         console.error(chalk.red('Errore nell\'elaborazione:'), err); 
     }
 });
 
-// --- 9. PAIRING & UPDATES ---
+// --- 9. PAIRING & STATO ---
 if (!fs.existsSync(`./${global.authFile}/creds.json`) && opzione === '2') {
     let phoneNumber = await question(chalk.bgHex('#00e5ff').black.bold(` Inserisci il numero (es: 39347...) `) + '\n' + chalk.hex('#ff00d4')('━━► '));
     let addNumber = phoneNumber.replace(/\D/g, '');
