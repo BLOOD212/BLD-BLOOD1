@@ -449,3 +449,4 @@ async function connectSubBots() {
   } catch (error) {
     console.error('Errore:', error);
   }
+})();
