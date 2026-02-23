@@ -46,7 +46,7 @@ function redefineConsoleMethod(methodName, filterStrings) {
     const originalConsoleMethod = console[methodName];
     console[methodName] = function () {
         const message = arguments[0];
-        if (typeof message === 'string' && filterStrings.some(filterString => message.includes(atob(filterString)))) {
+        if (typeof message === 'string' && filterStrings.some(filterString => message.includes(Buffer.from(filterString, 'base64').toString()))) {
             arguments[0] = "";
         }
         originalConsoleMethod.apply(console, arguments);
@@ -443,4 +443,235 @@ async function connectSubBots() {
 (async () => {
     global.conns = [];
     try {
-        conn.ev.on('connection.update', connectionUpd
+        conn.ev.on('connection.update', connectionUpdate);
+        conn.ev.on('creds.update', saveCreds);
+        console.log(chalk.bold.magenta(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ varebot connesso correttamente ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+        await connectSubBots();
+    } catch (error) {
+        console.error(chalk.bold.bgRedBright(`🥀 Errore nell'avvio del bot: `, error));
+    }
+})();
+let isInit = true;
+let handler = await import('./handler.js');
+global.reloadHandler = async function (restatConn) {
+    try {
+        const Handler = await import(`./handler.js?update=${Date.now()}`).catch(console.error);
+        if (Object.keys(Handler || {}).length) handler = Handler;
+    } catch (e) {
+        console.error(e);
+    }
+    if (restatConn) {
+        try {
+            global.conn.ws.close();
+        } catch { }
+        conn.ev.removeAllListeners();
+        global.conn = makeWASocket(connectionOptions);
+        global.store.bind(global.conn.ev);
+        isInit = true;
+    }
+    if (!isInit) {
+        conn.ev.off('messages.upsert', conn.handler);
+        conn.ev.off('connection.update', conn.connectionUpdate);
+        conn.ev.off('creds.update', conn.credsUpdate);
+    }
+    conn.handler = handler.handler.bind(global.conn);
+    conn.connectionUpdate = connectionUpdate.bind(global.conn);
+    conn.credsUpdate = saveCreds;
+    conn.ev.on('messages.upsert', conn.handler);
+    conn.ev.on('connection.update', conn.connectionUpdate);
+    conn.ev.on('creds.update', conn.credsUpdate);
+    isInit = false;
+    return true;
+};
+const pluginFolder = global.__dirname(join(__dirname, './plugins/index'));
+const pluginFilter = (filename) => /\.js$/.test(filename);
+global.plugins = {};
+async function filesInit() {
+    for (const filename of readdirSync(pluginFolder).filter(pluginFilter)) {
+        try {
+            const file = global.__filename(join(pluginFolder, filename));
+            const module = await import(file);
+            global.plugins[filename] = module.default || module;
+        } catch (e) {
+            conn.logger.error(e);
+            delete global.plugins[filename];
+        }
+    }
+}
+filesInit().then((_) => Object.keys(global.plugins)).catch(console.error);
+global.reload = async (_ev, filename) => {
+    if (pluginFilter(filename)) {
+        const dir = global.__filename(join(pluginFolder, filename), true);
+        if (filename in global.plugins) {
+            if (existsSync(dir)) conn.logger.info(chalk.green(`✅ AGGIORNATO - '${filename}' CON SUCCESSO`));
+            else {
+                conn.logger.warn(`🗑️ FILE ELIMINATO: '${filename}'`);
+                return delete global.plugins[filename];
+            }
+        } else conn.logger.info(`🆕 NUOVO PLUGIN RILEVATO: '${filename}'`);
+
+        try {
+            const module = (await import(`${global.__filename(dir)}?update=${Date.now()}`));
+            global.plugins[filename] = module.default || module;
+        } catch (e) {
+            conn.logger.error(`⚠️ ERRORE NEL PLUGIN: '${filename}\n${format(e)}'`);
+        } finally {
+            global.plugins = Object.fromEntries(Object.entries(global.plugins).sort(([a], [b]) => a.localeCompare(b)));
+        }
+    }
+};
+Object.freeze(global.reload);
+const pluginWatcher = watch(pluginFolder, global.reload);
+pluginWatcher.setMaxListeners(20);
+await global.reloadHandler();
+async function _quickTest() {
+    const test = await Promise.all([
+        spawn('ffmpeg'),
+        spawn('ffprobe'),
+        spawn('ffmpeg', ['-hide_banner', '-loglevel', 'error', '-filter_complex', 'color', '-frames:v', '1', '-f', 'webp', '-']),
+        spawn('convert'),
+        spawn('magick'),
+        spawn('gm'),
+        spawn('find', ['--version']),
+    ].map((p) => {
+        return Promise.race([
+            new Promise((resolve) => {
+                p.on('close', (code) => {
+                    resolve(code !== 127);
+                });
+            }),
+            new Promise((resolve) => {
+                p.on('error', (_) => resolve(false));
+            })
+        ]);
+    }));
+    const [ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find] = test;
+    const s = global.support = { ffmpeg, ffprobe, ffmpegWebp, convert, magick, gm, find };
+    Object.freeze(global.support);
+}
+function clearDirectory(dirPath) {
+    if (!existsSync(dirPath)) {
+        try {
+            mkdirSync(dirPath, { recursive: true });
+        } catch (e) {
+            console.error(chalk.red(`Errore nella creazione della directory ${dirPath}:`, e));
+        }
+        return;
+    }
+    const filenames = readdirSync(dirPath);
+    filenames.forEach(file => {
+        const filePath = join(dirPath, file);
+        try {
+            const stats = statSync(filePath);
+            if (stats.isFile()) {
+                unlinkSync(filePath);
+            } else if (stats.isDirectory()) {
+                rmSync(filePath, { recursive: true, force: true });
+            }
+        } catch (e) {
+            console.error(chalk.red(`Errore nella pulizia del file ${filePath}:`, e));
+        }
+    });
+}
+function purgeSession(sessionDir, cleanPreKeys = false) {
+    try {
+        if (!existsSync(sessionDir)) {
+            console.log(chalk.bold.yellow(`\n╭⭑⭒━━━✦❘༻ 🟡 DIRECTORY 🟡 ༺❘✦━━━⭒⭑\n┃  ⚠️  La directory di sessione ${sessionDir} non esiste.\n╰⭑⭒━━━✦❘༻☾⋆₊✧ 𝓿𝓪𝓻𝓮𝓫ot ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+            return;
+        }
+        const files = readdirSync(sessionDir);
+        let deletedCount = 0;
+        let preKeyDeletedCount = 0;
+        files.forEach(file => {
+            const filePath = path.join(sessionDir, file);
+            const stats = statSync(filePath);
+            const fileAge = (Date.now() - stats.mtimeMs) / (1000 * 60 * 60 * 24);
+
+            if (file === 'creds.json') {
+                return;
+            }
+
+            if (file.startsWith('pre-key') && cleanPreKeys) {
+                if (fileAge > 1) { 
+                    try {
+                        unlinkSync(filePath);
+                        preKeyDeletedCount++;
+                        deletedCount++;
+                    } catch (err) {
+                        console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE PRE-KEY 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ ${file} NON È STATO ELIMINATO\n┃  Errore: ${err.message}\n╰⭑⭒━━━✦❘༻☾⋆₊🗑️ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
+                    }
+                }
+            } else if (!file.startsWith('pre-key')) {
+                try {
+                    if (stats.isDirectory()) {
+                        rmSync(filePath, { recursive: true, force: true });
+                    } else {
+                        unlinkSync(filePath);
+                    }
+                    deletedCount++;
+                } catch (err) {
+                    console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE FILE 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ ${file} NON È STATO ELIMINATO\n┃  Errore: ${err.message}\n╰⭑⭒━━━✦❘༻☾⋆₊🗑️ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
+                }
+            }
+        });
+
+        let message = chalk.bold.magentaBright(`\n╭⭑⭒━━━✦❘༻ 🟣 SESSIONE 🟣 ༺❘✦━━━⭒⭑\n┃  ✅ ${deletedCount} file di sessione eliminati da ${sessionDir}`);
+        if (preKeyDeletedCount > 0) {
+            message += `\n┃  🔑 ${preKeyDeletedCount} pre-key vecchie (>7 giorni) rimosse`;
+        }
+        message += `\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`;
+
+        if (deletedCount > 0) {
+            console.log(message);
+        } else {
+            console.log(chalk.bold.yellowBright(`\n╭⭑⭒━━━✦❘༻ 🟡 SESSIONE 🟡 ༺❘✦━━━⭒⭑\n┃  ℹ️  Nessun file da eliminare in ${sessionDir}.\n╰⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+        }
+
+    } catch (dirErr) {
+        console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE DIRECTORY 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ Errore durante la lettura della directory ${sessionDir}\n┃  Errore: ${dirErr.message}\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
+    }
+}
+
+setInterval(async () => {
+    if (global.stopped === 'close' || !global.conn || !global.conn.user) return;
+    clearDirectory(join(__dirname, 'tmp'));
+    clearDirectory(join(__dirname, 'temp'));
+    console.log(chalk.bold.greenBright(`\n╭⭑⭒━━━✦❘༻ 🟢 PULIZIA MULTIMEDIA 🟢 ༺❘✦━━━⭒⭑\n┃          CARTELLE TMP/TEMP\n┃          ELIMINATE CON SUCCESSO\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
+}, 1000 * 60 * 60);
+
+setInterval(async () => {
+    if (global.stopped === 'close' || !global.conn || !global.conn.user) return;
+    purgeSession(`./${global.authFile}`);
+    const subBotDir = `./${global.authFileJB}`;
+    if (existsSync(subBotDir)) {
+         const subBotFolders = readdirSync(subBotDir).filter(file => statSync(join(subBotDir, file)).isDirectory());
+         subBotFolders.forEach(folder => purgeSession(join(subBotDir, folder)));
+    }
+}, 1000 * 60 * 60 * 2);
+
+setInterval(async () => {
+    if (global.stopped === 'close' || !global.conn || !global.conn.user) return;
+    console.log(chalk.bold.cyanBright(`\n╭⭑⭒━━━✦❘༻ 🔵 PULIZIA PRE-KEY 🔵 ༺❘✦━━━⭒⭑\n┃  🔄 Avvio pulizia pre-keys vecchie\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🧹 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
+    purgeSession(`./${global.authFile}`, true);
+    const subBotDir = `./${global.authFileJB}`;
+    if (existsSync(subBotDir)) {
+         const subBotFolders = readdirSync(subBotDir).filter(file => statSync(join(subBotDir, file)).isDirectory());
+         subBotFolders.forEach(folder => purgeSession(join(subBotDir, folder), true));
+    }
+}, 1000 * 60 * 60 * 6);
+
+_quickTest().then(() => conn.logger.info(chalk.bold.magentaBright(``)));
+
+let filePath = fileURLToPath(import.meta.url);
+const mainWatcher = watch(filePath, async () => {
+  console.log(chalk.bgHex('#3b0d95')(chalk.white.bold("File: 'main.js' Aggiornato")))
+  await global.reloadHandler(true).catch(console.error);
+});
+mainWatcher.setMaxListeners(20);
+
+conn.ev.on('connection.update', async (update) => {
+    if (update.connection === 'open') {
+        ripristinaTimer(conn);
+    }
+});
+ 
