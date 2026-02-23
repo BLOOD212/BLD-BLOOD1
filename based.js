@@ -16,46 +16,12 @@ import { makeWASocket, protoType, serialize } from './lib/simple.js';
 import { Low, JSONFile } from 'lowdb';
 import NodeCache from 'node-cache';
 
-// --- INIZIALIZZAZIONE OPZIONI (FIX ERRORE LEGACY) ---
+// --- INIZIALIZZAZIONE OPZIONI & GLOBALS ---
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
-
-const DisconnectReason = {
-    connectionClosed: 428,
-    connectionLost: 408,
-    connectionReplaced: 440,
-    timedOut: 408,
-    loggedOut: 401,
-    badSession: 500,
-    restartRequired: 515,
-    multideviceMismatch: 411,
-    forbidden: 403,
-    unavailableService: 503
-};
-
-const { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, getPerformanceConfig, setPerformanceConfig, Logger, makeInMemoryStore } = await import('@realvare/based');
-const { chain } = lodash;
-const PORT = process.env.PORT || process.env.SERVER_PORT || 3000;
-
 protoType();
 serialize();
 
-global.isLogoPrinted = false;
-global.qrGenerated = false;
-global.connectionMessagesPrinted = {};
-let methodCodeQR = process.argv.includes("qr");
-let methodCode = process.argv.includes("code");
-let MethodMobile = process.argv.includes("mobile");
-let phoneNumber = global.botNumberCode;
-
-global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
-    return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
-};
-
-global.__dirname = function dirname(pathURL) {
-    return path.dirname(global.__filename(pathURL, true));
-};
-
-const __dirname = global.__dirname(import.meta.url);
+const { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, makeInMemoryStore } = await import('@realvare/based');
 const logger = pino({ level: 'silent' });
 global.store = makeInMemoryStore({ logger });
 
@@ -70,7 +36,7 @@ global.loadDatabase = async function loadDatabase() {
 };
 await global.loadDatabase();
 
-// --- AUTH ---
+// --- AUTH & SESSION ---
 global.authFile = 'bloodsession';
 const { state, saveCreds } = await useMultiFileAuthState(global.authFile);
 const msgRetryCounterCache = new NodeCache();
@@ -84,48 +50,37 @@ const question = (t) => {
     });
 };
 
-// --- INTERFACCIA DI AVVIO ---
+// --- LOGICA DI AVVIO ---
 let opzione;
-if (!methodCodeQR && !methodCode && !fs.existsSync(`./${global.authFile}/creds.json`)) {
-    do {
-        const v1 = chalk.hex('#9d00ff'); 
-        const v2 = chalk.hex('#00e5ff'); 
-        const v3 = chalk.hex('#ff00d4'); 
-        const softText = chalk.hex('#b0b0b0');
-
-        console.clear();
-        const a = v1('╭━━━━━━━━━━━━━• ✧˚🩸BLD BLOOD🕊️˚✧ •━━━━━━━━━━━━━');
-        const b = v1('╰━━━━━━━━━━━━━• ☾⋆₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⋆☽ •━━━━━━━━━━━━━');
-        const linea = v2('   ✦━━━━━━✦✦━━━━━━༺༻━━━━━━༺༻━━━━━━✦✦━━━━━━✦');
-        
-        const menu = `
-${a}
+if (!fs.existsSync(`./${global.authFile}/creds.json`)) {
+    console.clear();
+    const v1 = chalk.hex('#9d00ff'); 
+    const v2 = chalk.hex('#00e5ff'); 
+    const v3 = chalk.hex('#ff00d4'); 
+    
+    const menu = `
+${v1('╭━━━━━━━━━━━━━• ✧˚🩸BLD BLOOD🕊️˚✧ •━━━━━━━━━━━━━')}
           ${v3('SELEZIONE METODO DI ACCESSO ✦')}
-${linea}
+${v2('   ✦━━━━━━✦✦━━━━━━༺༻━━━━━━༺༻━━━━━━✦✦━━━━━━✦')}
 ${v1(' ┌─⭓')} ${chalk.bold.white('1. Scansione con QR Code')}
 ${v1(' └─⭓')} ${chalk.bold.white('2. Codice di 8 cifre')}
-${linea}
-${v1(' ┌─⭓')} ${softText.italic('Digita il numero e premi Invio.')}
-${v2.italic('                   by blood')}
-${b}`;
+${v2('   ✦━━━━━━✦✦━━━━━━༺༻━━━━━━༺༻━━━━━━✦✦━━━━━━✦')}
+${v1('╰━━━━━━━━━━━━━• ☾⋆₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⋆☽ •━━━━━━━━━━━━━')}`;
 
-        opzione = await question(menu + v3.bold('\n⌯ Inserisci la tua scelta ---> '));
-    } while (!/^[1-2]$/.test(opzione));
+    console.log(menu);
+    opzione = await question(v3.bold('\n⌯ Inserisci la tua scelta (1 o 2) ---> '));
 }
 
-// --- CONNESSIONE ---
+// --- CONNESSIONE SOCKET ---
 const connectionOptions = {
     logger: logger,
-    browser: opzione === '1' ? Browsers.windows('Chrome') : Browsers.macOS('Safari'),
+    browser: Browsers.macOS('Safari'),
     auth: {
         creds: state.creds,
         keys: makeCacheableSignalKeyStore(state.keys, logger),
     },
-    decodeJid: (jid) => {
-        if (!jid) return jid;
-        return jidNormalizedUser(jid);
-    },
-    printQRInTerminal: opzione === '1' || methodCodeQR,
+    decodeJid: (jid) => jidNormalizedUser(jid),
+    printQRInTerminal: opzione === '1',
     getMessage: async (key) => {
         const jid = jidNormalizedUser(key.remoteJid);
         const msg = await global.store.loadMessage(jid, key.id);
@@ -137,30 +92,58 @@ const connectionOptions = {
 global.conn = makeWASocket(connectionOptions);
 global.store.bind(global.conn.ev);
 
-// --- PAIRING CODE ---
-if (!fs.existsSync(`./${global.authFile}/creds.json`) && opzione === '2') {
-    if (!global.conn.authState.creds.registered) {
-        let addNumber = phoneNumber ? phoneNumber.replace(/[^0-9]/g, '') : '';
-        if (!addNumber) {
-            const input = await question(chalk.bgHex('#00e5ff').black.bold(` Inserisci il numero (es: 39347...) `) + '\n' + chalk.hex('#ff00d4')('━━► '));
-            addNumber = input.replace(/\D/g, '');
+// --- IMPORTAZIONE DINAMICA HANDLER (Per vedere i messaggi) ---
+let handler = await import('./handler.js');
+global.reloadHandler = async function (restat) {
+    try {
+        const filePath = './handler.js';
+        if (restat) {
+            const str = format(readFileSync(filePath));
+            const newHandler = await import(`./handler.js?update=${Date.now()}`);
+            handler = newHandler;
         }
-        setTimeout(async () => {
-            let codeBot = await global.conn.requestPairingCode(addNumber, 'BLOODBOT');
-            codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
-            console.log(chalk.bgHex('#9d00ff').white.bold('『 🔗 』– CODICE:'), chalk.hex('#00e5ff').bold(codeBot));
-        }, 3000);
+    } catch (e) {
+        console.error(e);
     }
+};
+
+// --- LISTENER MESSAGGI (Cruciale per i log in console) ---
+global.conn.ev.on('messages.upsert', async (chatUpdate) => {
+    try {
+        const m = chatUpdate.messages[0];
+        if (!m) return;
+        if (m.key.fromMe && !global.opts['self']) return;
+        
+        // Carica il database se non è pronto
+        if (global.db.data == null) await global.loadDatabase();
+        
+        // Trasforma il messaggio in un formato leggibile
+        const msg = await serialize(global.conn, m, global.store);
+        
+        // Invia il messaggio all'handler per la stampa in console e l'esecuzione
+        await handler.handler.call(global.conn, msg, chatUpdate);
+        
+    } catch (err) {
+        console.error(chalk.red('Errore Handler:'), err);
+    }
+});
+
+// --- PAIRING CODE (Opzione 2) ---
+if (!fs.existsSync(`./${global.authFile}/creds.json`) && opzione === '2') {
+    let phoneNumber = await question(chalk.bgHex('#00e5ff').black.bold(` Inserisci il numero (es: 39347...) `) + '\n' + chalk.hex('#ff00d4')('━━► '));
+    let addNumber = phoneNumber.replace(/\D/g, '');
+    setTimeout(async () => {
+        let codeBot = await global.conn.requestPairingCode(addNumber, 'BLOODBOT');
+        codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
+        console.log(chalk.bgHex('#9d00ff').white.bold('『 🔗 』– CODICE:'), chalk.hex('#00e5ff').bold(codeBot));
+    }, 3000);
 }
 
-// --- HANDLERS ---
-async function connectionUpdate(update) {
+// --- STATO CONNESSIONE ---
+global.conn.ev.on('connection.update', (update) => {
     const { connection, lastDisconnect, qr } = update;
     
-    if (qr && !global.qrGenerated) {
-        console.log(chalk.hex('#00ff88').bold(`\n 🪐 SCANSIONA IL QR - SCADENZA 45s 🪐`));
-        global.qrGenerated = true;
-    }
+    if (qr) console.log(chalk.hex('#00ff88').bold(`\n🪐 QR DISPONIBILE PER LA SCANSIONE 🪐`));
     
     if (connection === 'open') {
         console.clear();
@@ -174,17 +157,20 @@ async function connectionUpdate(update) {
             `╚═════╝ ╚══════╝ ╚═════╝  ╚═════╝ ╚═════╝ ╚═════╝  ╚═════╝    ╚═╝`
         ];
         logo.forEach((line, i) => console.log(chalk.hex(gradiente[i])(line)));
-        console.log(chalk.hex('#00e5ff').bold(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 CONNESSO ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+        console.log(chalk.hex('#00e5ff').bold(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ATTIVO ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+        console.log(chalk.hex('#00ff88')('  SISTEMA DI LOG ATTIVATO: I comandi appariranno ora...'));
     }
 
     if (connection === 'close') {
         const reason = lastDisconnect?.error?.output?.statusCode;
-        console.log(chalk.hex('#ff4500')(`\n⚠️ Connessione chiusa (Codice: ${reason}). Riavvio...`));
+        console.log(chalk.hex('#ff4500')(`\n⚠️ Connessione chiusa (${reason}). Riavvio automatico...`));
+        // Il riavvio viene gestito solitamente da PM2 o script shell, 
+        // ma puoi forzare l'uscita per far resettare il processo.
         process.exit();
     }
-}
+});
 
-global.conn.ev.on('connection.update', connectionUpdate);
 global.conn.ev.on('creds.update', saveCreds);
 
-console.log(chalk.hex('#00e5ff').bold('✦ SISTEMA BLOOD BOT AVVIATO ✦'));
+// Ricarica l'handler se il file viene modificato
+watch('./handler.js', () => global.reloadHandler(true));
