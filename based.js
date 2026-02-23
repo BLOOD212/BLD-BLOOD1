@@ -1,4 +1,5 @@
 process.env['NODE_TLS_REJECT_UNAUTHORIZED'] = '1';
+process.setMaxListeners(0); // Linea aggiunta per prevenire l'avviso a livello globale
 import './config.js';
 import { createRequire } from 'module';
 import path, { join } from 'path';
@@ -454,6 +455,7 @@ async function connectSubBots() {
         console.error(chalk.bold.bgRedBright(`🥀 Errore nell'avvio del bot: `, error));
     }
 })();
+
 let isInit = true;
 let handler = await import('./handler.js');
 global.reloadHandler = async function (restatConn) {
@@ -524,9 +526,14 @@ global.reload = async (_ev, filename) => {
     }
 };
 Object.freeze(global.reload);
-const pluginWatcher = watch(pluginFolder, global.reload);
-pluginWatcher.setMaxListeners(20);
+
+// --- MODIFICA WATCHER PLUGINS ---
+if (global.pluginWatcher) global.pluginWatcher.close(); // Chiude se già esistente
+global.pluginWatcher = watch(pluginFolder, global.reload);
+global.pluginWatcher.setMaxListeners(25);
+
 await global.reloadHandler();
+
 async function _quickTest() {
     const test = await Promise.all([
         spawn('ffmpeg'),
@@ -595,7 +602,7 @@ function purgeSession(sessionDir, cleanPreKeys = false) {
             }
             
             if (file.startsWith('pre-key') && cleanPreKeys) {
-                if (fileAge > 1) {  // cancella pre-key solo se hanno più di 1 giorno e non sono state modificate di recente (per non riempire la memoria yk)
+                if (fileAge > 1) { 
                     try {
                         unlinkSync(filePath);
                         preKeyDeletedCount++;
@@ -634,12 +641,14 @@ function purgeSession(sessionDir, cleanPreKeys = false) {
         console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE DIRECTORY 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ Errore durante la lettura della directory ${sessionDir}\n┃  Errore: ${dirErr.message}\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
     }
 };
+
 setInterval(async () => {
     if (stopped === 'close' || !conn || !conn.user) return;
     clearDirectory(join(__dirname, 'tmp'));
     clearDirectory(join(__dirname, 'temp'));
     console.log(chalk.bold.greenBright(`\n╭⭑⭒━━━✦❘༻ 🟢 PULIZIA MULTIMEDIA 🟢 ༺❘✦━━━⭒⭑\n┃          CARTELLE TMP/TEMP\n┃          ELIMINATE CON SUCCESSO\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
 }, 1000 * 60 * 60);
+
 setInterval(async () => {
     if (stopped === 'close' || !conn || !conn.user) return;
     purgeSession(`./${global.authFile}`);
@@ -649,6 +658,7 @@ setInterval(async () => {
          subBotFolders.forEach(folder => purgeSession(join(subBotDir, folder)));
     }
 }, 1000 * 60 * 60 * 2);
+
 setInterval(async () => {
     if (stopped === 'close' || !conn || !conn.user) return;
     console.log(chalk.bold.cyanBright(`\n╭⭑⭒━━━✦❘༻ 🔵 PULIZIA PRE-KEY 🔵 ༺❘✦━━━⭒⭑\n┃  🔄 Avvio pulizia pre-keys vecchie\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🧹 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
@@ -659,13 +669,23 @@ setInterval(async () => {
          subBotFolders.forEach(folder => purgeSession(join(subBotDir, folder), true));
     }
 }, 1000 * 60 * 60 * 6);
+
 _quickTest().then(() => conn.logger.info(chalk.bold.magentaBright(``)));
+
+// --- MODIFICA WATCHER FILE PRINCIPALE ---
 let filePath = fileURLToPath(import.meta.url);
-const mainWatcher = watch(filePath, async () => {
+if (global.mainWatcher) global.mainWatcher.close(); // Chiude se già esistente
+global.mainWatcher = watch(filePath, async () => {
   console.log(chalk.bgHex('#3b0d95')(chalk.white.bold("File: 'based.js' Aggiornato")))
+  
+  // Chiudiamo i watcher correnti prima del reload per pulire tutto
+  if (global.pluginWatcher) global.pluginWatcher.close();
+  if (global.mainWatcher) global.mainWatcher.close();
+  
   await global.reloadHandler(true).catch(console.error);
 });
-mainWatcher.setMaxListeners(20);
+global.mainWatcher.setMaxListeners(25);
+
 conn.ev.on('connection.update', async (update) => {
     if (update.connection === 'open') {
         ripristinaTimer(conn);
