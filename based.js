@@ -103,8 +103,8 @@ if (global.conns instanceof Array) {
 }
 
 global.creds = 'creds.json';
-global.authFile = 'varesession';
-global.authFileJB = 'varebot-sub';
+global.authFile = 'bloodssion';
+global.authFileJB = '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙-sub';
 
 setPerformanceConfig({
     performance: {
@@ -138,8 +138,8 @@ if (!methodCodeQR && !methodCode && !fs.existsSync(`./${authFile}/creds.json`)) 
         const violet4 = chalk.hex('#5B2C6F');
         const softText = chalk.hex('#D7BDE2');
 
-        const a = violet1('╭━━━━━━━━━━━━━• ✧˚🩸 varebot 🕊️˚✧ •━━━━━━━━━━━━━');
-        const b = violet1('╰━━━━━━━━━━━━━• ☾⋆₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⋆☽ •━━━━━━━━━━━━━');
+        const a = violet1('╭━━━━━━━━━━━━━• ✧˚🩸 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🕊️˚✧ •━━━━━━━━━━━━━');
+        const b = violet1('╰━━━━━━━━━━━━━• ☾⋆₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⋆☽ •━━━━━━━━━━━━━');
         const linea = violet2('   ✦━━━━━━✦✦━━━━━━༺༻━━━━━━༺༻━━━━━━✦✦━━━━━━✦');
         const sm = violet3('SELEZIONE METODO DI ACCESSO ✦');
         const qr = violet4(' ┌─⭓') + ' ' + chalk.bold.hex('#D2B4DE')('1. Scansione con QR Code');
@@ -174,7 +174,7 @@ ${chalk.hex('#F5EEF8')('   ━━━━━━━━━━━━━━━━━�
 ${chalk.hex('#EC7063').bold('⚠️ Sono ammessi solo i numeri')} ${chalk.bold.green('1')} ${chalk.hex('#EC7063').bold('o')} ${chalk.bold.green('2')}
 ${chalk.hex('#FADBD8')('┌─⭓ Nessuna lettera o simbolo')}
 ${chalk.hex('#FADBD8')('└─⭓ Copia il numero dell\'opzione desiderata e incollalo')}
-${chalk.hex('#BB8FCE').italic('\n✧ Suggerimento: Se hai dubbi, scrivi al creatore +393476686131')}
+${chalk.hex('#BB8FCE').italic('\n✧ Suggerimento: Se hai dubbi, scrivi al creatore +393701330693')}
 `);
         }
     } while ((opzione !== '1' && opzione !== '2') || fs.existsSync(`./${authFile}/creds.json`));
@@ -269,7 +269,7 @@ if (!fs.existsSync(`./${authFile}/creds.json`)) {
             setTimeout(async () => {
                 let codeBot = await conn.requestPairingCode(addNumber, 'VAR3BOT2');
                 codeBot = codeBot?.match(/.{1,4}/g)?.join("-") || codeBot;
-                console.log(chalk.bold.white(chalk.bgMagenta('『 🔗 』– CODICE DI ABBINAMENTO:')), chalk.bold.white(chalk.white(codeBot)));
+                console.log(chalk.bold.white(chalk.bgMagenta('『 🔗 』– CODICE DI ABBINAMENTO:')), chalk.bold.white(chalk.white(BLOODBOT)));
             }, 3000);
         }
     }
@@ -343,7 +343,7 @@ async function connectionUpdate(update) {
             global.connectionMessagesPrinted.badSession = true;
             await global.reloadHandler(true).catch(console.error);
         } else if (reason === DisconnectReason.connectionLost && !global.connectionMessagesPrinted.connectionLost) {
-            console.log(chalk.bold.blueBright(`\n╭⭑⭒━━━✦❘༻ ⚠️ CONNESSIONE PERSA COL SERVER ༺❘✦━━━⭒⭑\n┃ 🔄 RICONNESSIONE IN CORSO... \n╰⭑⭒━━━✦❘༻☾⋆₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+            console.log(chalk.bold.blueBright(`\n╭⭑⭒━━━✦❘༻ ⚠️ CONNESSIONE PERSA COL SERVER ༺❘✦━━━⭒⭑\n┃ 🔄 RICONNESSIONE IN CORSO... \n╰⭑⭒━━━✦❘༻☾⋆₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
             global.connectionMessagesPrinted.connectionLost = true;
             await global.reloadHandler(true).catch(console.error);
         } else if (reason === DisconnectReason.connectionReplaced && !global.connectionMessagesPrinted.connectionReplaced) {
@@ -365,7 +365,7 @@ async function connectionUpdate(update) {
             global.connectionMessagesPrinted.restartRequired = true;
             await global.reloadHandler(true).catch(console.error);
         } else if (reason === DisconnectReason.timedOut && !global.connectionMessagesPrinted.timedOut) {
-            console.log(chalk.bold.yellowBright(`\n╭⭑⭒━━━✦❘༻ ⌛ TIMEOUT CONNESSIONE ༺❘✦━━━⭒⭑\n┃ 🔄 RICONNESSIONE IN CORSO...\n╰⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+            console.log(chalk.bold.yellowBright(`\n╭⭑⭒━━━✦❘༻ ⌛ TIMEOUT CONNESSIONE ༺❘✦━━━⭒⭑\n┃ 🔄 RICONNESSIONE IN CORSO...\n╰⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
             global.connectionMessagesPrinted.timedOut = true;
             await global.reloadHandler(true).catch(console.error);
         } else if (reason === 401) {
@@ -391,7 +391,7 @@ async function connectSubBots() {
         console.log(chalk.bold.magentaBright('🌙 vare ✧ bot non ha Sub-Bot collegati. Creazione directory...'));
         try {
             mkdirSync(subBotDirectory, { recursive: true });
-            console.log(chalk.bold.green('✅ Directory varebot-sub creata con successo.'));
+            console.log(chalk.bold.green('✅ Directory 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙-sub creata con successo.'));
         } catch (err) {
             console.log(chalk.bold.red('❌ Errore nella creazione della directory varebot-sub:', err.message));
             return;
@@ -445,7 +445,7 @@ async function connectSubBots() {
     try {
         conn.ev.on('connection.update', connectionUpdate);
         conn.ev.on('creds.update', saveCreds);
-        console.log(chalk.bold.magenta(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ varebot connesso correttamente ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+        console.log(chalk.bold.magenta(`⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 connesso correttamente ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
         await connectSubBots();
     } catch (error) {
         console.error(chalk.bold.bgRedBright(`🥀 Errore nell'avvio del bot: `, error));
@@ -576,7 +576,7 @@ function clearDirectory(dirPath) {
 function purgeSession(sessionDir, cleanPreKeys = false) {
     try {
         if (!existsSync(sessionDir)) {
-            console.log(chalk.bold.yellow(`\n╭⭑⭒━━━✦❘༻ 🟡 DIRECTORY 🟡 ༺❘✦━━━⭒⭑\n┃  ⚠️  La directory di sessione ${sessionDir} non esiste.\n╰⭑⭒━━━✦❘༻☾⋆₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+            console.log(chalk.bold.yellow(`\n╭⭑⭒━━━✦❘༻ 🟡 DIRECTORY 🟡 ༺❘✦━━━⭒⭑\n┃  ⚠️  La directory di sessione ${sessionDir} non esiste.\n╰⭑⭒━━━✦❘༻☾⋆₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
             return;
         }
         const files = readdirSync(sessionDir);
@@ -598,7 +598,7 @@ function purgeSession(sessionDir, cleanPreKeys = false) {
                         preKeyDeletedCount++;
                         deletedCount++;
                     } catch (err) {
-                        console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE PRE-KEY 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ ${file} NON È STATO ELIMINATO\n┃  Errore: ${err.message}\n╰⭑⭒━━━✦❘༻☾⋆₊🗑️ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
+                        console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE PRE-KEY 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ ${file} NON È STATO ELIMINATO\n┃  Errore: ${err.message}\n╰⭑⭒━━━✦❘༻☾⋆₊🗑️ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
                     }
                 }
             } else if (!file.startsWith('pre-key')) {
@@ -610,7 +610,7 @@ function purgeSession(sessionDir, cleanPreKeys = false) {
                     }
                     deletedCount++;
                 } catch (err) {
-                    console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE FILE 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ ${file} NON È STATO ELIMINATO\n┃  Errore: ${err.message}\n╰⭑⭒━━━✦❘༻☾⋆₊🗑️ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
+                    console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE FILE 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ ${file} NON È STATO ELIMINATO\n┃  Errore: ${err.message}\n╰⭑⭒━━━✦❘༻☾⋆₊🗑️ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
                 }
             }
         });
@@ -619,23 +619,23 @@ function purgeSession(sessionDir, cleanPreKeys = false) {
         if (preKeyDeletedCount > 0) {
             message += `\n┃  🔑 ${preKeyDeletedCount} pre-key vecchie (>7 giorni) rimosse`;
         }
-        message += `\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`;
+        message += `\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`;
         
         if (deletedCount > 0) {
             console.log(message);
         } else {
-            console.log(chalk.bold.yellowBright(`\n╭⭑⭒━━━✦❘༻ 🟡 SESSIONE 🟡 ༺❘✦━━━⭒⭑\n┃  ℹ️  Nessun file da eliminare in ${sessionDir}.\n╰⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
+            console.log(chalk.bold.yellowBright(`\n╭⭑⭒━━━✦❘༻ 🟡 SESSIONE 🟡 ༺❘✦━━━⭒⭑\n┃  ℹ️  Nessun file da eliminare in ${sessionDir}.\n╰⭑⭒━━━✦❘༻☾⋆⁺₊✧ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ✧₊⁺⋆☽༺❘✦━━━⭒⭑`));
         }
 
     } catch (dirErr) {
-        console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE DIRECTORY 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ Errore durante la lettura della directory ${sessionDir}\n┃  Errore: ${dirErr.message}\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝓿𝓪𝓻𝓮𝓱𝓸𝓽 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
+        console.log(chalk.bold.red(`\n╭⭑⭒━━━✦❘༻ 🔴 ERRORE DIRECTORY 🔴 ༺❘✦━━━⭒⭑\n┃  ❌ Errore durante la lettura della directory ${sessionDir}\n┃  Errore: ${dirErr.message}\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ❌₊⁺⋆☽༺❘✦━━━⭒⭑`));
     }
 };
 setInterval(async () => {
     if (stopped === 'close' || !conn || !conn.user) return;
     clearDirectory(join(__dirname, 'tmp'));
     clearDirectory(join(__dirname, 'temp'));
-    console.log(chalk.bold.greenBright(`\n╭⭑⭒━━━✦❘༻ 🟢 PULIZIA MULTIMEDIA 🟢 ༺❘✦━━━⭒⭑\n┃          CARTELLE TMP/TEMP\n┃          ELIMINATE CON SUCCESSO\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝓿𝓪𝓻𝓮𝓱𝓸𝓽 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
+    console.log(chalk.bold.greenBright(`\n╭⭑⭒━━━✦❘༻ 🟢 PULIZIA MULTIMEDIA 🟢 ༺❘✦━━━⭒⭑\n┃          CARTELLE TMP/TEMP\n┃          ELIMINATE CON SUCCESSO\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🗑️ 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
 }, 1000 * 60 * 60);
 setInterval(async () => {
     if (stopped === 'close' || !conn || !conn.user) return;
@@ -648,7 +648,7 @@ setInterval(async () => {
 }, 1000 * 60 * 60 * 2);
 setInterval(async () => {
     if (stopped === 'close' || !conn || !conn.user) return;
-    console.log(chalk.bold.cyanBright(`\n╭⭑⭒━━━✦❘༻ 🔵 PULIZIA PRE-KEY 🔵 ༺❘✦━━━⭒⭑\n┃  🔄 Avvio pulizia pre-keys vecchie\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🧹 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
+    console.log(chalk.bold.cyanBright(`\n╭⭑⭒━━━✦❘༻ 🔵 PULIZIA PRE-KEY 🔵 ༺❘✦━━━⭒⭑\n┃  🔄 Avvio pulizia pre-keys vecchie\n╰⭑⭒━━━✦❘༻☾⋆⁺₊🧹 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 ♻️₊⁺⋆☽༺❘✦━━━⭒⭑`));
     purgeSession(`./${global.authFile}`, true);
     const subBotDir = `./${global.authFileJB}`;
     if (existsSync(subBotDir)) {
