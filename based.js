@@ -16,20 +16,18 @@ import { makeWASocket, protoType, serialize } from './lib/simple.js';
 import { Low, JSONFile } from 'lowdb';
 import NodeCache from 'node-cache';
 
-// --- 1. FUNZIONI GLOBALI (Devono essere in cima per handler.js) ---
+// --- 1. FUNZIONI GLOBALI ---
 global.__filename = function filename(pathURL = import.meta.url, rmPrefix = platform !== 'win32') {
     return rmPrefix ? /file:\/\/\//.test(pathURL) ? fileURLToPath(pathURL) : pathURL : pathToFileURL(pathURL).toString();
 };
-
 global.__dirname = function dirname(pathURL) {
     return path.dirname(global.__filename(pathURL, true));
 };
-
 global.__require = function require(dir = import.meta.url) {
     return createRequire(dir);
 };
 
-// --- 2. INIZIALIZZAZIONE OPZIONI & UTILS ---
+// --- 2. INIZIALIZZAZIONE ---
 global.opts = new Object(yargs(process.argv.slice(2)).exitProcess(false).parse());
 protoType();
 serialize();
@@ -37,7 +35,6 @@ serialize();
 const { useMultiFileAuthState, makeCacheableSignalKeyStore, Browsers, jidNormalizedUser, makeInMemoryStore } = await import('@realvare/based');
 const logger = pino({ level: 'silent' });
 global.store = makeInMemoryStore({ logger });
-const __dirname = global.__dirname(import.meta.url);
 
 // --- 3. DATABASE ---
 global.db = new Low(new JSONFile('database.json'));
@@ -50,10 +47,9 @@ global.loadDatabase = async function loadDatabase() {
 };
 await global.loadDatabase();
 
-// --- 4. AUTH & SESSION ---
+// --- 4. AUTH ---
 global.authFile = 'bloodsession';
 const { state, saveCreds } = await useMultiFileAuthState(global.authFile);
-const msgRetryCounterCache = new NodeCache();
 
 const question = (t) => {
     process.stdout.write(t);
@@ -64,14 +60,13 @@ const question = (t) => {
     });
 };
 
-// --- 5. LOGICA DI AVVIO ---
+// --- 5. SELEZIONE METODO ---
 let opzione;
 if (!fs.existsSync(`./${global.authFile}/creds.json`)) {
     console.clear();
     const v1 = chalk.hex('#9d00ff'); 
     const v2 = chalk.hex('#00e5ff'); 
     const v3 = chalk.hex('#ff00d4'); 
-    
     console.log(`
 ${v1('╭━━━━━━━━━━━━━• ✧˚🩸BLD BLOOD🕊️˚✧ •━━━━━━━━━━━━━')}
           ${v3('SELEZIONE METODO DI ACCESSO ✦')}
@@ -83,7 +78,7 @@ ${v1('╰━━━━━━━━━━━━━• ☾⋆₊✧ 𝖇𝖑𝖔�
     opzione = await question(v3.bold('\n⌯ Inserisci la tua scelta (1 o 2) ---> '));
 }
 
-// --- 6. CONNESSIONE ---
+// --- 6. SOCKET ---
 const connectionOptions = {
     logger: logger,
     browser: Browsers.macOS('Safari'),
@@ -97,14 +92,13 @@ const connectionOptions = {
         const jid = jidNormalizedUser(key.remoteJid);
         const msg = await global.store.loadMessage(jid, key.id);
         return msg?.message || undefined;
-    },
-    msgRetryCounterCache
+    }
 };
 
 global.conn = makeWASocket(connectionOptions);
 global.store.bind(global.conn.ev);
 
-// --- 7. CARICAMENTO HANDLER ---
+// --- 7. HANDLER ---
 let handler = await import('./handler.js');
 global.reloadHandler = async function (restat) {
     try {
@@ -115,19 +109,27 @@ global.reloadHandler = async function (restat) {
     } catch (e) { console.error(e); }
 };
 
-// --- 8. LISTENER MESSAGGI ---
+// --- 8. MESSAGE LISTENER (FIX ERRORE PROPERTY ID) ---
 global.conn.ev.on('messages.upsert', async (chatUpdate) => {
     try {
         const m = chatUpdate.messages[0];
         if (!m) return;
         if (m.key.fromMe && !global.opts['self']) return;
         if (global.db.data == null) await global.loadDatabase();
-        const msg = await serialize(global.conn, m, global.store);
+
+        // FIX: Creiamo una copia "pulita" dell'oggetto m per evitare l'errore 'Cannot redefine property: id'
+        let msgCopied = JSON.parse(JSON.stringify(m));
+        
+        // Passiamo la copia alla serializzazione
+        const msg = await serialize(global.conn, msgCopied, global.store);
+        
         await handler.handler.call(global.conn, msg, chatUpdate);
-    } catch (err) { console.error(chalk.red('Errore Handler:'), err); }
+    } catch (err) { 
+        console.error(chalk.red('Errore nell\'elaborazione:'), err); 
+    }
 });
 
-// --- 9. PAIRING CODE ---
+// --- 9. PAIRING & UPDATES ---
 if (!fs.existsSync(`./${global.authFile}/creds.json`) && opzione === '2') {
     let phoneNumber = await question(chalk.bgHex('#00e5ff').black.bold(` Inserisci il numero (es: 39347...) `) + '\n' + chalk.hex('#ff00d4')('━━► '));
     let addNumber = phoneNumber.replace(/\D/g, '');
@@ -138,9 +140,8 @@ if (!fs.existsSync(`./${global.authFile}/creds.json`) && opzione === '2') {
     }, 3000);
 }
 
-// --- 10. STATO CONNESSIONE ---
 global.conn.ev.on('connection.update', (update) => {
-    const { connection, lastDisconnect, qr } = update;
+    const { connection, qr } = update;
     if (qr) console.log(chalk.hex('#00ff88').bold(`\n🪐 QR DISPONIBILE 🪐`));
     if (connection === 'open') {
         console.clear();
