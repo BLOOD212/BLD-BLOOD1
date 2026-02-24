@@ -50,7 +50,7 @@ handler.tags = ['giochi'];
 handler.command = /^(ditalino)$/i;
 
 handler.group = true;
-handler.admin = true;
+handler.admin = false;
 handler.botAdmin = false;
 
 handler.fail = null;
