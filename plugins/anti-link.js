@@ -528,7 +528,7 @@ async function handleViolation(conn, m, reasonMessage, isBotAdmin) {
     
     if (!isBotAdmin) {
         await conn.sendMessage(m.chat, {
-            text: `> 『 ℹ️ 』 \`Non sono un admin.\`\n> Per rimuovere l'utente, rendimi un amministratore.\n\n> \`vare ✧ bot\``
+            text: `> 『 ℹ️ 』 \`Non sono un admin.\`\n> Per rimuovere l'utente, rendimi un amministratore.\n\n> \`bloodbot\``
         }, { quoted: m });
         return;
     }
