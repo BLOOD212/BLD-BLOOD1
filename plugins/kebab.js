@@ -1,3 +1,5 @@
+import { createCanvas } from 'canvas';
+
 const kebabIngredients = [
   '*Pane pita 🫓*', '*Pane lavash 🫓*', '*Carne di pollo 🍗*', '*Carne di manzo 🥩*', '*Carne di agnello 🐑*',
   '*Insalata 🥗*', '*Pomodori 🍅*', '*Cipolla 🧅*', '*Cetriolini sottaceto 🥒*', '*Peperoni 🌶️*',
@@ -6,87 +8,178 @@ const kebabIngredients = [
 ];
 
 const kebabBotReplies = [
-  "🌯 Kebab perfetto!", "😋 Che bontà!", "🔥 Attenzione, questo è piccante!", 
-  "🤔 Kebab interessante...", "🎉 Kebab da campioni!", "🙃 Combinazione curiosa!", 
-  "😱 Troppi ingredienti!", "🤤 Mmm, che delizia!"
+  "🌯 Kebab perfetto!",
+  "😋 Che bontà!",
+  "🔥 Attenzione, questo è piccante!",
+  "🎉 Kebab da campioni!",
+  "🤤 Mmm, che delizia!"
 ];
 
-const playAgainButtons = () => [{ name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: 'Ordina un altro kebab! 🌯', id: `.kebab` }) }];
+const playAgainButtons = () => [
+  {
+    name: 'quick_reply',
+    buttonParamsJson: JSON.stringify({
+      display_text: 'Ordina un altro kebab 🌯',
+      id: `.kebab`
+    })
+  }
+];
 
-let handler = async (m, { conn, args }) => {
-  let messages = [
-    `🌯 *Scegli gli ingredienti per il tuo kebab!*`,
-    `🔥 *Personalizza il tuo kebab!*`,
-    `🌟 *Crea il kebab dei tuoi sogni!*`,
-    `🧂 *Scegli i tuoi ingredienti preferiti!*`,
-  ];
+async function generateKebabImage(ingredients) {
+  const width = 800;
+  const height = 800;
+  const canvas = createCanvas(width, height);
+  const ctx = canvas.getContext('2d');
 
-  if (global.kebabGame?.[m.chat]) return m.reply('⚠️ *C\'è già un kebab in preparazione in questo gruppo!*');
+  // Sfondo
+  ctx.fillStyle = "#f5e6c8";
+  ctx.fillRect(0, 0, width, height);
+
+  // Titolo
+  ctx.fillStyle = "#000";
+  ctx.font = "bold 50px Sans";
+  ctx.textAlign = "center";
+  ctx.fillText("IL TUO KEBAB", width / 2, 80);
+
+  // Base kebab
+  ctx.fillStyle = "#d9a066";
+  ctx.fillRect(250, 200, 300, 400);
+
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(270, 220, 260, 360);
+
+  // Ingredienti scritti dentro
+  ctx.fillStyle = "#000";
+  ctx.font = "28px Sans";
+  ctx.textAlign = "left";
+
+  let y = 260;
+  ingredients.forEach(ing => {
+    ctx.fillText("• " + ing.replace(/\*/g, ''), 290, y);
+    y += 40;
+  });
+
+  return canvas.toBuffer();
+}
+
+let handler = async (m, { conn }) => {
+  if (global.kebabGame?.[m.chat])
+    return m.reply("⚠️ C'è già un kebab in preparazione in questo gruppo!");
 
   const cooldownKey = `kebab_${m.chat}`;
   const now = Date.now();
   const cooldownTime = 5000;
-  const lastGame = global.cooldowns?.[cooldownKey] || 0;
-  if (now - lastGame < cooldownTime) {
-    const remainingTime = Math.ceil((cooldownTime - (now - lastGame)) / 1000);
-    return m.reply(`⏳ *Aspetta ancora ${remainingTime} secondi prima di avviare un nuovo gioco!*`);
-  }
 
   global.cooldowns = global.cooldowns || {};
+  const lastGame = global.cooldowns[cooldownKey] || 0;
+
+  if (now - lastGame < cooldownTime) {
+    const remaining = Math.ceil((cooldownTime - (now - lastGame)) / 1000);
+    return m.reply(`⏳ Aspetta ${remaining} secondi prima di riaprire la cucina!`);
+  }
+
   global.cooldowns[cooldownKey] = now;
 
-  const messageIntro = messages[Math.floor(Math.random() * messages.length)];
-  let messageText = `${messageIntro}\n\n`;
-  kebabIngredients.forEach((c, i) => { messageText += `${i + 1}. ${c}\n`; });
-  messageText += '\n*Rispondi con i numeri degli ingredienti separati da virgola (es. 1, 2, 3)*\n*Scrivi "fine" per completare il tuo kebab*';
+  const intro = `
+╭━━━〔 🌯 𝑲𝑬𝑩𝑨𝑩 𝑺𝑻𝑼𝑫𝑰𝑶 🌯 〕━━━╮
+┃  Crea il tuo kebab perfetto
+╰━━━━━━━━━━━━━━━━━━╯
+`;
 
-  try {
-    const msg = await conn.sendMessage(m.chat, { text: messageText, footer: '🌯 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🌯' }, { quoted: m });
-    global.kebabGame = global.kebabGame || {};
-    global.kebabGame[m.chat] = {
-      id: msg.key.id,
-      ingredients: [],
-      user: m.sender,
-      timeout: setTimeout(async () => {
-        if (!global.kebabGame?.[m.chat]) return;
-        const kebab = global.kebabGame[m.chat].ingredients.join(', ');
-        const userTag = `@${global.kebabGame[m.chat].user.split('@')[0]}`;
-        const randomReply = kebabBotReplies[Math.floor(Math.random() * kebabBotReplies.length)];
-        await conn.sendMessage(m.chat, { text: `*KEBAB CREATO DA* ${userTag}\n\n*Ingredienti scelti:* ${kebab}\n\n${randomReply}`, footer: '🌯 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🌯', interactiveButtons: playAgainButtons() }, { quoted: msg });
-        delete global.kebabGame[m.chat];
-      }, 120000)
-    };
-  } catch (error) {
-    console.error('Errore nel gioco kebab:', error);
-    m.reply('❌ *Si è verificato un errore durante l\'avvio del gioco*\n🔄 *Riprova tra qualche secondo*');
-  }
-};
+  let text = intro + "\n";
+  kebabIngredients.forEach((c, i) => {
+    text += `〔 ${i + 1} 〕 ${c}\n`;
+  });
 
-handler.before = async (m, { conn }) => {
-  const chat = m.chat;
-  const game = global.kebabGame?.[chat];
-  if (!game || !m.quoted || m.quoted.id !== game.id || m.key.fromMe || m.sender !== game.user) return;
+  text += `
+━━━━━━━━━━━━━━
+✎ Scrivi: 1,2,3
+✦ Scrivi "fine" per completare
+━━━━━━━━━━━━━━`;
 
-  const choices = m.text.trim().split(',').map(s => s.trim()).filter(s => s);
-  for (const choice of choices) {
-    if (choice.toLowerCase() === 'fine') {
-      clearTimeout(game.timeout);
+  const msg = await conn.sendMessage(m.chat, { text }, { quoted: m });
+
+  global.kebabGame = global.kebabGame || {};
+  global.kebabGame[m.chat] = {
+    id: msg.key.id,
+    ingredients: [],
+    user: m.sender,
+    timeout: setTimeout(async () => {
+      const game = global.kebabGame[m.chat];
+      if (!game) return;
+
       const kebab = game.ingredients.join(', ');
       const userTag = `@${game.user.split('@')[0]}`;
       const randomReply = kebabBotReplies[Math.floor(Math.random() * kebabBotReplies.length)];
-      await conn.sendMessage(m.chat, { text: `*KEBAB CREATO DA* ${userTag}\n\n*Ingredienti scelti:* ${kebab}\n\n${randomReply}`, footer: '🌯 𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙 🌯', interactiveButtons: playAgainButtons() }, { quoted: m });
+      const imageBuffer = await generateKebabImage(game.ingredients);
+
+      await conn.sendMessage(m.chat, {
+        image: imageBuffer,
+        caption: `
+╭━━━〔 🌯 𝑲𝑬𝑩𝑨𝑩 𝑪𝑹𝑬𝑨𝑻𝑶 🌯 〕━━━╮
+┃ 👤 Creato da: ${userTag}
+┃
+┃ 🥙 Ingredienti:
+┃ ${kebab}
+┃
+╰━━━━━━━━━━━━━━━━━━╯
+
+${randomReply}
+`,
+        mentions: [game.user],
+        interactiveButtons: playAgainButtons()
+      });
+
+      delete global.kebabGame[m.chat];
+    }, 120000)
+  };
+};
+
+handler.before = async (m, { conn }) => {
+  const game = global.kebabGame?.[m.chat];
+  if (!game || !m.quoted || m.quoted.id !== game.id || m.sender !== game.user) return;
+
+  const choices = m.text.trim().split(',').map(s => s.trim());
+
+  for (const choice of choices) {
+    if (choice.toLowerCase() === 'fine') {
+      clearTimeout(game.timeout);
+
+      const kebab = game.ingredients.join(', ');
+      const userTag = `@${game.user.split('@')[0]}`;
+      const randomReply = kebabBotReplies[Math.floor(Math.random() * kebabBotReplies.length)];
+      const imageBuffer = await generateKebabImage(game.ingredients);
+
+      await conn.sendMessage(m.chat, {
+        image: imageBuffer,
+        caption: `
+╭━━━〔 🌯 𝑲𝑬𝑩𝑨𝑩 𝑪𝑹𝑬𝑨𝑻𝑶 🌯 〕━━━╮
+┃ 👤 Creato da: ${userTag}
+┃
+┃ 🥙 Ingredienti:
+┃ ${kebab}
+┃
+╰━━━━━━━━━━━━━━━━━━╯
+
+${randomReply}
+`,
+        mentions: [game.user],
+        interactiveButtons: playAgainButtons()
+      });
+
       delete global.kebabGame[m.chat];
       return;
     }
+
     const index = parseInt(choice) - 1;
     if (!isNaN(index) && kebabIngredients[index] && !game.ingredients.includes(kebabIngredients[index])) {
       game.ingredients.push(kebabIngredients[index]);
-    } else if (isNaN(index)) {
-      await conn.sendMessage(m.chat, { text: '*Scelta non valida. Usa solo numeri o "fine".*' });
-      return;
     }
   }
-  await conn.sendMessage(m.chat, { text: `*Hai scelto ${game.ingredients.join(', ')}.*\n*Vuoi aggiungere altro? (rispondi con i numeri degli ingredienti separati da virgola o "fine")*` });
+
+  await conn.sendMessage(m.chat, {
+    text: `🥙 Hai scelto:\n${game.ingredients.join(', ')}\n\nScrivi altri numeri o "fine".`
+  });
 };
 
 handler.help = ['kebab'];
