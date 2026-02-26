@@ -19,7 +19,7 @@ let handler = async (m, { conn, usedPrefix }) => {
     const totalMemGB = (totalMem / 1024 / 1024 / 1024).toFixed(2);
     const usedMemGB = (usedMem / 1024 / 1024 / 1024).toFixed(2);
 
-    const botName = global.db?.data?.nomedelbot || "ᴅᴛʜ-ʙᴏᴛ";
+    const botName = global.db?.data?.nomedelbot || "𝐒𝐛𝐨𝐫𝐫𝐚 𝐁𝐨𝐭";
 
     const botStartTime = new Date(Date.now() - uptimeMs);
     const activationTime = botStartTime.toLocaleString('it-IT', {
@@ -32,10 +32,14 @@ let handler = async (m, { conn, usedPrefix }) => {
       year: 'numeric',
     });
 
-    const textMsg = `⟦ 𝙿𝙸𝙽𝙶·𝙱𝙾𝚃 ⟧
-│
-├─ 🕒 𝚄𝙿𝚃𝙸𝙼𝙴  : ${uptimeStr}
-└─ ⚡ 𝙿𝙸𝙽𝙶    : ${speed} ms`;
+    const textMsg = `╭𖧹───ঐ͚͢ᬃ͜𝐏𝕀͢𝚴𝐆 𝐁𝚯͢𝑻ᬃ͜ঐ͚͢───𖧹
+┃◈┃•𝑻𝚺𝐌𝑷𝚯: ${uptimeStr}
+┃◈┃•𝐏𝕀𝚴𝐆 : ${speed} ms
+┃◈┃•𝐑𝜜𝐌: ${usedMemGB} / ${totalMemGB} GB 
+┃◈┃(${percentUsed}%)
+┃◈┃•𝛬𝐕𝐕𝕀𝚯: 
+┃◈┃•${activationTime}
+╰𖧹───ঐ͚͢ᬃ͜𝐏𝕀͢𝚴𝐆 𝐁𝚯͢𝑻ᬃ͜ঐ͚͢───𖧹`;
 
     await conn.sendMessage(m.chat, {
       text: textMsg,
@@ -62,6 +66,5 @@ function clockString(ms) {
 handler.help = ['ping'];
 handler.tags = ['info'];
 handler.command = /^(ping)$/i;
-handler.admin = true 
 
 export default handler;
