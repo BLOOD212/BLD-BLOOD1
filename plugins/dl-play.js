@@ -125,7 +125,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
 
     if (!text) {
         const helpMessage = `
-*╭─ׄ✦☾⋆⁺₊✧*bloodbot*✧₊⁺⋆☽✦─ׅ⭒*
+*╭─ׄ✦☾⋆⁺₊✧ *Bloodbot* ✧₊⁺⋆☽✦─ׅ⭒*
 *├* 『 ⁉️ 』 _Comandi disponibili:_
 *├* *├* \`${prefix}play\` _<nome/url>_
 *├* ↳ 『 🎵 』- *Scarica audio veloce*
@@ -140,7 +140,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
 *├* _${prefix}play Charge me Future_
 *├* _${prefix}playaudio https://youtu.be/gLNpPiUpJ4w_
 *╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*
-> \`*BloodBot*\``;
+> \`*Bloodbot*\``;
         await conn.reply(m.chat, helpMessage.trim(), m);
         return;
     }
@@ -196,7 +196,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
             const views = videoInfo.view_count ? parseInt(videoInfo.view_count).toLocaleString() : '?';
 
             const captionMessage = `
-*╭─ׄ✦*bloodbot*✦─ׅ⭒*
+*╭─ׄ✦☾⋆⁺₊✧ *Bloodbot* ✧₊⁺⋆☽✦─ׅ⭒*
 *├* *\`${title}\`*
 *├* 👤 \`Autore:\` *${author}*
 *├* 👁️ \`Views:\` *${views}*
@@ -207,7 +207,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
             await conn.sendMessage(m.chat, {
                 image: { url: videoInfo.thumbnail },
                 caption: captionMessage.trim(),
-                footer: '> \`vare ✧ bot\`',
+                footer: '> \'*Bloodbot*\`',
                 contextInfo: global.fake.contextInfo
             }, { quoted: m });
 
@@ -229,7 +229,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
                 image: { url: video.thumbnail },
                 title: `${index + 1}. ${shortTitle}`,
                 body: `『 👤 』 *${author}*\n『 ⏱️ 』 *${durationDisplay}* - 『 👁️ 』 *${views}*`,
-                footer: `˗ˏˋ ☾ *bloodbot* ☽ ˎˊ˗`,
+                footer: `˗ˏˋ ☾ *Bloodbot* ☽ ˎˊ˗`,
                 buttons: [
                     {
                         name: "quick_reply",
@@ -262,7 +262,7 @@ let handler = async (m, { conn, command, text, usedprefix }) => {
             m.chat,
             {
                 text: `『 🔍 』 *Risultati trovati per:*\n- ↳ *\`${text}\`*`,
-                footer: '*BloodBot*',
+                footer: '*Bloodbot*',
                 cards: cards
             },
             { quoted: m }
@@ -354,7 +354,7 @@ async function downloadMedia(m, conn, command, url, prefix, preloadedVideoInfo =
                                 video: buffer,
                                 mimetype: 'video/mp4',
                                 fileName: `${safeTitle}.mp4`,
-                                caption: `> \`*BloodBot*\``,
+                                caption: `> \`*Bloodbot*\``,
                                 contextInfo: global.fake.contextInfo
                             }, { quoted: m });
                         } else {
@@ -368,7 +368,7 @@ async function downloadMedia(m, conn, command, url, prefix, preloadedVideoInfo =
                                     externalAdReply: {
                                         ...global.fake.contextInfo,
                                         title: `${videoInfo?.title} - ${author?.name}`,
-                                        body: '⋆⭑˚₊ *BloodBot* ₊˚⭑⋆',
+                                        body: '⋆⭑˚₊ *Bloodbot* ₊˚⭑⋆',
                                         thumbnailUrl: videoInfo ? videoInfo.thumbnail : null,
                                         mediaType: 1,
                                         renderLargerThumbnail: false,
