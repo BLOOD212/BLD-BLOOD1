@@ -1,114 +1,130 @@
 import { createCanvas, loadImage } from 'canvas'
 
-let cooldowns = {}
-const fruits = ['🍒', '🍋', '🍉', '🍇', '🍎', '🍓']
-
-// URL Twemoji per ogni frutto
-const fruitURLs = {
-    '🍒': 'https://twemoji.maxcdn.com/v/latest/72x72/1f352.png',
-    '🍋': 'https://twemoji.maxcdn.com/v/latest/72x72/1f34b.png',
-    '🍉': 'https://twemoji.maxcdn.com/v/latest/72x72/1f349.png',
-    '🍇': 'https://twemoji.maxcdn.com/v/latest/72x72/1f347.png',
-    '🍎': 'https://twemoji.maxcdn.com/v/latest/72x72/1f34e.png',
-    '🍓': 'https://twemoji.maxcdn.com/v/latest/72x72/1f353.png'
-}
-
-let handler = async (m, { conn }) => {
+let handler = async (m, { conn, command, args, usedPrefix }) => {
     let user = global.db.data.users[m.sender]
+    if (!user) user = global.db.data.users[m.sender] = { fiches: 1000, exp: 0, level: 1 }
+    let groupName = m.isGroup ? m.metadata.subject : 'Gemini Casino'
 
-    // ⏳ Cooldown 5 minuti
-    if (cooldowns[m.sender] && Date.now() - cooldowns[m.sender] < 300000) {
-        let timeLeft = cooldowns[m.sender] + 300000 - Date.now()
-        let min = Math.floor(timeLeft / 60000)
-        let sec = Math.floor((timeLeft % 60000) / 1000)
-        return conn.reply(
-            m.chat,
-            `⏳ 𝗖𝗢𝗢𝗟𝗗𝗢𝗪𝗡\n⏱️ 𝗔𝘀𝗽𝗲𝘁𝘁𝗮 ${min}𝗺 ${sec}𝘀`,
-            m
-        )
+    // --- 1. BLACKJACK VISIVO ---
+    if (command === 'blackjack' || command === 'blakjak') {
+        let bet = parseInt(args[0])
+        if (!bet || bet <= 0) return m.reply(`*⚠️ USA: ${usedPrefix}${command} <quantità>*`)
+        if (user.fiches < bet) return m.reply('*❌ FICHES INSUFFICIENTI!*')
+
+        user.fiches -= bet
+        let tu = Math.floor(Math.random() * 10) + 12
+        let banco = Math.floor(Math.random() * 10) + 13
+        let vinto = (tu <= 21 && (tu > banco || banco > 21))
+
+        const canvas = createCanvas(600, 400)
+        const ctx = canvas.getContext('2d')
+
+        // Sfondo Tavolo Verde
+        ctx.fillStyle = '#0a5d1e'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.strokeStyle = '#fff'
+        ctx.lineWidth = 5
+        ctx.strokeRect(20, 20, 560, 360)
+
+        // Testo
+        ctx.fillStyle = '#fff'
+        ctx.textAlign = 'center'
+        ctx.font = 'bold 40px Sans'
+        ctx.fillText('🃏 BLACKJACK 🃏', canvas.width / 2, 70)
+
+        // Punteggi
+        ctx.font = '30px Sans'
+        ctx.fillText(`TU: ${tu}`, 150, 200)
+        ctx.fillText(`BANCO: ${banco}`, 450, 200)
+
+        // Esito
+        ctx.font = 'bold 50px Sans'
+        ctx.fillStyle = vinto ? '#2ecc71' : '#e74c3c'
+        ctx.fillText(vinto ? 'HAI VINTO!' : 'HAI PERSO!', canvas.width / 2, 320)
+
+        if (vinto) user.fiches += bet * 2
+        
+        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: `*🃏 TAVOLO DA GIOCO DI ${m.pushName.toUpperCase()}*\n*SALDO ATTUALE:* *${user.fiches} FICHES*` }, { quoted: m })
     }
 
-    // 🎰 Estrazione simboli
-    let r1 = fruits[Math.floor(Math.random() * fruits.length)]
-    let r2 = fruits[Math.floor(Math.random() * fruits.length)]
-    let r3 = fruits[Math.floor(Math.random() * fruits.length)]
+    // --- 2. ROULETTE VISIVA ---
+    if (command === 'roulette') {
+        let bet = parseInt(args[0])
+        let scelta = args[1]?.toLowerCase()
+        if (!bet || !['rosso', 'nero'].includes(scelta)) return m.reply(`*⚠️ USA: ${usedPrefix}roulette <quantità> rosso/nero*`)
+        if (user.fiches < bet) return m.reply('*❌ FICHES INSUFFICIENTI!*')
 
-    let win = (r1 === r2 || r2 === r3 || r1 === r3)
+        user.fiches -= bet
+        let vincente = Math.random() > 0.5 ? 'rosso' : 'nero'
+        let vinto = scelta === vincente
 
-    user.limit = Number(user.limit) || 0
-    user.exp = Number(user.exp) || 0
-    user.level = Number(user.level) || 1
+        const canvas = createCanvas(600, 400)
+        const ctx = canvas.getContext('2d')
 
-    let { min: minXP, xp: levelXP } = xpRange(user.level, global.multiplier || 1)
-    let currentLevelXP = user.exp - minXP
+        ctx.fillStyle = '#1a1a1a'
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // Aggiornamento saldo e XP
-    if (win) {
-        user.limit += 500
-        user.exp += 100
-    } else {
-        user.limit = Math.max(0, user.limit - 100)
-        user.exp = Math.max(0, user.exp - 50)
+        // Disegno Disco Roulette
+        ctx.beginPath()
+        ctx.arc(300, 200, 100, 0, Math.PI, false)
+        ctx.fillStyle = '#e74c3c' // Rosso
+        ctx.fill()
+        ctx.beginPath()
+        ctx.arc(300, 200, 100, Math.PI, Math.PI * 2, false)
+        ctx.fillStyle = '#2c3e50' // Nero (Blu scuro/Nero)
+        ctx.fill()
+
+        ctx.fillStyle = '#fff'
+        ctx.font = 'bold 40px Sans'
+        ctx.textAlign = 'center'
+        ctx.fillText(`PALLINA SU: ${vincente.toUpperCase()}`, canvas.width / 2, 80)
+        
+        ctx.font = 'bold 50px Sans'
+        ctx.fillStyle = vinto ? '#2ecc71' : '#e74c3c'
+        ctx.fillText(vinto ? 'VITTORIA!' : 'SCONFITTA!', canvas.width / 2, 350)
+
+        if (vinto) user.fiches += bet * 2
+        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: `*🎡 LA ROULETTE DI ${groupName.toUpperCase()}*\n*RISULTATO:* *${vincente.toUpperCase()}*` }, { quoted: m })
     }
 
-    cooldowns[m.sender] = Date.now()
+    // --- 3. CORSA CAVALLI VISIVA ---
+    if (command === 'corsa') {
+        let bet = parseInt(args[0])
+        if (!bet) return m.reply(`*⚠️ USA: ${usedPrefix}corsa <quantità>*`)
+        
+        const canvas = createCanvas(600, 400)
+        const ctx = canvas.getContext('2d')
+        ctx.fillStyle = '#5d4037' // Terra della pista
+        ctx.fillRect(0, 0, canvas.width, canvas.height)
 
-    // 🌟 Creazione Canvas
-    const canvas = createCanvas(600, 400)
-    const ctx = canvas.getContext('2d')
+        let cavalli = ['🐎', '🏇', '🐎', '🏇']
+        let vincitoreIdx = Math.floor(Math.random() * 4)
 
-    // Sfondo
-    ctx.fillStyle = '#1a1a1a'
-    ctx.fillRect(0, 0, canvas.width, canvas.height)
+        ctx.fillStyle = '#fff'
+        ctx.font = 'bold 30px Sans'
+        ctx.fillText('🏁 TRAGUARDO 🏁', 450, 50)
 
-    // Titolo
-    ctx.fillStyle = '#fff'
-    ctx.font = 'bold 36px Sans'
-    ctx.textAlign = 'center'
-    ctx.fillText(' SLOT MACHINE ', canvas.width / 2, 50)
+        cavalli.forEach((c, i) => {
+            let x = (i === vincitoreIdx) ? 480 : Math.floor(Math.random() * 300) + 50
+            ctx.font = '50px Sans'
+            ctx.fillText(c, x, 100 + (i * 80))
+            ctx.strokeStyle = '#fff'
+            ctx.lineWidth = 2
+            ctx.strokeRect(10, 80 + (i * 80), 580, 2)
+        })
 
-    // Caricamento immagini frutta da Twemoji
-    const img1 = await loadImage(fruitURLs[r1])
-    const img2 = await loadImage(fruitURLs[r2])
-    const img3 = await loadImage(fruitURLs[r3])
+        if (vincitoreIdx === 0) { // Esempio logica vittoria
+            user.fiches += bet * 2
+            m.reply('*🏆 IL TUO CAVALLO HA VINTO!*')
+        } else {
+            user.fiches -= bet
+            m.reply('*💀 IL TUO CAVALLO È ARRIVATO ULTIMO!*')
+        }
 
-    // Disegna frutta
-    ctx.drawImage(img1, 100, 120, 100, 100)
-    ctx.drawImage(img2, 250, 120, 100, 100)
-    ctx.drawImage(img3, 400, 120, 100, 100)
-
-    // Esito
-    ctx.font = 'bold 28px Sans'
-    ctx.fillStyle = win ? '#00ff00' : '#ff3333'
-    ctx.fillText(win ? ' VITTORIA!' : ' SCONFITTA!', canvas.width / 2, 300)
-
-    // Saldo e XP
-    ctx.font = '20px Sans'
-    ctx.fillStyle = '#fff'
-    ctx.fillText(` Euro: ${user.limit}    XP: ${user.exp}`, canvas.width / 2, 340)
-    ctx.fillText(` Livello ${user.level}   Progresso: ${currentLevelXP}/${levelXP} XP`, canvas.width / 2, 370)
-
-    // Invio immagine su WhatsApp
-    await new Promise(r => setTimeout(r, 1500))
-    await conn.sendMessage(
-        m.chat,
-        { image: canvas.toBuffer(), caption: '🎰 Slot Machine' },
-        { quoted: m }
-    )
+        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: `*🏇 GRAN PREMIO DI ${groupName.toUpperCase()}*` }, { quoted: m })
+    }
 }
 
-handler.help = ['slot',];
-handler.tags = ['giochi'];
-handler.command = /^(slot)$/i;
-handler.group = true;
-handler.botAdmin = false;
-handler.fail = null;
-export default handler;
-
-function xpRange(level, multiplier = 1) {
-    if (level < 0) level = 0
-    let min = level === 0 ? 0 : Math.pow(level, 2) * 20
-    let max = Math.pow(level + 1, 2) * 20
-    let xp = Math.floor((max - min) * multiplier)
-    return { min, xp, max }
-}
+handler.command = /^(blackjack|blakjak|roulette|corsa)$/i
+handler.group = true
+export default handler
