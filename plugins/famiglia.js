@@ -22,29 +22,62 @@ let handler = async (m, { conn, text, command }) => {
         let menu = `*🌳 SISTEMA GENEALOGICO REALE 🌳*\n\n`
         menu += `*ECCO I COMANDI DISPONIBILI:*\n\n`
         menu += `*👉 .unione @tag* - *CHIEDI DI UNIRTI A UN PARTNER*\n`
-        menu += `*👉 .accettaunione* - *CONFERMA L'UNIONE RICEVUTA*\n`
         menu += `*👉 .adotta @tag* - *ADOTTA UN UTENTE COME FIGLIO*\n`
         menu += `*👉 .famigliamia* - *VISUALIZZA IL TUO ALBERO VERO*\n`
         menu += `*👉 .albero @tag* - *GUARDA L'ALBERO DI UN ALTRO*\n`
         menu += `*👉 .sciogli* - *TERMINA L'UNIONE ATTUALE*\n`
         menu += `*👉 .disereda @tag* - *RIMUOVI UN FIGLIO*\n\n`
-        menu += `*⚠️ NOTA: NON PUOI ADOTTARE IL TUO PARTNER O I TUOI GENITORI!*`
+        menu += `*⚠️ NOTA: IL COMANDO .UNIONE USA ORA I BOTTONI PER ACCETTARE O RIFIUTARE!*`
         return m.reply(menu)
     }
 
-    // --- 2. LOGICA UNIONE ---
+    // --- 2. LOGICA UNIONE CON BOTTONI ---
     if (command === 'unione') {
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
         if (!target || target === user) return m.reply('*⚠️ ERRORE: TAGGA UN PARTNER VALIDO!*')
         checkUser(target)
+
         if (users[user].s === target || users[target].s === user) return m.reply('*⚠️ AZIONE BLOCCATA: NO INCESTO!*')
-        if (users[user].c) return m.reply('*⚠️ ERRORE: SEI GIÀ UNITO!*')
+        if (users[user].c) return m.reply('*⚠️ ERRORE: SEI GIÀ UNITO A QUALCUNO!*')
+        if (users[target].c) return m.reply('*⚠️ ERRORE: QUESTA PERSONA È GIÀ UNITA!*')
         
-        users[user].proposta = target
+        users[target].propostaUnione = user
+
+        const buttons = [
+            { buttonId: `.accettaunione`, buttonText: { displayText: 'ACCETTA ✅' }, type: 1 },
+            { buttonId: `.rifiutaunione`, buttonText: { displayText: 'RIFIUTA ❌' }, type: 1 }
+        ]
+
+        let msg = `*💍 RICHIESTA DI UNIONE 💍*\n\n`
+        msg += `*@${user.split('@')[0]} VUOLE UNIRSI UFFICIALMENTE A @${target.split('@')[0]}*\n\n`
+        msg += `*VUOI ACCETTARE E UNIRE I VOSTRI ALBERI?*`
+
         return conn.sendMessage(chat, { 
-            text: `*💍 RICHIESTA DI UNIONE*\n\n*@${user.split('@')[0]} VUOLE UNIRSI A @${target.split('@')[0]}*\n\n*SCRIVI .ACCETTAUNIONE PER CONFERMARE!*`, 
+            text: msg, 
+            footer: '*SISTEMA GENEALOGICO*', 
+            buttons: buttons, 
+            headerType: 1, 
             mentions: [user, target] 
-        })
+        }, { quoted: m })
+    }
+
+    // --- LOGICA RISPOSTA BOTTONI ---
+    if (command === 'accettaunione') {
+        let proponente = users[user].propostaUnione
+        if (!proponente) return m.reply('*⚠️ NON HAI RICHIESTE DI UNIONE IN SOSPESO.*')
+        
+        users[user].c = proponente
+        users[proponente].c = user
+        delete users[user].propostaUnione
+        
+        return conn.reply(chat, `*✨ UNIONE CONFERMATA! @${proponente.split('@')[0]} E @${user.split('@')[0]} SONO ORA UNITI!*`, m, { mentions: [proponente, user] })
+    }
+
+    if (command === 'rifiutaunione') {
+        let proponente = users[user].propostaUnione
+        if (!proponente) return
+        delete users[user].propostaUnione
+        return conn.reply(chat, `*💔 UNIONE RIFIUTATA. @${user.split('@')[0]} HA DECISO DI RESTARE SINGLE.*`, m, { mentions: [user] })
     }
 
     // --- 3. LOGICA ADOTTA ---
@@ -52,14 +85,17 @@ let handler = async (m, { conn, text, command }) => {
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
         if (!target) return m.reply('*⚠️ ERRORE: CHI VUOI ADOTTARE?*')
         checkUser(target)
-        if (users[user].c === target || users[user].s === target || users[target].s) return m.reply('*⚠️ AZIONE NON VALIDA O REALE!*')
+        
+        if (users[user].c === target || users[user].s === target || users[target].s) {
+            return m.reply('*⚠️ AZIONE NON VALIDA: CONTROLLA CHE L\'UTENTE NON SIA GIÀ TUO PARENTE O ABBIA GIÀ UN PADRE!*')
+        }
 
         users[user].p.push(target)
         users[target].s = user
-        return m.reply(`*👶 ADOZIONE COMPLETATA PER @${target.split('@')[0]}*`, null, { mentions: [target] })
+        return m.reply(`*👶 ADOZIONE COMPLETATA PER @${target.split('@')[0]}!*`, null, { mentions: [target] })
     }
 
-    // --- 4. VISUALIZZAZIONE ALBERO (FAMIGLIAMIA / ALBERO) ---
+    // --- 4. VISUALIZZAZIONE ALBERO ---
     if (command === 'famigliamia' || command === 'albero') {
         let target = (command === 'famigliamia') ? user : (m.mentionedJid[0] || (m.quoted ? m.quoted.sender : user))
         checkUser(target)
@@ -110,8 +146,15 @@ let handler = async (m, { conn, text, command }) => {
 
         return conn.sendMessage(chat, { text: tree, mentions: [target, partner, padre, madre, nonno, nonna, ...fratelli, ...(u.p || [])].filter(Boolean) }, { quoted: m })
     }
+
+    if (command === 'sciogli') {
+        let ex = users[user].c
+        if (!ex) return m.reply('*⚠️ NON SEI UNITO A NESSUNO!*')
+        users[user].c = null; if (users[ex]) users[ex].c = null
+        return m.reply('*📄 UNIONE SCIOLTA CON SUCCESSO!*')
+    }
 }
 
-handler.command = /^(unione|accettaunione|adotta|albero|famiglia|famigliamia|sciogli)$/i
+handler.command = /^(unione|accettaunione|rifiutaunione|adotta|albero|famiglia|famigliamia|sciogli)$/i
 handler.group = true
 export default handler
