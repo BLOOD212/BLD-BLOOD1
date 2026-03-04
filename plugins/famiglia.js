@@ -17,48 +17,56 @@ let handler = async (m, { conn, text, command }) => {
 
     checkUser(user)
 
-    // --- COMANDO UNIONE (CON VINCOLI) ---
+    // --- 1. COMANDO FAMIGLIA (SOLO COMANDI) ---
+    if (command === 'famiglia') {
+        let menu = `*🌳 SISTEMA GENEALOGICO REALE 🌳*\n\n`
+        menu += `*ECCO I COMANDI DISPONIBILI:*\n\n`
+        menu += `*👉 .unione @tag* - *CHIEDI DI UNIRTI A UN PARTNER*\n`
+        menu += `*👉 .accettaunione* - *CONFERMA L'UNIONE RICEVUTA*\n`
+        menu += `*👉 .adotta @tag* - *ADOTTA UN UTENTE COME FIGLIO*\n`
+        menu += `*👉 .famigliamia* - *VISUALIZZA IL TUO ALBERO VERO*\n`
+        menu += `*👉 .albero @tag* - *GUARDA L'ALBERO DI UN ALTRO*\n`
+        menu += `*👉 .sciogli* - *TERMINA L'UNIONE ATTUALE*\n`
+        menu += `*👉 .disereda @tag* - *RIMUOVI UN FIGLIO*\n\n`
+        menu += `*⚠️ NOTA: NON PUOI ADOTTARE IL TUO PARTNER O I TUOI GENITORI!*`
+        return m.reply(menu)
+    }
+
+    // --- 2. LOGICA UNIONE ---
     if (command === 'unione') {
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
         if (!target || target === user) return m.reply('*⚠️ ERRORE: TAGGA UN PARTNER VALIDO!*')
         checkUser(target)
-
-        // Vincoli di realtà
-        if (users[user].s === target || users[target].s === user) return m.reply('*⚠️ AZIONE BLOCCATA: NON PUOI UNIRTI A UN GENITORE O A UN FIGLIO!*')
-        if (users[user].c) return m.reply('*⚠️ ERRORE: SEI GIÀ UNITO A QUALCUNO!*')
+        if (users[user].s === target || users[target].s === user) return m.reply('*⚠️ AZIONE BLOCCATA: NO INCESTO!*')
+        if (users[user].c) return m.reply('*⚠️ ERRORE: SEI GIÀ UNITO!*')
         
         users[user].proposta = target
         return conn.sendMessage(chat, { 
-            text: `*💍 RICHIESTA DI UNIONE*\n\n*@${user.split('@')[0]}* *VUOLE UNIRSI A* *@${target.split('@')[0]}*.\n\n*USA I BOTTONI O SCRIVI .ACCETTAUNIONE PER CONFERMARE!*`, 
+            text: `*💍 RICHIESTA DI UNIONE*\n\n*@${user.split('@')[0]} VUOLE UNIRSI A @${target.split('@')[0]}*\n\n*SCRIVI .ACCETTAUNIONE PER CONFERMARE!*`, 
             mentions: [user, target] 
         })
     }
 
-    // --- COMANDO ADOTTA (CON VINCOLI DI REALTÀ) ---
+    // --- 3. LOGICA ADOTTA ---
     if (command === 'adotta') {
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
         if (!target) return m.reply('*⚠️ ERRORE: CHI VUOI ADOTTARE?*')
         checkUser(target)
-
-        if (target === user) return m.reply('*⚠️ ERRORE: NON PUOI ADOTTARE TE STESSO!*')
-        if (users[user].c === target) return m.reply('*⚠️ ERRORE: NON PUOI ADOTTARE TUO MARITO/TUA MOGLIE!*')
-        if (users[user].s === target) return m.reply('*⚠️ ERRORE: NON PUOI ADOTTARE TUO PADRE/TUA MADRE!*')
-        if (users[target].s) return m.reply('*⚠️ ERRORE: QUESTO UTENTE HA GIÀ UN GENITORE!*')
+        if (users[user].c === target || users[user].s === target || users[target].s) return m.reply('*⚠️ AZIONE NON VALIDA O REALE!*')
 
         users[user].p.push(target)
         users[target].s = user
-        return m.reply(`*👶 ADOZIONE COMPLETATA: *@${target.split('@')[0]}* *È ORA TUO FIGLIO!*`, null, { mentions: [target] })
+        return m.reply(`*👶 ADOZIONE COMPLETATA PER @${target.split('@')[0]}*`, null, { mentions: [target] })
     }
 
-    // --- VISUALIZZAZIONE ALBERO (TUTTO IN GRASSETTO) ---
-    if (command === 'albero' || command === 'famigliamia' || command === 'famiglia') {
+    // --- 4. VISUALIZZAZIONE ALBERO (FAMIGLIAMIA / ALBERO) ---
+    if (command === 'famigliamia' || command === 'albero') {
         let target = (command === 'famigliamia') ? user : (m.mentionedJid[0] || (m.quoted ? m.quoted.sender : user))
         checkUser(target)
         
         let u = users[target]
         let fmt = (id) => id ? `*@${id.split('@')[0]}*` : '*???*'
 
-        // Calcolo parenti
         let partner = u.c
         let padre = u.s
         let madre = padre ? users[padre]?.c : null
@@ -66,34 +74,28 @@ let handler = async (m, { conn, text, command }) => {
         let nonna = nonno ? users[nonno]?.c : null
         let fratelli = padre ? users[padre].p.filter(id => id !== target) : []
 
-        let tree = `*🌳 ALBERO GENEALOGICO DI ${fmt(target).toUpperCase()} 🌳*\n\n`
-
-        // Grafica Antenati
+        let tree = `*🌳 ALBERO DI ${fmt(target).toUpperCase()} 🌳*\n\n`
         tree += `       [👵 ${fmt(nonna)}] *♾️* [👴 ${fmt(nonno)}]\n`
         tree += `               ┃\n`
         tree += `       [👩 ${fmt(madre)}] *♾️* [👨 ${fmt(padre)}]\n`
         tree += `               ┃\n`
         
-        // Fratelli
         if (fratelli.length > 0) {
             tree += `  ${fratelli.map(f => `[👫 ${fmt(f)}]`).join(' *━* ')} *━ ┓*\n`
             tree += `                       ┃\n`
         }
 
-        // Centro (Tu e Partner)
         if (partner) {
             tree += `      [👤 ${fmt(target)}] *💍* [💍 ${fmt(partner)}]\n`
         } else {
             tree += `               [👤 ${fmt(target)}]\n`
         }
 
-        // Discendenti
         if (u.p && u.p.length > 0) {
             tree += `               *┣━━━━━━━━━━━━━━┓*\n`
             u.p.forEach((figlio, i) => {
                 let rano = (i === u.p.length - 1) ? '*┗*' : '*┣*'
                 tree += `               ${rano}*━━* [👶 ${fmt(figlio)}]\n`
-                
                 let nipoti = users[figlio]?.p || []
                 nipoti.forEach((nipote, ni) => {
                     let subRano = (ni === nipoti.length - 1) ? '*┗*' : '*┣*'
@@ -106,18 +108,7 @@ let handler = async (m, { conn, text, command }) => {
             tree += `        *[🍃 NESSUN EREDE]*\n`
         }
 
-        tree += `\n*──────────────────────────*\n`
-        tree += `*_SISTEMA DI GENEALOGIA REALE_*`
-
-        let mnts = [target, partner, padre, madre, nonno, nonna, ...fratelli, ...(u.p || [])].filter(Boolean)
-        return conn.sendMessage(chat, { text: tree, mentions: [...new Set(mnts)] }, { quoted: m })
-    }
-
-    if (command === 'sciogli') {
-        let ex = users[user].c
-        if (!ex) return m.reply('*⚠️ NON SEI UNITO A NESSUNO!*')
-        users[user].c = null; if (users[ex]) users[ex].c = null
-        return m.reply('*📄 UNIONE SCIOLTA CON SUCCESSO!*')
+        return conn.sendMessage(chat, { text: tree, mentions: [target, partner, padre, madre, nonno, nonna, ...fratelli, ...(u.p || [])].filter(Boolean) }, { quoted: m })
     }
 }
 
