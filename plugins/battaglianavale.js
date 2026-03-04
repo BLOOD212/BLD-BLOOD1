@@ -6,7 +6,7 @@ let handler = async (m, { conn, text, command }) => {
 
     // --- COMANDO INIZIALE: .battaglia @user ---
     if (command === 'battaglia') {
-        if (global.navale[chat]) return m.reply('*⚠️ C\'è già una sfida in sospeso o una partita in corso in questo gruppo.*')
+        if (global.navale[chat]) return m.reply('*⚠️ C\'è già una sfida in sospeso o una partita in corso. Usa .endgame per forzare la chiusura.*')
         
         let target = m.mentionedJid[0] || (m.quoted ? m.quoted.sender : null)
         if (!target) return m.reply('*Devi menzionare l\'avversario che desideri sfidare!*')
@@ -33,7 +33,6 @@ let handler = async (m, { conn, text, command }) => {
         intro += `*3.* Si attacca col comando *.fuoco [coordinate]* (es: .fuoco A1).\n\n`
         intro += `*@${target.split('@')[0]}, accetti la sfida?*`
 
-        // Configurazione Bottoni
         const buttons = [
             { buttonId: `.accetta`, buttonText: { displayText: 'ACCETTA ✅' }, type: 1 },
             { buttonId: `.rifiuta`, buttonText: { displayText: 'RIFIUTA ❌' }, type: 1 }
@@ -41,13 +40,20 @@ let handler = async (m, { conn, text, command }) => {
 
         const buttonMessage = {
             text: intro,
-            footer: 'Seleziona un\'opzione per continuare',
+            footer: 'Usa .endgame per annullare in qualsiasi momento',
             buttons: buttons,
             headerType: 1,
             mentions: [user, target]
         }
 
         return conn.sendMessage(chat, buttonMessage, { quoted: m })
+    }
+
+    // --- COMANDO PER TERMINARE LA PARTITA: .endgame ---
+    if (command === 'endgame' || command === 'fine') {
+        if (!global.navale[chat]) return m.reply('*Non ci sono partite attive da terminare.*')
+        delete global.navale[chat]
+        return m.reply('*🏁 La partita è stata terminata forzatamente. La chat è ora libera.*')
     }
 
     // --- LOGICA ACCETTA ---
@@ -57,25 +63,24 @@ let handler = async (m, { conn, text, command }) => {
         if (user !== game.p2) return m.reply('*Solo l\'utente sfidato può accettare la partita.*')
 
         game.status = 'PLAYING'
-        return conn.reply(chat, `*🚢 PARTITA INIZIATA! LE NAVI SONO SCHIERATE!*\n\n*Inizia @${game.p1.split('@')[0]}*\nUsa il comando *.fuoco [A-E][1-5]*`, m, { mentions: [game.p1] })
+        return conn.reply(chat, `*🚢 PARTITA INIZIATA!*\n\n*Inizia @${game.p1.split('@')[0]}*\nUsa il comando *.fuoco [A-E][1-5]*`, m, { mentions: [game.p1] })
     }
 
-    // --- LOGICA RIFIUTA (RESET IMMEDIATO) ---
+    // --- LOGICA RIFIUTA ---
     if (command === 'rifiuta') {
         let game = global.navale[chat]
         if (!game || game.status !== 'WAITING') return
         if (user !== game.p2) return m.reply('*Non puoi rifiutare una sfida non diretta a te.*')
 
-        // Eliminiamo la sessione per permettere una nuova sfida subito
         delete global.navale[chat]
-        return conn.reply(chat, `*SFIDA ANNULLATA! @${user.split('@')[0]} ha rifiutato. La chat è ora libera per una nuova sfida.*`, m, { mentions: [user] })
+        return conn.reply(chat, `*SFIDA ANNULLATA! @${user.split('@')[0]} ha rifiutato.*`, m, { mentions: [user] })
     }
 
     // --- COMANDO DI ATTACCO: .fuoco ---
     if (command === 'fuoco') {
         let game = global.navale[chat]
-        if (!game || game.status !== 'PLAYING') return m.reply('*Nessuna battaglia attiva in questo momento.*')
-        if (user !== game.turno) return m.reply('*Non è il tuo turno! Attendi la mossa dell\'avversario.*')
+        if (!game || game.status !== 'PLAYING') return m.reply('*Nessuna battaglia attiva.*')
+        if (user !== game.turno) return m.reply('*Non è il tuo turno!*')
 
         let coord = text.toUpperCase().trim()
         if (!/^[A-E][1-5]$/.test(coord)) return m.reply('*Coordinate errate! Inserisci un valore da A1 a E5.*')
@@ -132,6 +137,6 @@ function renderGrid(hits, ships) {
     return '```' + grid + '```'
 }
 
-handler.command = /^(battaglia|accetta|rifiuta|fuoco)$/i
+handler.command = /^(battaglia|accetta|rifiuta|fuoco|endgame|fine)$/i
 handler.group = true
 export default handler
