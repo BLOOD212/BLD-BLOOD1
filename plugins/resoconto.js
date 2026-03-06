@@ -1,90 +1,101 @@
-//plug-in di blood
-// Database globale per non perdere i dati durante la sessione
-globalThis.archivioMessaggi = globalThis.archivioMessaggi || {};
-
+// plug-in di blood 
 let handler = async (m, { conn }) => {
-  // Comando manuale: mostra la situazione attuale senza resettare
   let chatId = m.chat;
-  let dati = globalThis.archivioMessaggi[chatId];
-
-  if (!dati || dati.totali === 0) {
-    return m.reply("📊 *STATISTICHE ATTUALI*\n\nNessun messaggio registrato finora in questo gruppo.");
+  
+  // Inizializza se non esiste nel database persistente
+  if (!global.db.data.chats[chatId].statsGiornaliere) {
+    global.db.data.chats[chatId].statsGiornaliere = { totali: 0, utenti: {}, data: new Date().toLocaleDateString() };
   }
 
-  // Genera Top 3 Attuale
+  let dati = global.db.data.chats[chatId].statsGiornaliere;
+
+  if (dati.totali === 0) {
+    return m.reply("📊 *STATISTICHE ATTUALI*\n\nNessun messaggio registrato oggi.");
+  }
+
   let classifica = Object.values(dati.utenti)
     .sort((a, b) => b.conteggio - a.conteggio)
-    .slice(0, 3);
+    .slice(0, 5); // Estesa a top 5 per più precisione
 
   let report = `📊 *STATISTICHE IN TEMPO REALE* 📊\n`;
-  report += `_Aggiornate a questo istante_\n`;
+  report += `_Dati salvati nel database_\n`;
   report += `──────────────────\n\n`;
-  report += `💬 Messaggi totali finora: *${dati.totali}*\n\n`;
-  report += `🏆 *TOP 3 ATTUALE:* \n`;
+  report += `💬 Messaggi totali: *${dati.totali}*\n\n`;
+  report += `🏆 *TOP PARLATORI:* \n`;
 
-  const medaglie = ['🥇', '🥈', '🥉'];
+  const medaglie = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
   classifica.forEach((u, i) => {
     report += `${medaglie[i]} *${u.nome}*: ${u.conteggio} messaggi\n`;
   });
 
   report += `\n──────────────────\n`;
-  report += `👉 _Il conteggio continuerà ad aumentare fino a mezzanotte._`;
+  report += `👉 _Reset automatico a mezzanotte._`;
 
   await conn.sendMessage(chatId, { text: report }, { quoted: m });
 };
 
-// --- REGISTRAZIONE MESSAGGI ---
+// --- REGISTRAZIONE PERSISTENTE ---
 handler.before = async function (m) {
   if (!m.chat || !m.text || m.isBaileys || !m.isGroup) return; 
-  
+
   let chat = m.chat;
   let user = m.sender;
 
-  if (!globalThis.archivioMessaggi[chat]) {
-    globalThis.archivioMessaggi[chat] = { totali: 0, utenti: {} };
+  // Assicurati che la struttura esista nel database globale del bot
+  if (!global.db.data.chats[chat]) global.db.data.chats[chat] = {};
+  if (!global.db.data.chats[chat].statsGiornaliere) {
+    global.db.data.chats[chat].statsGiornaliere = { totali: 0, utenti: {}, data: new Date().toLocaleDateString() };
   }
 
-  globalThis.archivioMessaggi[chat].totali += 1;
-  
-  let nome = m.pushName || 'Utente';
-  if (!globalThis.archivioMessaggi[chat].utenti[user]) {
-    globalThis.archivioMessaggi[chat].utenti[user] = { nome: nome, conteggio: 0 };
+  let stats = global.db.data.chats[chat].statsGiornaliere;
+
+  // Controllo sicurezza: se la data è diversa da quella salvata, resetta (gestione fallback mezzanotte)
+  let oggi = new Date().toLocaleDateString();
+  if (stats.data !== oggi) {
+    stats.totali = 0;
+    stats.utenti = {};
+    stats.data = oggi;
   }
-  globalThis.archivioMessaggi[chat].utenti[user].conteggio += 1;
+
+  stats.totali += 1;
+  let nome = m.pushName || 'Utente';
+  if (!stats.utenti[user]) {
+    stats.utenti[user] = { nome: nome, conteggio: 0 };
+  }
+  stats.utenti[user].conteggio += 1;
 };
 
-// --- AUTOMAZIONE MEZZANOTTE (REPORT FINALE E RESET) ---
+// --- AUTOMAZIONE MEZZANOTTE CON DATABASE ---
 setInterval(async () => {
     let ora = new Date().getHours();
     let minuti = new Date().getMinutes();
-    
+
     if (ora === 0 && minuti === 0) {
-        let gruppi = Object.keys(globalThis.archivioMessaggi);
-        for (let gid of gruppi) {
-            if (globalThis.conn) { 
-                let dati = globalThis.archivioMessaggi[gid];
-                if (!dati || dati.totali === 0) continue;
+        let chats = global.db.data.chats;
+        for (let gid in chats) {
+            let dati = chats[gid].statsGiornaliere;
+            if (!dati || dati.totali === 0) continue;
 
-                let classifica = Object.values(dati.utenti)
-                    .sort((a, b) => b.conteggio - a.conteggio)
-                    .slice(0, 3);
+            let classifica = Object.values(dati.utenti)
+                .sort((a, b) => b.conteggio - a.conteggio)
+                .slice(0, 3);
 
-                let reportFinal = `🌙 *RESOCONTO FINALE DELLA GIORNATA* 🌙\n`;
-                reportFinal += `──────────────────\n\n`;
-                reportFinal += `📊 Totale messaggi del giorno: *${dati.totali}*\n\n`;
-                reportFinal += `🏆 *PODIO FINALE:* \n`;
+            let reportFinal = `🌙 *RESOCONTO FINALE DELLA GIORNATA* 🌙\n`;
+            reportFinal += `──────────────────\n\n`;
+            reportFinal += `📊 Totale messaggi: *${dati.totali}*\n\n`;
+            reportFinal += `🏆 *PODIO DI OGGI:* \n`;
 
-                const medaglie = ['🥇', '🥈', '🥉'];
-                classifica.forEach((u, i) => {
-                    reportFinal += `${medaglie[i]} *${u.nome}*: ${u.conteggio}\n`;
-                });
+            const medaglie = ['🥇', '🥈', '🥉'];
+            classifica.forEach((u, i) => {
+                reportFinal += `${medaglie[i]} *${u.nome}*: ${u.conteggio}\n`;
+            });
 
-                reportFinal += `\n✨ *Contatori azzerati. Buonanotte!*`;
+            reportFinal += `\n✨ *Database pulito. A domani!*`;
 
-                await globalThis.conn.sendMessage(gid, { text: reportFinal });
-                // Reset dati solo a mezzanotte
-                globalThis.archivioMessaggi[gid] = { totali: 0, utenti: {} };
-            }
+            if (global.conn) await global.conn.sendMessage(gid, { text: reportFinal }).catch(e => console.error(e));
+            
+            // Reset definitivo
+            chats[gid].statsGiornaliere = { totali: 0, utenti: {}, data: new Date().toLocaleDateString() };
         }
     }
 }, 60000);
