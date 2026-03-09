@@ -10,12 +10,6 @@ const fruitURLs = {
     '🍎': 'https://twemoji.maxcdn.com/v/latest/72x72/1f34e.png',
     '🍓': 'https://twemoji.maxcdn.com/v/latest/72x72/1f353.png'
 }
-const cavalliConfig = [
-    { nome: 'ROSSO', color: '#ff4d4d' },
-    { nome: 'BLU', color: '#4d94ff' },
-    { nome: 'VERDE', color: '#4dff88' },
-    { nome: 'GIALLO', color: '#ffff4d' }
-]
 
 const footer = '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙'
 
@@ -23,7 +17,7 @@ let handler = async (m, { conn, command, args, usedPrefix }) => {
     // Inizializzazione Database Utente (Sistema Euro)
     global.db.data.users[m.sender] = global.db.data.users[m.sender] || {}
     let user = global.db.data.users[m.sender]
-    if (user.euro === undefined) user.euro = 50 // Saldo iniziale se nuovo
+    if (user.euro === undefined) user.euro = 50
     if (user.exp === undefined) user.exp = 0
 
     const checkMoney = (amount) => {
@@ -40,25 +34,30 @@ let handler = async (m, { conn, command, args, usedPrefix }) => {
         intro += `│ 『 💰 』 \`Il tuo Saldo:\` *${user.euro}€*\n`
         intro += `│ 『 🆙 』 \`Livello Exp:\` *${user.exp}*\n`
         intro += `*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n\n`
-        intro += `*Seleziona un gioco per puntare:*`
+        intro += `*Scegli il tuo gioco:*`
 
         const buttons = [
-            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🎰 SLOT', id: `${usedPrefix}infoslot` }) },
-            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🃏 BLACKJACK', id: `${usedPrefix}infobj` }) },
-            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '⚽ RIGORI', id: `${usedPrefix}inforigore` }) },
-            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🎟️ GRATTA&VINCI', id: `${usedPrefix}infogratta` }) }
+            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🎰 SLOT (20€)', id: `${usedPrefix}slot` }) },
+            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🃏 BLACKJACK (50€)', id: `${usedPrefix}blackjack` }) },
+            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '⚽ RIGORI (30€)', id: `${usedPrefix}inforigore` }) },
+            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🎟️ GRATTA (100€)', id: `${usedPrefix}gratta` }) }
         ]
         
         return conn.sendMessage(m.chat, { text: intro, footer, interactiveButtons: buttons }, { quoted: m })
     }
 
-    // --- 2. GESTIONE INFO TASTI ---
-    if (command === 'infoslot') return m.reply(`*🎰 SLOT*\nPunta *20€* per girare!\nUsa: \`${usedPrefix}slot\``)
-    if (command === 'infobj') return m.reply(`*🃏 BLACKJACK*\nPunta *50€*!\nUsa: \`${usedPrefix}blackjack\``)
-    if (command === 'infogratta') return m.reply(`*🎟️ GRATTA & VINCI*\nCosto biglietto: *100€*!\nUsa: \`${usedPrefix}gratta\``)
-    if (command === 'inforigore') return m.reply(`*⚽ RIGORI*\nPunta *30€*!\nUsa: \`${usedPrefix}rigore sx/cx/dx\``)
+    // --- INFO RIGORI (Menu Bottoni per direzioni) ---
+    if (command === 'inforigore') {
+        let text = `⚽ *SFIDA AI RIGORI*\nPunta 30€! Scegli dove tirare:`
+        const buttons = [
+            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '⬅️ SINISTRA', id: `${usedPrefix}rigore sx` }) },
+            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '⬆️ CENTRO', id: `${usedPrefix}rigore cx` }) },
+            { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '➡️ DESTRA', id: `${usedPrefix}rigore dx` }) }
+        ]
+        return conn.sendMessage(m.chat, { text, footer, interactiveButtons: buttons }, { quoted: m })
+    }
 
-    // --- 3. LOGICHE GIOCHI ---
+    // --- LOGICHE GIOCHI ---
 
     // ⚽ RIGORI
     if (command === 'rigore') {
@@ -82,15 +81,16 @@ let handler = async (m, { conn, command, args, usedPrefix }) => {
         cap += `│ 『 👛 』 \`Saldo Attuale:\` *${user.euro}€*\n`
         cap += `*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
 
-        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: cap, footer }, { quoted: m })
+        const buttons = [{ name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '⚽ RIGIOCA', id: `${usedPrefix}inforigore` }) }, { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🏠 MENU', id: `${usedPrefix}casino` }) }]
+        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: cap, footer, interactiveButtons: buttons }, { quoted: m })
     }
 
     // 🎰 SLOT
     if (command === 'slot') {
         if (!checkMoney(20)) return
         let r = [fruits[Math.floor(Math.random() * 6)], fruits[Math.floor(Math.random() * 6)], fruits[Math.floor(Math.random() * 6)]]
-        let win = (r[0] === r[1] && r[1] === r[2]) // Jackpot 3 uguali
-        let semiWin = (r[0] === r[1] || r[1] === r[2] || r[0] === r[2]) // 2 uguali
+        let win = (r[0] === r[1] && r[1] === r[2])
+        let semiWin = (r[0] === r[1] || r[1] === r[2] || r[0] === r[2])
         
         let premio = win ? 200 : (semiWin ? 40 : -20)
         user.euro += premio
@@ -109,7 +109,8 @@ let handler = async (m, { conn, command, args, usedPrefix }) => {
         cap += `│ 『 👛 』 \`Saldo:\` *${user.euro}€*\n`
         cap += `*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
 
-        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: cap, footer }, { quoted: m })
+        const buttons = [{ name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🎰 TIRA DI NUOVO', id: `${usedPrefix}slot` }) }, { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🏠 MENU', id: `${usedPrefix}casino` }) }]
+        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: cap, footer, interactiveButtons: buttons }, { quoted: m })
     }
 
     // 🎟️ GRATTA & VINCI
@@ -130,10 +131,11 @@ let handler = async (m, { conn, command, args, usedPrefix }) => {
         cap += `│ 『 👛 』 \`Saldo:\` *${user.euro}€*\n`
         cap += `*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
 
-        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: cap, footer }, { quoted: m })
+        const buttons = [{ name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🎟️ RIGIOCA', id: `${usedPrefix}gratta` }) }, { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🏠 MENU', id: `${usedPrefix}casino` }) }]
+        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: cap, footer, interactiveButtons: buttons }, { quoted: m })
     }
 
-    // 🃏 BLACKJACK (Semplificato)
+    // 🃏 BLACKJACK
     if (command === 'blackjack' || command === 'blakjak') {
         if (!checkMoney(50)) return
         let tu = Math.floor(Math.random() * 11) + 11
@@ -154,13 +156,14 @@ let handler = async (m, { conn, command, args, usedPrefix }) => {
         cap += `│ 『 💰 』 \`Esito:\` *${win ? '+50€' : '-50€'}*\n`
         cap += `*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
 
-        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: cap, footer }, { quoted: m })
+        const buttons = [{ name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🃏 RIGIOCA', id: `${usedPrefix}blackjack` }) }, { name: 'quick_reply', buttonParamsJson: JSON.stringify({ display_text: '🏠 MENU', id: `${usedPrefix}casino` }) }]
+        return conn.sendMessage(m.chat, { image: canvas.toBuffer(), caption: cap, footer, interactiveButtons: buttons }, { quoted: m })
     }
 }
 
 handler.help = ['casino']
 handler.tags = ['giochi']
-handler.command = /^(casino|infoslot|infobj|infogratta|inforigore|slot|blackjack|blakjak|gratta|rigore)$/i
+handler.command = /^(casino|inforigore|slot|blackjack|blakjak|gratta|rigore)$/i
 handler.group = true
 handler.register = true
 
