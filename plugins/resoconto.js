@@ -1,19 +1,14 @@
 // plug-in di blood 
 let handler = async (m, { conn }) => {
   let chatId = m.chat;
+  let dati = global.db.data.chats[chatId]?.statsGiornaliere;
 
-  if (!global.db.data.chats[chatId]?.statsGiornaliere) {
-    return m.reply("📊 *STATISTICHE*\n\nNessun dato registrato oggi.");
-  }
-
-  let dati = global.db.data.chats[chatId].statsGiornaliere;
-
-  if (dati.totali === 0) {
+  if (!dati || dati.totali === 0) {
     return m.reply("📊 *STATISTICHE ATTUALI*\n\nNessun messaggio registrato oggi.");
   }
 
-  let classifica = Object.values(dati.utenti)
-    .sort((a, b) => b.conteggio - a.conteggio)
+  let classifica = Object.entries(dati.utenti)
+    .sort(([, a], [, b]) => b.conteggio - a.conteggio)
     .slice(0, 5);
 
   let report = `📊 *STATISTICHE IN TEMPO REALE* 📊\n`;
@@ -22,12 +17,12 @@ let handler = async (m, { conn }) => {
   report += `🏆 *TOP PARLATORI:* \n`;
 
   const medaglie = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-  classifica.forEach((u, i) => {
+  classifica.forEach(([jid, u], i) => {
     report += `${medaglie[i]} *${u.nome}*: ${u.conteggio} messaggi\n`;
   });
 
   report += `\n──────────────────\n`;
-  report += `👉 _Reset automatico a mezzanotte._`;
+  report += `👉 _Reset automatico a mezzanotte con premi in denaro!_`;
 
   await conn.sendMessage(chatId, { text: report }, { quoted: m });
 };
@@ -44,12 +39,7 @@ handler.before = async function (m) {
   let stats = global.db.data.chats[m.chat].statsGiornaliere;
   let oggi = new Date().toLocaleDateString('it-IT');
 
-  // Reset di sicurezza se il bot era spento a mezzanotte
-  if (stats.data !== oggi) {
-    stats.totali = 0;
-    stats.utenti = {};
-    stats.data = oggi;
-  }
+  if (stats.data !== oggi) return; 
 
   stats.totali += 1;
   let nome = m.pushName || 'Utente';
@@ -59,43 +49,64 @@ handler.before = async function (m) {
   stats.utenti[m.sender].conteggio += 1;
 };
 
-// --- AUTOMAZIONE MEZZANOTTE ---
-let resettato = false; // Flag per evitare invii multipli nello stesso minuto
+// --- AUTOMAZIONE MEZZANOTTE CON TAG E PREMI ---
+let isResetting = false; 
 setInterval(async () => {
     let ora = new Date().getHours();
     let minuti = new Date().getMinutes();
 
-    if (ora === 0 && minuti === 0 && !resettato) {
-        resettato = true; 
+    if (ora === 0 && minuti === 0 && !isResetting) {
+        isResetting = true; 
         let chats = global.db.data.chats;
         
         for (let gid in chats) {
-            let dati = chats[gid].statsGiornaliere;
+            let dati = chats[gid]?.statsGiornaliere;
             if (!dati || dati.totali === 0) continue;
 
-            let classifica = Object.values(dati.utenti)
-                .sort((a, b) => b.conteggio - a.conteggio)
+            // 1. CALCOLO CLASSIFICA E PREMI
+            let classifica = Object.entries(dati.utenti)
+                .sort(([, a], [, b]) => b.conteggio - a.conteggio)
                 .slice(0, 3);
+
+            if (classifica.length === 0) continue;
 
             let reportFinal = `🌙 *RESOCONTO FINALE DELLA GIORNATA* 🌙\n`;
             reportFinal += `──────────────────\n\n`;
             reportFinal += `📊 Totale messaggi: *${dati.totali}*\n\n`;
-            reportFinal += `🏆 *PODIO DI OGGI:* \n`;
+            reportFinal += `🏆 *PODIO E PREMI:* \n`;
 
             const medaglie = ['🥇', '🥈', '🥉'];
-            classifica.forEach((u, i) => {
-                reportFinal += `${medaglie[i]} *${u.nome}*: ${u.conteggio}\n`;
+            const premi = [1000, 500, 250]; // Soldi per 1°, 2° e 3° posto
+            let mentions = [];
+
+            classifica.forEach(([jid, u], i) => {
+                let premio = premi[i];
+                mentions.push(jid);
+                
+                // Accredito soldi nel database utenti
+                if (!global.db.data.users[jid]) global.db.data.users[jid] = { money: 0 };
+                global.db.data.users[jid].money += premio;
+
+                reportFinal += `${medaglie[i]} @${jid.split('@')[0]}\n`;
+                reportFinal += `   └─ 💬 ${u.conteggio} messaggi | 💰 +$${premio}\n\n`;
             });
 
-            reportFinal += `\n✨ *Database pulito. A domani!*`;
+            reportFinal += `──────────────────\n`;
+            reportFinal += `✨ *Premi accreditati. Il database è stato resettato!*`;
 
+            // 2. INVIO CON TAG
             try {
-                if (global.conn) await global.conn.sendMessage(gid, { text: reportFinal });
+                if (global.conn) {
+                    await global.conn.sendMessage(gid, { 
+                        text: reportFinal, 
+                        mentions: mentions 
+                    });
+                }
             } catch (e) {
-                console.error(`Errore invio report a ${gid}:`, e);
+                console.error(`Errore invio a ${gid}:`, e);
             }
 
-            // PULIZIA: Avviene solo dopo l'invio del messaggio
+            // 3. RESET
             chats[gid].statsGiornaliere = { 
                 totali: 0, 
                 utenti: {}, 
@@ -103,9 +114,9 @@ setInterval(async () => {
             };
         }
     } else if (minuti !== 0) {
-        resettato = false; // Ricarica il flag per il giorno dopo
+        isResetting = false; 
     }
-}, 30000); // Controllo ogni 30 secondi
+}, 30000); 
 
 handler.help = ['resoconto'];
 handler.tags = ['strumenti'];
