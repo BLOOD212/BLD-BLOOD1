@@ -17,195 +17,125 @@ const calculateLevel = (exp) => {
 
 const getGroupMessageRank = (chatId, userId) => {
     try {
-        const groupUsers = []
         const chatData = global.db?.data?.chats?.[chatId]
+        if (!chatData?.users) return { rank: 0, total: 0, messages: 0 }
 
-        if (!chatData?.users) {
-            return { rank: 0, total: 0, messages: 0 }
-        }
-
-        for (const [id, userData] of Object.entries(chatData.users)) {
-            const messages = userData.messages || 0
-            if (messages > 0) {
-                groupUsers.push({ id, messages })
-            }
-        }
-
-        groupUsers.sort((a, b) => b.messages - a.messages)
+        const groupUsers = Object.entries(chatData.users)
+            .map(([id, data]) => ({ id, messages: data.messages || 0 }))
+            .filter(user => user.messages > 0)
+            .sort((a, b) => b.messages - a.messages)
 
         const userIndex = groupUsers.findIndex(user => user.id === userId)
-        const userMessages = groupUsers[userIndex]?.messages || 0
-
         return {
             rank: userIndex >= 0 ? userIndex + 1 : 0,
             total: groupUsers.length,
-            messages: userMessages
+            messages: chatData.users[userId]?.messages || 0
         }
-    } catch (error) {
+    } catch {
         return { rank: 0, total: 0, messages: 0 }
     }
 }
 
 const getGlobalMessageRank = (userId) => {
     try {
-        const allUsers = []
+        const userTotals = {}
+        const chats = global.db?.data?.chats || {}
 
-        if (global.db?.data?.chats) {
-            const userTotals = {}
-
-            for (const [chatId, chatData] of Object.entries(global.db.data.chats)) {
-                if (chatData?.users) {
-                    for (const [id, userData] of Object.entries(chatData.users)) {
-                        const messages = userData.messages || 0
-                        if (messages > 0) {
-                            userTotals[id] = (userTotals[id] || 0) + messages
-                        }
-                    }
-                }
-            }
-
-            for (const [id, totalMessages] of Object.entries(userTotals)) {
-                allUsers.push({ id, messages: totalMessages })
+        for (const chatId in chats) {
+            const users = chats[chatId]?.users || {}
+            for (const id in users) {
+                userTotals[id] = (userTotals[id] || 0) + (users[id].messages || 0)
             }
         }
 
-        allUsers.sort((a, b) => b.messages - a.messages)
+        const allUsers = Object.entries(userTotals)
+            .map(([id, messages]) => ({ id, messages }))
+            .filter(u => u.messages > 0)
+            .sort((a, b) => b.messages - a.messages)
 
-        const userIndex = allUsers.findIndex(user => user.id === userId)
-        const userMessages = allUsers[userIndex]?.messages || 0
-
+        const userIndex = allUsers.findIndex(u => u.id === userId)
         return {
             rank: userIndex >= 0 ? userIndex + 1 : 0,
             total: allUsers.length,
-            messages: userMessages
+            messages: userTotals[userId] || 0
         }
-    } catch (error) {
+    } catch {
         return { rank: 0, total: 0, messages: 0 }
     }
 }
 
 const formatNumber = (num) => {
+    if (!num) return '0'
     if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M'
-    if (num >= 1000) return (num / 1000).toFixed(1) + 'K'
+    if (num >= 1000) return (num / 1000).toFixed(1) + 'k'
     return num.toString()
 }
+
 const normalizeDateForBirthday = (dateStr) => {
     if (!dateStr) return null
-    dateStr = dateStr.trim()
-    const patterns = [
-        /^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/,
-        /^(\d{1,2})[\/\-\.](\d{1,2})$/,
-        /^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/,
-    ]
-
+    const patterns = [/^(\d{1,2})[\/\-\.](\d{1,2})[\/\-\.](\d{4})$/, /^(\d{1,2})[\/\-\.](\d{1,2})$/, /^(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})$/]
     for (const pattern of patterns) {
-        const match = dateStr.match(pattern)
+        const match = dateStr.trim().match(pattern)
         if (match) {
-            let day, month, year
-
+            let d, m;
             if (match[3]) {
-                if (match[0].startsWith(match[1]) && match[1].length <= 2) {
-                    day = match[1].padStart(2, '0')
-                    month = match[2].padStart(2, '0')
-                    year = match[3]
-                } else {
-                    year = match[1]
-                    month = match[2].padStart(2, '0')
-                    day = match[3].padStart(2, '0')
-                }
-            } else {
-                day = match[1].padStart(2, '0')
-                month = match[2].padStart(2, '0')
-                year = null
-            }
-
-            return { day, month, year }
+                if (match[1].length <= 2) { d = match[1]; m = match[2]; }
+                else { d = match[3]; m = match[2]; }
+            } else { d = match[1]; m = match[2]; }
+            return { day: d.padStart(2, '0'), month: m.padStart(2, '0') }
         }
     }
-
     return null
 }
 
 const isBirthday = (birthdayStr) => {
     const today = new Date()
-    const todayDay = today.getDate().toString().padStart(2, '0')
-    const todayMonth = (today.getMonth() + 1).toString().padStart(2, '0')
-
-    const birthday = normalizeDateForBirthday(birthdayStr)
-
-    if (!birthday) return false
-
-    return birthday.day === todayDay && birthday.month === todayMonth
+    const b = normalizeDateForBirthday(birthdayStr)
+    if (!b) return false
+    return b.day === today.getDate().toString().padStart(2, '0') && b.month === (today.getMonth() + 1).toString().padStart(2, '0')
 }
 
-const shouldSendBirthdayMessage = (userId) => {
-    const today = new Date().toDateString()
-    if (!global.birthdayMessages) {
-        global.birthdayMessages = {}
-    }
-    if (global.birthdayMessages[userId] === today) {
-        return false
-    }
-    global.birthdayMessages[userId] = today
-    return true
-}
-
-let handler = async (m, { conn, args, usedPrefix }) => {
+let handler = async (m, { conn, usedPrefix }) => {
     let who = m.quoted?.sender || m.mentionedJid?.[0] || m.sender
     let user = global.db.data.users[who]
+    if (!user) return m.reply('Utente non trovato nel database.')
 
     if (!user.profile) user.profile = {}
-    if (!user.firstTime) user.firstTime = Date.now()
-
     let pp = await conn.profilePictureUrl(who, 'image').catch(_ => 'https://i.ibb.co/BKHtdBNp/default-avatar-profile-icon-1280x1280.jpg')
-
     let currentLevel = user.level || calculateLevel(user.exp || 0)
-
     const groupRank = getGroupMessageRank(m.chat, who)
     const globalRank = getGlobalMessageRank(who)
-
     const marriages = loadMarriages()
 
-    let partnerMention = 'Nessuno'
-    let mentions = [who]
+    let partnerMention = marriages[who] ? `@${marriages[who].split('@')[0]}` : 'Single'
+    let mentions = marriages[who] ? [who, marriages[who]] : [who]
 
-    if (marriages[who]) {
-        let partnerJid = marriages[who]
-        partnerMention = `@${partnerJid.split('@')[0]}`
-        mentions.push(partnerJid)
-    }
-
-    let profileBox = `ㅤㅤ⋆｡˚『 ╭ \`STATISTICHE\` ╯ 』˚｡⋆
-╭
-│  『 🪙 』 \`Euro:\` *${formatNumber(user.euro || 0)} 💰*
-│  『 🏅 』 \`Livello:\` *${currentLevel}*
-│  『 ✨』  \`Exp:\` *${formatNumber(user.exp || 0)} XP*
-│  『 💎 』 \`Premium:\` *${user.premium ? '✅' : '❌'}*
-│  『 💬 』 \`Messaggi gruppo:\` *${formatNumber(groupRank.messages)}*
-│  『 🏆 』 \`Rank gruppo:\` *#${groupRank.rank}${groupRank.total > 0 ? '/' + groupRank.total : ''}*
-│  『 🌍 』 \`Rank globale:\` *#${globalRank.rank}${globalRank.total > 0 ? '/' + globalRank.total : ''}*
-│
-*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*
-
-ㅤㅤ⋆｡˚『 ╭ \`INFORMAZIONI\` ╯ 』˚｡⋆
-╭
-${user.profile?.description ? `│  『 📝 』 \`Bio:\`\n│      *⤷* *${user.profile.description}*` : `│  『 📝 』 \`Bio:\` ?`}
-${user.profile?.gender ? `│  『 ⚧️ 』 \`Genere:\`\n│      *⤷* *${user.profile.gender}*` : `│  『 ⚧️ 』 \`Genere:\` ?`}
-${user.profile?.instagram ? `│  『 📸 』 \`Instagram:\`\n│      *⤷* instagram.com/${user.profile.instagram}` : `│  『 📸 』 \`Instagram:\` ?`}
-${user.profile?.city ? `│  『 🌆 』 \`Città:\`\n│      *⤷* *${user.profile.city}*` : `│  『 🌆 』 \`Città:\` ?`}
-${user.profile?.birthday ? `│  『 🎂 』 \`Compleanno:\`\n│      *⤷* *${user.profile.birthday}*` : `│  『 🎂 』 \`Compleanno:\` ?`}
-${user.profile?.hobby ? `│  『 🎨 』 \`Hobby:\`\n│      *⤷* *${user.profile.hobby}*` : `│  『 🎨 』 \`Hobby:\` ?`}
-${user.profile?.status ? `│  『 💝 』 \`Stato:\`\n│      *⤷* *${user.profile.status}*` : `│  『 💝 』 \`Stato:\` ?`}
-${user.profile?.occupation ? `│  『 💼 』 \`Lavoro:\`\n│      *⤷* *${user.profile.occupation}*` : `│  『 💼 』 \`Lavoro:\` ?`}
-${user.profile?.music ? `│  『 🎵 』 \`Musica:\`\n│      *⤷* *${user.profile.music}*` : `│  『 🎵 』 \`Musica:\` ?`}
-${user.profile?.food ? `│  『 🍕 』 \`Cibo:\`\n│      *⤷* *${user.profile.food}*` : `│  『 🍕 』 \`Cibo:\` ?`}
-${user.profile?.movie ? `│  『 🎬 』 \`Film:\`\n│      *⤷* *${user.profile.movie}*` : `│  『 🎬 』 \`Film:\` ?`}
-${user.profile?.game ? `│  『 🎮 』 \`Gioco:\`\n│      *⤷* *${user.profile.game}*` : `│  『 🎮 』 \`Gioco:\` ?`}
-${user.profile?.sport ? `│  『 🏃 』 \`Sport:\`\n│      *⤷* *${user.profile.sport}*` : `│  『 🏃 』 \`Sport:\` ?`}
-${user.profile?.language ? `│  『 🌍 』 \`Lingua:\`\n│      *⤷* *${user.profile.language}*` : `│  『 🌍 』 \`Lingua:\` ?`}
-${marriages[who] ? `│  『 💕 』 \`Sposato:\`\n│      *⤷* ${partnerMention}` : `│  『 💕 』 \`Sposato:\` Single`} 
-│
-*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
+    let profileBox = `┏━━━〔 **USER PROFILE** 〕━━━┓
+┃
+┃  ✨ **STATISTICHE**
+┃  • **Euro:** ${formatNumber(user.euro)} 💰
+┃  • **Livello:** ${currentLevel}
+┃  • **Esperienza:** ${formatNumber(user.exp)} XP
+┃  • **Premium:** ${user.premium ? '✅' : '❌'}
+┃
+┃  📊 **ATTIVITÀ**
+┃  • **Messaggi (GP):** ${formatNumber(groupRank.messages)}
+┃  • **Rank Gruppo:** #${groupRank.rank}/${groupRank.total}
+┃  • **Rank Global:** #${globalRank.rank}/${globalRank.total}
+┃
+┃  📝 **INFO PERSONALI**
+┃  • **Bio:** ${user.profile.description || 'Non impostata'}
+┃  • **Città:** ${user.profile.city || 'Sconosciuta'}
+┃  • **Genere:** ${user.profile.gender || 'Non specificato'}
+┃  • **Stato:** ${user.profile.status || 'Libero/a'}
+┃  • **Partner:** ${partnerMention}
+┃
+┃  🎨 **INTERESSI**
+┃  • **Hobby:** ${user.profile.hobby || '?'}
+┃  • **Musica:** ${user.profile.music || '?'}
+┃  • **Gioco:** ${user.profile.game || '?'}
+┃
+┗━━━━━━━━━━━━━━━━━━━━┛`
 
     try {
         await conn.sendMessage(m.chat, {
@@ -214,8 +144,8 @@ ${marriages[who] ? `│  『 💕 』 \`Sposato:\`\n│      *⤷* ${partnerMent
             contextInfo: {
                 ...(global.fake?.contextInfo || {}),
                 externalAdReply: {
-                    title: `👤 ${await conn.getName(who)}`,
-                    body: `📱 ${PhoneNumber('+' + who.split('@')[0]).getNumber('international')} • Livello ${currentLevel}`,
+                    title: `PROFILO DI ${await conn.getName(who)}`,
+                    body: `📱 ${PhoneNumber('+' + who.split('@')[0]).getNumber('international')}`,
                     thumbnailUrl: pp,
                     sourceUrl: '',
                     mediaType: 1,
@@ -223,28 +153,25 @@ ${marriages[who] ? `│  『 💕 』 \`Sposato:\`\n│      *⤷* ${partnerMent
                 }
             }
         }, { quoted: m })
-        if (user.profile?.birthday && isBirthday(user.profile.birthday) && shouldSendBirthdayMessage(who)) {
-            setTimeout(async () => {
-                try {
-                    const userName = await conn.getName(who)
-                    await conn.sendMessage(m.chat, {
-                        text: `🎉─ׄ─⭒『 \`BUON COMPLEANNO\` 』⭒─ׄ─🎂\n\n『 🌟 』- \`Tanti auguri\` *${userName}* \`passa questo giorno al meglio!\``,
-                        mentions: [who]
-                    })
-                } catch (birthdayError) {
-                    console.error('Errore nell\'invio del messaggio di compleanno:', birthdayError)
-                }
-            }, 1000)
-        }
 
+        if (user.profile?.birthday && isBirthday(user.profile.birthday)) {
+            const today = new Date().toDateString()
+            if (!global.birthdayMessages) global.birthdayMessages = {}
+            if (global.birthdayMessages[who] !== today) {
+                global.birthdayMessages[who] = today
+                setTimeout(() => {
+                    conn.sendMessage(m.chat, { text: `🎉 *Auguri ${conn.getName(who)}!* Buon compleanno! 🎂`, mentions: [who] })
+                }, 1000)
+            }
+        }
     } catch (e) {
-        console.error('Errore nel profilo:', e)
-        await m.reply(`${global.errore}`)
+        console.error(e)
+        m.reply('Errore durante il caricamento del profilo.')
     }
 }
 
 handler.help = ['profilo']
-handler.tags = ['info', 'profilo']
+handler.tags = ['info']
 handler.command = /^(profilo|profile)$/i
 handler.register = true
 export default handler
