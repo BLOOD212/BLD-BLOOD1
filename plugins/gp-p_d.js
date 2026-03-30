@@ -1,18 +1,19 @@
 let handler = async (m, { conn, text, command, isAdmin, isOwner }) => {
   const chat = global.db.data.chats[m.chat]
   const isAntinukeOn = chat?.antinuke
+  const sender = m.sender
 
-  // --- LOGICA PERMESSI DINAMICI ---
-  // Se l'antinuke è attivo, solo l'owner può procedere.
-  // Se è spento, possono farlo sia owner che admin.
-  if (isAntinukeOn) {
-    if (!isOwner) return conn.reply(m.chat, '『 🛡️ 』 𝐀𝐧𝐭𝐢𝐧𝐮𝐤𝐞 𝐀𝐭𝐭𝐢𝐯𝐨: solo il Creatore può usare questo comando.', m)
-  } else {
-    if (!isAdmin && !isOwner) return conn.reply(m.chat, '『 👤 』 Questo comando è riservato agli Admin.', m)
+  // --- CONTROLLO SICUREZZA FONDAMENTALE ---
+  // Se chi scrive NON è Admin e NON è Owner, non può fare nulla.
+  if (!isAdmin && !isOwner) {
+    return conn.reply(m.chat, '『 ❌ 』 𝐀𝐜𝐜𝐞𝐬𝐬𝐨 𝐃𝐞negato: Non sei un amministratore.', m)
   }
 
-  let action, successMsg, errorMsg
-  let sender = m.sender
+  // --- LOGICA PERMESSI DINAMICI (ANTINUKE) ---
+  // Se l'antinuke è ON, gli admin normali vengono bloccati. Solo l'Owner può promuovere.
+  if (isAntinukeOn && !isOwner) {
+    return conn.reply(m.chat, '『 🛡️ 』 𝐀𝐧𝐭𝐢𝐧𝐮𝐤𝐞 𝐀𝐭𝐭𝐢𝐯𝐨: In questa modalità solo il Creatore può gestire i gradi.', m)
+  }
 
   let number
   if (m.mentionedJid && m.mentionedJid[0]) {
@@ -22,25 +23,25 @@ let handler = async (m, { conn, text, command, isAdmin, isOwner }) => {
   } else if (text && !isNaN(text.replace(/[^0-9]/g, ''))) {
     number = text.replace(/[^0-9]/g, '')
   } else {
-    return conn.reply(m.chat, '『 👤 』 𝐌𝐞𝐧𝐳𝐢𝐨𝐧𝐚 𝐮𝐧 𝐮𝐭𝐞𝐧𝐭 e, quota un messaggio o scrivi il numero', m)
-  }
-
-  if (!number || number.length < 7 || number.length > 15) {
-    return conn.reply(m.chat, '『 ❌ 』 𝐍𝐮𝐦𝐞𝐫𝐨 𝐧𝐨𝐧 𝐯𝐚𝐥𝐢𝐝𝐨', m)
+    return conn.reply(m.chat, '『 👤 』 𝐌𝐞𝐧𝐳𝐢𝐨𝐧𝐚 𝐨𝐧 𝐮𝐭𝐞𝐧𝐭𝐞 o quota un messaggio.', m)
   }
 
   let user = number + '@s.whatsapp.net'
+  let action, successMsg, errorMsg
+
+  // Evitiamo che qualcuno provi a promuovere se stesso (anche se il bot lo bloccherebbe comunque)
+  if (user === sender) return conn.reply(m.chat, '『 🤡 』 Non puoi promuovere/retrocedere te stesso.', m)
 
   if (['promote', 'promuovi', 'p'].includes(command)) {
     action = 'promote'
     successMsg = `『 👑 』 𝐋’𝐮𝐭𝐞𝐧𝐭𝐞 @${user.split('@')[0]} 𝐞̀ 𝐬𝐭𝐚𝐭𝐨 𝐢𝐧𝐜𝐨𝐫𝐨𝐧𝐚𝐭𝐨/𝐚 \n\n𝐃𝐚: @${sender.split('@')[0]}`
-    errorMsg = '『 ❌ 』 𝐄𝐫𝐫𝐨𝐫𝐞 𝐧𝐞𝐥 𝐩𝐫𝐨𝐦𝐮𝐨𝐯𝐞𝐫𝐞 (Forse è già admin?)'
+    errorMsg = '『 ❌ 』 Impossibile promuovere (utente già admin o non nel gruppo).'
   }
 
   if (['demote', 'retrocedi', 'r'].includes(command)) {
     action = 'demote'
     successMsg = `『 ⚠️ 』 𝐋’𝐮𝐭𝐞𝐧𝐭𝐞 @${user.split('@')[0]} 𝐞̀ 𝐬𝐭𝐚𝐭𝐨 𝐛𝐮𝐥𝐥𝐢𝐳𝐳𝐚𝐭𝐨\n\n𝐃𝐚: @${sender.split('@')[0]}`
-    errorMsg = '『 ❌ 』 𝐄𝐫𝐫𝐨𝐫𝐞 𝐧𝐞𝐥 𝐫𝐞𝐭𝐫𝐨𝐜𝐞𝐝𝐞𝐫𝐞 (Forse non è admin?)'
+    errorMsg = '『 ❌ 』 Impossibile retrocedere (utente non admin o già membro semplice).'
   }
 
   try {
@@ -49,7 +50,6 @@ let handler = async (m, { conn, text, command, isAdmin, isOwner }) => {
       mentions: [sender, user]
     })
   } catch (e) {
-    console.error(e)
     conn.reply(m.chat, errorMsg, m)
   }
 }
