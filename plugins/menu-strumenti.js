@@ -1,3 +1,9 @@
+import { promises } from 'fs'
+import { join } from 'path'
+
+// --- PERCORSO IMMAGINE ---
+const localImg = join(process.cwd(), 'menu-strumenti.jpeg');
+
 const defmenu = {
   before: `
 ┏━━━━━━━━━━━━━━━━━━━━┓
@@ -21,17 +27,23 @@ let handler = async (m, { conn, usedPrefix: _p }) => {
   }
 
   try {
+    await conn.sendPresenceUpdate('composing', m.chat)
+    
     let name = await conn.getName(m.sender) || 'Soggetto Ignoto'
-    let help = Object.values(global.plugins).filter(plugin => !plugin.disabled && plugin.tags && plugin.tags.includes('strumenti')).map(plugin => ({
-      help: Array.isArray(plugin.help) ? plugin.help : [plugin.help],
-      prefix: 'customPrefix' in plugin,
-    }))
+    
+    // Filtro plugin per la categoria strumenti
+    let help = Object.values(global.plugins)
+      .filter(plugin => !plugin.disabled && plugin.tags && plugin.tags.includes('strumenti'))
+      .map(plugin => ({
+        help: Array.isArray(plugin.help) ? plugin.help : [plugin.help],
+        prefix: 'customPrefix' in plugin,
+      }))
 
-    // Costruzione del testo con le variabili Cyber Blood
-    let text = [
+    // Costruzione del testo
+    let _text = [
       defmenu.before.replace(/%name/g, name),
       defmenu.header.replace(/%category/g, tags['strumenti']),
-      help.map(menu => menu.help.map(cmd =>
+      help.map(menu => menu.help.map(cmd => 
         defmenu.body.replace(/%cmd/g, menu.prefix ? cmd : _p + cmd)
       ).join('\n')).join('\n'),
       defmenu.footer,
@@ -40,33 +52,31 @@ let handler = async (m, { conn, usedPrefix: _p }) => {
 
     let fake = global.fake || {};
 
+    await m.react('🧪')
+
+    // --- INVIO COME IMMAGINE (SOSTITUITO VIDEO) ---
     await conn.sendMessage(m.chat, {
-      video: { url: './media/menu/menu5.mp4' },
-      caption: text.trim(),
-      gifPlayback: true,
-      gifAttribution: 2,
-      mimetype: 'video/mp4',
-      ...fake,
+      image: { url: localImg },
+      caption: _text.trim(),
       contextInfo: {
         ...fake.contextInfo,
         mentionedJid: [m.sender],
         forwardedNewsletterMessageInfo: {
           ...fake.contextInfo?.forwardedNewsletterMessageInfo,
+          newsletterJid: '120363232743845068@newsletter',
           newsletterName: "🩸 Cyber Blood - Tools ☣️"
         }
       }
     }, { quoted: m })
 
-    await m.react('🧪')
-
   } catch (e) {
     console.error(e)
-    conn.reply(m.chat, '☣️ ERRORE NEL SETTORE STRUMENTI', m)
-    throw e
+    conn.reply(m.chat, '☣️ ERRORE NEL SETTORE STRUMENTI: File immagine mancante o corrotto.', m)
   }
 }
 
 handler.help = ['menustrumenti']
 handler.tags = ['menu']
 handler.command = ['menutools', 'menustrumenti']
+
 export default handler
