@@ -31,7 +31,8 @@ const defaultMenu = {
   after: `_Powered by BLD-BOT Interface_`,
 }
 
-const MENU_IMAGE_URL = 'https://i.ibb.co/hJW7WwxV/varebot.jpg';
+// L'immagine quadrata che hai richiesto
+const MENU_IMAGE_URL = 'https://files.catbox.moe/u8o020.jpg';
 
 let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
   try {
@@ -76,7 +77,7 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     };
 
     let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name]);
-    
+
     const msgID = m.id || m.key?.id;
     const deviceType = detectDevice(msgID);
 
