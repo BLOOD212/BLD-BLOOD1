@@ -25,22 +25,12 @@ const defaultMenu = {
  │ 👥 *Total Users:* %totalreg
  └───────────────────
  
- *DIGITA I COMANDI PER ACCEDERE:*
+ *Seleziona un'interfaccia operativa:*
 `.trimStart(),
   header: '      ⋆｡˚『 %category 』˚｡⋆\n╭',
   body: '*│ ➢* 『%emoji』 %cmd',
   footer: '*╰━━━━━━━──────━━━━━━━*\n',
-  after: `
-*┍━━━━━〔 📂 SEZIONI 〕━━━━━┑*
-┇ 🛡️ *.%pattiva* (Sicurezza)
-┇ 🎮 *.%pmenugiochi* (Giochi)
-┇ 🤖 *.%pmenuia* (IA)
-┇ 👥 *.%pmenugruppo* (Gruppo)
-┇ 🛠️ *.%pmenustrumenti* (Tools)
-┇ 👨‍💻 *.%pmenucreatore* (Owner)
-*┕━━━━━━━──ׄ──ׅ──ׄ──━━━━━━━┙*
-
-_Powered by BLD-BOT Interface_`,
+  after: `_Powered by BLD-BOT Interface_`,
 }
 
 const MENU_IMAGE_URL = 'https://i.ibb.co/hJW7WwxV/varebot.jpg';
@@ -89,31 +79,37 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 
     let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name]);
 
-    // INVIO UNIFICATO (Fix per iOS/Android/PC)
-    await conn.sendMessage(m.chat, {
-      image: { url: MENU_IMAGE_URL },
-      caption: text.trim(),
-      contextInfo: {
-        externalAdReply: {
-          title: "💠 𝐁𝐋𝐃 - 𝐂𝐄𝐍𝐓𝐑𝐀𝐋 𝐇𝐔𝐁 💠",
-          body: "SISTEMA OPERATIVO ATTIVO",
-          mediaType: 1,
-          renderLargerThumbnail: true,
-          thumbnailUrl: MENU_IMAGE_URL,
-          sourceUrl: 'https://whatsapp.com/channel/0029Vajp6GvK0NBoP7WlR81G'
-        }
-      }
-    }, { quoted: m });
+    // --- STRUTTURA TASTI UNIVERSALE ---
+    const buttons = [
+      { buttonId: _p + 'attiva', buttonText: { displayText: '🛡️ SICUREZZA' }, type: 1 },
+      { buttonId: _p + 'menugiochi', buttonText: { displayText: '🎮 GIOCHI' }, type: 1 },
+      { buttonId: _p + 'menugruppo', buttonText: { displayText: '👥 GRUPPO' }, type: 1 }
+    ]
 
-    await m.react('💠');
+    const buttonMessage = {
+        image: { url: MENU_IMAGE_URL },
+        caption: text.trim(),
+        footer: "B L D - B O T  C E N T R A L",
+        buttons: buttons,
+        headerType: 4,
+        viewOnce: true // Fondamentale per la compatibilità iOS
+    }
+
+    // Invio del messaggio con i tasti
+    await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
+    
+    await m.react('💠')
+
   } catch (e) {
-    console.error(e);
+    console.error(e)
+    // Fallback se i bottoni falliscono comunque
+    conn.reply(m.chat, '❌ Errore nell\'invio del menu interattivo.', m)
   }
-};
+}
 
-handler.help = ['menu'];
-handler.command = ['menu', 'help'];
-export default handler;
+handler.help = ['menu']
+handler.command = ['menu', 'help']
+export default handler
 
 function clockString(ms) {
   let h = Math.floor(ms / 3600000);
