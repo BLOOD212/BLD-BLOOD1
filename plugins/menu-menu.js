@@ -1,4 +1,4 @@
-limport { promises } from 'fs'
+import { promises } from 'fs'
 import { join } from 'path'
 import moment from 'moment-timezone'
 
@@ -106,18 +106,13 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
           ]
         },
         {
-          title: "🎮 AREA DIVERTIMENTO",
-          rows: [
-            { header: "『 🎮 』", title: "MENU GIOCHI", description: "Sfide, Divertimento e Classifiche", id: _p + "menugiochi" }
-          ]
-        },
-        {
           title: "📂 CATEGORIE OPERATIVE",
           rows: [
-            { header: "『 🤖 』", title: "Menu IA", id: _p + "menuia" },
-            { header: "『 👥 』", title: "Menu Gruppo", id: _p + "menugruppo" },
-            { header: "『 📥 』", title: "Menu Download", id: _p + "menudownload" },
-            { header: "『 👨‍💻 』", title: "Menu Creatore", id: _p + "menucreatore" }
+            { header: "『 🎮 』", title: "Menu Giochi", description: "Sfide, Divertimento e Classifiche", id: _p + "menugiochi" },
+            { header: "『 🤖 』", title: "Menu IA", description: "Interazione con Intelligenza Artificiale", id: _p + "menuia" },
+            { header: "『 👥 』", title: "Menu Gruppo", description: "Comandi per la gestione dei membri", id: _p + "menugruppo" },
+            { header: "『 🛠️ 』", title: "Menu Strumenti", description: "Utility e strumenti vari", id: _p + "menustrumenti" },
+            { header: "『 👨‍💻 』", title: "Menu Creatore", description: "Pannello riservato all'Owner", id: _p + "menucreatore" }
           ]
         }
       ];
