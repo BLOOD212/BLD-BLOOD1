@@ -1,89 +1,92 @@
 import { xpRange } from '../lib/levelling.js'
+import moment from 'moment-timezone'
 
 const defaultMenu = {
-  before: ``.trimStart(),
-  header: 'ㅤㅤ⋆｡˚『 ╭ \`MENU PREMIUM\` ╯ 』˚｡⋆\n╭',
-  body: '│ ➤ 『 🉐 』 %cmd', 
-  footer: '*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n',
-  after: `> ⋆｡°✩ BLOODBOT ✩°｡⋆`.trimEnd()
+  before: `
+┎━━━━━━━━━━━━━━━━━━━┑
+┃   ✧  𝐁𝐋𝐃 - 𝐏𝐑𝐄𝐌𝐈𝐔𝐌  ✧   ┃
+┖━━━━━━━━━━━━━━━━━━━┙
+┌───────────────────┐
+  👤 𝚄𝚜𝚎𝚛: %name
+  🏆 𝚁𝚊𝚗𝚔: %role
+  ✨ 𝚂𝚝𝚊𝚝𝚞𝚜: 𝙴𝚕𝚒𝚝𝚎
+└───────────────────┘
+
+*〘 ᴀᴄᴄᴇssɪɴɢ ᴘʀɪᴠᴀᴛᴇ ɴᴏᴅᴇ... 〙*
+`.trimStart(),
+  header: '┍━━━〔 %category 〕━━━┑',
+  body: '┇ 👑  *%cmd*',
+  footer: '┕━━━━━──ׄ──ׅ──ׄ──━━━━━┙\n',
+  after: `_ʙʟᴅ-ʙᴏᴛ ᴇxᴄʟᴜsɪᴠᴇ sʏsᴛᴇᴍ_`
 }
 
 let handler = async (m, { conn, usedPrefix: _p }) => {
   let tags = {
-    'prem': 'premium'
+    'prem': 'ᴇʟɪᴛᴇ ᴘʀᴏᴛᴏᴄᴏʟ'
   }
 
   try {
-    let { level, exp, role } = global.db.data.users[m.sender]
-    let { min, xp, max } = xpRange(level, global.multiplier)
+    let user = global.db.data.users[m.sender]
+    let { level, role } = user
     let name = await conn.getName(m.sender)
-    let d = new Date()
-    let locale = 'it'
-    let week = d.toLocaleDateString(locale, { weekday: 'long' })
-    let date = d.toLocaleDateString(locale, { day: 'numeric', month: 'long', year: 'numeric' })
-    let time = d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit' })
-    let uptime = clockString(process.uptime() * 1000)
-    let totalreg = Object.keys(global.db.data.users).length
-    let help = Object.values(global.plugins).filter(plugin => !plugin.disabled && plugin.tags && plugin.tags.includes('premium')).map(plugin => ({
-      help: Array.isArray(plugin.help) ? plugin.help : [plugin.help],
-      prefix: 'customPrefix' in plugin,
-    }))
+    let _uptime = process.uptime() * 1000
+    let uptime = clockString(_uptime)
     
-    // Definire fake come oggetto vuoto se non è definito
-    let fake = global.fake || {};  // Aggiungi questa riga
+    // Filtraggio plugin premium
+    let help = Object.values(global.plugins).filter(p => !p.disabled && p.tags && (p.tags.includes('premium') || p.tags.includes('prem'))).map(p => ({
+      help: Array.isArray(p.help) ? p.help : [p.help],
+      prefix: 'customPrefix' in p,
+    }))
 
-    let text = [
+    let _text = [
       defaultMenu.before,
-      defaultMenu.header.replace(/%category/g, tags['premium']),
-      help.map(menu => menu.help.map(cmd =>
+      defaultMenu.header.replace(/%category/g, tags['prem']),
+      help.map(menu => menu.help.map(cmd => 
         defaultMenu.body.replace(/%cmd/g, menu.prefix ? cmd : _p + cmd)
       ).join('\n')).join('\n'),
       defaultMenu.footer,
       defaultMenu.after
     ].join('\n')
-    
-    text = text.replace(/%name/g, name)
-      .replace(/%level/g, level || 0)
-      .replace(/%exp/g, exp || 0)
-      .replace(/%role/g, role || 'N/A')
-      .replace(/%week/g, week)
-      .replace(/%date/g, date)
-      .replace(/%time/g, time)
-      .replace(/%uptime/g, uptime)
-      .replace(/%totalreg/g, totalreg)
-    
+
+    let replace = {
+      '%': '%',
+      p: _p,
+      name, level, role, uptime
+    }
+
+    let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name])
+
+    await m.react('⭐')
+
     await conn.sendMessage(m.chat, {
       video: { url: './media/menu/menu9.mp4' },
       caption: text.trim(),
       gifPlayback: true,
-      gifAttribution: 2,
       mimetype: 'video/mp4',
-      ...fake, // Usa il global.fake per il contesto
       contextInfo: {
-        ...fake.contextInfo, // Mantieni il contesto del fake
         mentionedJid: [m.sender],
         forwardedNewsletterMessageInfo: {
-          ...fake.contextInfo?.forwardedNewsletterMessageInfo, // Usa l'operatore di optional chaining per evitare errori se 'contextInfo' è undefined
-          newsletterName: " ⋆｡°✩ Menu Premium ✩°｡⋆"
+          newsletterJid: '120363232743845068@newsletter',
+          newsletterName: "✧ 𝙱𝙻𝙳-𝙱𝙾𝚃 𝙿𝚁𝙴𝙼𝙸𝚄𝙼 ✧"
         }
       }
     }, { quoted: m })
 
   } catch (e) {
-    conn.reply(m.chat, '❌ Errore nel menu premium.', m)
-    throw e
+    console.error(e)
+    conn.reply(m.chat, '❌ Error in Premium Module.', m)
   }
 }
 
-handler.help = ['menuspremium']
+handler.help = ['menupremium']
 handler.tags = ['menu']
 handler.command = ['menupremium', 'menuprem']
 
 export default handler
 
 function clockString(ms) {
-  let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000)
-  let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60
-  let s = isNaN(ms) ? '--' : Math.floor(ms / 1000) % 60
-  return [h, 'h', m, s, 's'].join(' ')
+  let h = isNaN(ms) ? '00' : Math.floor(ms / 3600000).toString().padStart(2, '0')
+  let m = isNaN(ms) ? '00' : (Math.floor(ms / 60000) % 60).toString().padStart(2, '0')
+  let s = isNaN(ms) ? '00' : (Math.floor(ms / 1000) % 60).toString().padStart(2, '0')
+  return `${h}:${m}:${s}`
 }
