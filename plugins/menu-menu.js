@@ -1,6 +1,5 @@
 import { promises } from 'fs'
 import { join } from 'path'
-import fetch from 'node-fetch'
 import moment from 'moment-timezone'
 
 const emojicategoria = {
@@ -73,29 +72,39 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     let replace = { '%': '%', p: _p, uptime, name, totalreg };
     let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name]);
 
-    // PREPARAZIONE DEI BOTTONI NATIVI (FUNZIONANO SU TUTTI)
+    // SISTEMA BOTTONI NATIVI (Protocollo richiesto)
     const buttons = [
       {
-        name: "single_select",
+        name: 'single_select',
         buttonParamsJson: JSON.stringify({
-          title: "📂 SELEZIONA MENU",
+          title: '💠 APRI MODULI',
           sections: [
             {
-              title: "⭐ MODULI PRINCIPALI",
+              title: "🛡️ SISTEMA & GIOCHI",
               rows: [
-                { title: "🛡️ SICUREZZA", id: _p + "attiva", description: "Protezione e Antilink" },
-                { title: "🎮 GIOCHI", id: _p + "menugiochi", description: "Divertimento e Livelli" },
-                { title: "🤖 IA", id: _p + "menuia", description: "Intelligenza Artificiale" },
-                { title: "👥 GRUPPO", id: _p + "menugruppo", description: "Gestione Membri" }
+                { title: "MENU SICUREZZA", id: _p + "attiva" },
+                { title: "MENU GIOCHI", id: _p + "menugiochi" }
               ]
             },
             {
-              title: "🛠️ UTILITY & ALTRO",
+              title: "🤖 INTELLIGENZA & GRUPPO",
               rows: [
-                { title: "📥 DOWNLOAD", id: _p + "menudownload", description: "Scarica Media" },
-                { title: "🛠️ STRUMENTI", id: _p + "menustrumenti", description: "Utility Varie" },
-                { title: "⭐ PREMIUM", id: _p + "menupremium", description: "Funzioni Pro" },
-                { title: "👨‍💻 CREATORE", id: _p + "menucreatore", description: "Comandi Owner" }
+                { title: "MENU IA", id: _p + "menuia" },
+                { title: "MENU GRUPPO", id: _p + "menugruppo" }
+              ]
+            },
+            {
+              title: "📥 DOWNLOAD & TOOLS",
+              rows: [
+                { title: "MENU DOWNLOAD", id: _p + "menudownload" },
+                { title: "MENU STRUMENTI", id: _p + "menustrumenti" }
+              ]
+            },
+            {
+              title: "👑 PREMIUM & OWNER",
+              rows: [
+                { title: "MENU PREMIUM", id: _p + "menupremium" },
+                { title: "MENU CREATORE", id: _p + "menucreatore" }
               ]
             }
           ]
@@ -103,20 +112,17 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
       }
     ];
 
-    // COSTRUZIONE MESSAGGIO INTERATTIVO
     await conn.sendMessage(m.chat, {
       image: { url: MENU_IMAGE_URL },
       caption: text.trim(),
-      footer: "B L D - B O T  S Y S T E M",
-      buttons: buttons,
-      headerType: 4
+      footer: '𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙',
+      interactiveButtons: buttons
     }, { quoted: m });
 
     await m.react('💠');
 
   } catch (e) {
     console.error(e);
-    conn.reply(m.chat, "Errore tecnico nell'invio dei bottoni.", m);
   }
 };
 
