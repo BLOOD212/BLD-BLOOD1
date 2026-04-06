@@ -29,12 +29,14 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
   }
 
   try {
+    await conn.sendPresenceUpdate('composing', m.chat)
+    
     let name = await conn.getName(m.sender)
     let _uptime = process.uptime() * 1000
     let uptime = clockString(_uptime)
     let mode = global.opts['self'] ? 'Privato' : 'Pubblico'
     let platform = os.platform()
-    
+
     let help = Object.values(global.plugins).filter(p => !p.disabled).map(p => ({
       help: Array.isArray(p.help) ? p.help : [p.help],
       tags: Array.isArray(p.tags) ? p.tags : [p.tags],
@@ -68,11 +70,9 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 
     await m.react('👨‍💻')
 
+    // --- INVIO SOLO TESTO (RIMOSSO VIDEO/IMMAGINE) ---
     await conn.sendMessage(m.chat, {
-      video: { url: './media/menu/menu6.mp4' },
-      caption: text.trim(),
-      gifPlayback: true,
-      mimetype: 'video/mp4',
+      text: text.trim(),
       contextInfo: {
         mentionedJid: [m.sender],
         forwardedNewsletterMessageInfo: {
