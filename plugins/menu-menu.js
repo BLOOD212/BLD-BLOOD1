@@ -1,5 +1,6 @@
 import { promises } from 'fs'
 import { join } from 'path'
+import fetch from 'node-fetch'
 import moment from 'moment-timezone'
 
 const emojicategoria = {
@@ -72,62 +73,50 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
     let replace = { '%': '%', p: _p, uptime, name, totalreg };
     let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name]);
 
-    // --- COSTRUZIONE BOTTONI (8 MENU) ---
-    // Usiamo il formato 'list' perché è l'unico che permette più di 3 tasti in un unico blocco
-    const sections = [
+    // PREPARAZIONE DEI BOTTONI NATIVI (FUNZIONANO SU TUTTI)
+    const buttons = [
       {
-        title: "🛡️ PROTEZIONE & GIOCHI",
-        rows: [
-          { title: "Menu Sicurezza", rowId: _p + "attiva", description: "Protezione Gruppo" },
-          { title: "Menu Giochi", rowId: _p + "menugiochi", description: "Games & Leveling" }
-        ]
-      },
-      {
-        title: "🤖 INTELLIGENZA & GRUPPO",
-        rows: [
-          { title: "Menu IA", rowId: _p + "menuia", description: "Intelligenza Artificiale" },
-          { title: "Menu Gruppo", rowId: _p + "menugruppo", description: "Gestione Membri" }
-        ]
-      },
-      {
-        title: "📂 UTILITY & DOWNLOAD",
-        rows: [
-          { title: "Menu Download", rowId: _p + "menudownload", description: "Social Downloader" },
-          { title: "Menu Strumenti", rowId: _p + "menustrumenti", description: "Tools vari" }
-        ]
-      },
-      {
-        title: "👑 AMMINISTRAZIONE",
-        rows: [
-          { title: "Menu Premium", rowId: _p + "menupremium", description: "Funzioni Pro" },
-          { title: "Menu Creatore", rowId: _p + "menucreatore", description: "Pannello Owner" }
-        ]
+        name: "single_select",
+        buttonParamsJson: JSON.stringify({
+          title: "📂 SELEZIONA MENU",
+          sections: [
+            {
+              title: "⭐ MODULI PRINCIPALI",
+              rows: [
+                { title: "🛡️ SICUREZZA", id: _p + "attiva", description: "Protezione e Antilink" },
+                { title: "🎮 GIOCHI", id: _p + "menugiochi", description: "Divertimento e Livelli" },
+                { title: "🤖 IA", id: _p + "menuia", description: "Intelligenza Artificiale" },
+                { title: "👥 GRUPPO", id: _p + "menugruppo", description: "Gestione Membri" }
+              ]
+            },
+            {
+              title: "🛠️ UTILITY & ALTRO",
+              rows: [
+                { title: "📥 DOWNLOAD", id: _p + "menudownload", description: "Scarica Media" },
+                { title: "🛠️ STRUMENTI", id: _p + "menustrumenti", description: "Utility Varie" },
+                { title: "⭐ PREMIUM", id: _p + "menupremium", description: "Funzioni Pro" },
+                { title: "👨‍💻 CREATORE", id: _p + "menucreatore", description: "Comandi Owner" }
+              ]
+            }
+          ]
+        })
       }
     ];
 
-    const listMessage = {
-      text: text.trim(),
-      footer: "B L D - B O T  S Y S T E M",
-      title: " ",
-      buttonText: "💠 CLICCA PER I MENU",
-      sections
-    };
-
-    // Invio forzato con immagine e lista (compatibile iOS/Android)
+    // COSTRUZIONE MESSAGGIO INTERATTIVO
     await conn.sendMessage(m.chat, {
       image: { url: MENU_IMAGE_URL },
       caption: text.trim(),
-      footer: "Seleziona una categoria",
-      buttonText: "💠 APRI MENU",
-      sections,
-      viewOnce: true // CRITICO: Forza la visualizzazione su iPhone
+      footer: "B L D - B O T  S Y S T E M",
+      buttons: buttons,
+      headerType: 4
     }, { quoted: m });
 
     await m.react('💠');
 
   } catch (e) {
     console.error(e);
-    conn.reply(m.chat, "Errore nell'invio dei bottoni.", m);
+    conn.reply(m.chat, "Errore tecnico nell'invio dei bottoni.", m);
   }
 };
 
