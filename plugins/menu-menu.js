@@ -25,7 +25,7 @@ const defaultMenu = {
  │ 👥 *Total Users:* %totalreg
  └───────────────────
  
- *Seleziona un'interfaccia operativa:*
+ *Pannello di Controllo Interattivo:*
 `.trimStart(),
   header: '      ⋆｡˚『 %category 』˚｡⋆\n╭',
   body: '*│ ➢* 『%emoji』 %cmd',
@@ -79,31 +79,45 @@ let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
 
     let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name]);
 
-    // --- STRUTTURA TASTI UNIVERSALE ---
-    const buttons = [
+    // --- CONFIGURAZIONE TASTI (Divisi in due blocchi per bypassare il limite di 3) ---
+    
+    // Blocco 1: Sicurezza e Divertimento
+    const buttons1 = [
       { buttonId: _p + 'attiva', buttonText: { displayText: '🛡️ SICUREZZA' }, type: 1 },
       { buttonId: _p + 'menugiochi', buttonText: { displayText: '🎮 GIOCHI' }, type: 1 },
       { buttonId: _p + 'menugruppo', buttonText: { displayText: '👥 GRUPPO' }, type: 1 }
     ]
 
-    const buttonMessage = {
+    // Blocco 2: Utility e IA
+    const buttons2 = [
+      { buttonId: _p + 'menuia', buttonText: { displayText: '🤖 INTELLIGENZA IA' }, type: 1 },
+      { buttonId: _p + 'menudownload', buttonText: { displayText: '📥 DOWNLOAD' }, type: 1 },
+      { buttonId: _p + 'menustrumenti', buttonText: { displayText: '🛠️ STRUMENTI' }, type: 1 }
+    ]
+
+    // Invio primo messaggio con Immagine e primi 3 tasti
+    await conn.sendMessage(m.chat, {
         image: { url: MENU_IMAGE_URL },
         caption: text.trim(),
-        footer: "B L D - B O T  C E N T R A L",
-        buttons: buttons,
+        footer: "SISTEMA DI PROTEZIONE E GIOCHI",
+        buttons: buttons1,
         headerType: 4,
-        viewOnce: true // Fondamentale per la compatibilità iOS
-    }
+        viewOnce: true
+    }, { quoted: m })
 
-    // Invio del messaggio con i tasti
-    await conn.sendMessage(m.chat, buttonMessage, { quoted: m })
+    // Invio secondo messaggio (solo tasti) per le altre categorie
+    await conn.sendMessage(m.chat, {
+        text: "📂 *ALTRE CATEGORIE DISPONIBILI:*",
+        footer: "STRUMENTI E INTELLIGENZA ARTIFICIALE",
+        buttons: buttons2,
+        headerType: 1,
+        viewOnce: true
+    }, { quoted: m })
     
     await m.react('💠')
 
   } catch (e) {
     console.error(e)
-    // Fallback se i bottoni falliscono comunque
-    conn.reply(m.chat, '❌ Errore nell\'invio del menu interattivo.', m)
   }
 }
 
