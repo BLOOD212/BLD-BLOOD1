@@ -1,4 +1,4 @@
-Import { TelegramClient, Api } from 'telegram'
+import { TelegramClient, Api } from 'telegram'
 import { StringSession } from 'telegram/sessions/index.js'
 import { NewMessage } from 'telegram/events/index.js'
 
@@ -122,6 +122,3 @@ handler.command = ['voip']
 handler.private = true 
 
 export default handler
-
-
-
