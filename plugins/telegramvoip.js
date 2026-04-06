@@ -2,75 +2,94 @@ import { TelegramClient, Api } from 'telegram'
 import { StringSession } from 'telegram/sessions/index.js'
 import input from 'input'
 
+// --- CONFIGURAZIONE ---
 const apiId = 2040; 
 const apiHash = 'b18441a1ff607e10a989891a5462e627'; 
 const targetBot = 'Number_Nest_Bot'; 
 const numeroTelefono = '+573215575562';
-
-// FONDAMENTALE: Una volta loggato, incolla qui la stringa lunga che esce in console
-let sessionSaved = ""; 
+let sessionSaved = ""; // Incolla qui la tua stringa dopo il primo login
 
 let client = null;
 
-let handler = async (m, { conn }) => {
+let handler = async (m, { conn, text, command }) => {
   if (m.isGroup) return m.reply('❌ Solo in Chat Privata.')
 
   try {
+    // 1. Inizializzazione Client
     if (!client || !client.connected) {
-      client = new TelegramClient(new StringSession(sessionSaved), apiId, apiHash, {
-        connectionRetries: 5,
-      });
-
+      client = new TelegramClient(new StringSession(sessionSaved), apiId, apiHash, { connectionRetries: 5 });
       await client.start({
         phoneNumber: async () => numeroTelefono,
-        password: async () => await input.text("Password 2FA: "),
+        password: async () => await input.text("2FA Password: "),
         phoneCode: async () => await input.text("Codice Telegram: "),
-        onError: (err) => console.log("Errore login:", err),
+        onError: (err) => console.log(err),
       });
+      console.log("✅ SESSION_STRING:", client.session.save());
 
-      console.log("✅ LOGIN OK! SESSION_STRING:");
-      console.log(client.session.save());
-
-      // Ascolto messaggi con sistema di sicurezza
+      // --- ASCOLTATORE EVENTI TELEGRAM ---
       client.addEventHandler(async (event) => {
         if (event && event.message) {
-            const message = event.message;
-            try {
-                // Recuperiamo il mittente in modo più robusto
-                const sender = await message.getSender();
-                const username = sender ? sender.username : null;
+          const msg = event.message;
+          const sender = await msg.getSender();
+          if (sender && sender.username === targetBot) {
+            
+            let extraInfo = "";
+            let buttons = [];
 
-                if (username === targetBot) {
-                    await conn.sendMessage(m.chat, {
-                        text: `🤖 *RISPOSTA DA @${targetBot}*\n\n${message.text || '[Media]'}`,
-                        contextInfo: {
-                            forwardingScore: 999,
-                            isForwarded: true,
-                            forwardedNewsletterMessageInfo: {
-                                newsletterJid: '120363232743845068@newsletter',
-                                newsletterName: "✧ 𝙱𝙻𝙳-𝙱𝙾𝚃 𝚅𝙾𝙸𝙿 𝚁𝙴𝙻𝙰𝚈 ✧"
-                            }
-                        }
-                    });
-                }
-            } catch (e) {
-                // Silenziamo errori interni di parsing
+            // Estrazione Bottoni da Telegram (se presenti)
+            if (msg.replyMarkup && msg.replyMarkup.rows) {
+              msg.replyMarkup.rows.forEach(row => {
+                row.buttons.forEach(btn => {
+                  buttons.push({
+                    buttonId: `tgbtn ${btn.text}`, // Prefisso per riconoscerlo
+                    buttonText: { displayText: btn.text },
+                    type: 1
+                  });
+                  extraInfo += `\n🔘 [${btn.text}]`;
+                });
+              });
             }
+
+            const cleanText = `🤖 *DA @${targetBot}*\n\n${msg.text || "[Media]"}${extraInfo}`;
+
+            // Invio su WhatsApp (Se la tua versione supporta i bottoni, altrimenti manda testo)
+            if (buttons.length > 0) {
+              await conn.sendMessage(m.chat, {
+                text: cleanText,
+                buttons: buttons,
+                headerType: 1,
+                viewOnce: true
+              });
+            } else {
+              await conn.sendMessage(m.chat, { text: cleanText });
+            }
+          }
         }
       });
     }
 
-    // Invia /start
-    await client.sendMessage(targetBot, { message: '/start' });
-    await m.react('📡')
+    // 2. LOGICA DI INVIO DA WHATSAPP A TELEGRAM
+    // Se il comando è .voip senza testo, manda /start
+    // Se scrivi qualcosa dopo .voip, lo manda al bot
+    let messaggioDaInviare = text ? text : "/start";
+    
+    await client.sendMessage(targetBot, { message: messaggioDaInviare });
+    await m.react('📤')
 
   } catch (e) {
     console.error(e)
-    if (e.message.includes('FLOOD')) {
-        m.reply(`⚠️ *TELEGRAM FLOOD:* Troppi tentativi. Devi aspettare ancora qualche minuto prima di riprovare.`)
-    } else {
-        m.reply(`❌ *ERRORE:* ${e.message}`)
-    }
+    m.reply(`❌ Errore: ${e.message}`)
+  }
+}
+
+// --- GESTORE RISPOSTE (Per far funzionare i bottoni cliccati) ---
+handler.before = async (m, { conn }) => {
+  if (!m.text || !client || !client.connected) return;
+  
+  // Se l'utente clicca un bottone generato sopra o risponde in chat
+  if (m.quoted && m.quoted.text && m.quoted.text.includes(`@${targetBot}`)) {
+    await client.sendMessage(targetBot, { message: m.text });
+    await m.react('📨');
   }
 }
 
