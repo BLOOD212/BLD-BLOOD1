@@ -33,41 +33,39 @@ let handler = async (m, { conn, text }) => {
                 const message = event.message;
                 if (!message) return;
 
-                // Verifica mittente
+                // Controllo mittente (Bot Target)
                 const sender = await message.getSender();
                 if (sender?.username !== targetBotUsername && message.senderId?.toString() !== targetBotUsername) return;
 
                 let testoCorpo = message.message || "";
                 let listaNumerata = "";
-                let bottoniDaSalvare = [];
+                let bottoniInMemoria = [];
 
-                // --- LOGICA DI NUMERAZIONE PER WHATSAPP ---
+                // ESTRAZIONE E NUMERAZIONE STATI/OPZIONI
                 if (message.replyMarkup && message.replyMarkup.rows) {
                     let count = 1;
-                    listaNumerata = "\n\n🔘 *OPZIONI NUMERATE:*\n";
+                    listaNumerata = "\n\n🌍 *SELEZIONA STATO/OPZIONE:*\n";
 
                     for (const row of message.replyMarkup.rows) {
                         for (const button of row.buttons) {
                             if (button.text) {
-                                bottoniDaSalvare.push({
+                                bottoniInMemoria.push({
                                     msg: message,
                                     btn: button
                                 });
-                                // CREA LA LISTA NUMERATA CHE VEDRAI SU WHATSAPP
                                 listaNumerata += `*${count}* - ${button.text}\n`;
                                 count++;
                             }
                         }
                     }
-                    listaNumerata += "\n_Invia il numero per cliccare l'opzione_";
                 }
 
-                // Salva i bottoni per far funzionare la risposta numerica
-                global.tgVoip.currentButtons = bottoniDaSalvare;
+                // Aggiorna i pulsanti correnti
+                global.tgVoip.currentButtons = bottoniInMemoria;
 
-                // Unisce il testo del bot alla lista numerata creata da noi
-                let messaggioFinale = `🤖 *TELEGRAM:*\n\n${testoCorpo}${listaNumerata}`;
-
+                // Invia a WhatsApp
+                let messaggioFinale = `🤖 *DA TELEGRAM*\n\n${testoCorpo}${listaNumerata}`;
+                
                 if (global.tgVoip.conn && global.tgVoip.chatId) {
                     await global.tgVoip.conn.sendMessage(global.tgVoip.chatId, { text: messaggioFinale });
                 }
@@ -75,6 +73,7 @@ let handler = async (m, { conn, text }) => {
             global.tgVoip.isListening = true;
         }
 
+        // Avvio interazione
         await global.tgVoip.client.sendMessage(targetBotUsername, { message: text || "/start" });
         await m.react('📡');
 
@@ -91,7 +90,7 @@ handler.before = async (m) => {
     const numeroScelto = parseInt(input);
     const bottoniDisponibili = global.tgVoip.currentButtons || [];
 
-    // Se invii un numero, clicca il bottone corrispondente
+    // Se è un numero, clicca l'opzione
     if (!isNaN(numeroScelto) && bottoniDisponibili.length > 0) {
         const index = numeroScelto - 1; 
 
@@ -99,7 +98,12 @@ handler.before = async (m) => {
             try {
                 const target = bottoniDisponibili[index];
                 await m.react('🔘'); 
+
+                // CLICCA SU TELEGRAM
                 await target.msg.click(target.btn);
+                
+                // Opzionale: Svuota per evitare click multipli accidentali
+                // global.tgVoip.currentButtons = []; 
                 return; 
             } catch (err) {
                 console.error("Errore click:", err);
@@ -107,12 +111,12 @@ handler.before = async (m) => {
         }
     }
 
-    // Altrimenti invia come testo normale
+    // Se scrivi testo (es. codice OTP), inoltralo
     try {
         await global.tgVoip.client.sendMessage(targetBotUsername, { message: m.text });
         await m.react('📤');
     } catch (e) {
-        console.error("Errore invio:", e);
+        console.error("Errore inoltro testo:", e);
     }
 }
 
