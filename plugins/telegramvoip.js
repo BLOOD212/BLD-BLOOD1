@@ -23,64 +23,67 @@ let handler = async (m, { conn, text }) => {
 
     try {
         if (!global.tgVoip.client || !global.tgVoip.client.connected) {
-            console.log("📡 Connessione a Telegram...");
             global.tgVoip.client = new TelegramClient(new StringSession(sessionSaved), apiId, apiHash, {
                 connectionRetries: 5,
             });
             await global.tgVoip.client.connect();
         }
 
-        // Registra l'evento solo se non è già attivo
         if (!global.tgVoip.isListening) {
             global.tgVoip.client.addEventHandler(async (event) => {
                 const message = event.message;
+                if (!message) return;
+
+                let testata = "🤖 *RISPOSTA DA TELEGRAM*\n\n";
+                let corpo = message.message || "";
                 
-                // Verifichiamo che il messaggio provenga dal bot target
-                // Usiamo peerId per sicurezza
-                if (message.peerId) {
-                    console.log("📥 Messaggio ricevuto da Telegram...");
-                    
-                    let testata = "🤖 *RISPOSTA DA TELEGRAM*\n\n";
-                    let corpo = message.message || "_[Messaggio vuoto o Media]_";
-                    
-                    if (global.tgVoip.conn && global.tgVoip.chatId) {
-                        await global.tgVoip.conn.sendMessage(global.tgVoip.chatId, { 
-                            text: testata + corpo 
-                        });
+                // --- RECUPERO BOTTONI ---
+                let pulsantiTesto = "";
+                if (message.replyMarkup && message.replyMarkup.rows) {
+                    pulsantiTesto = "\n\n🔘 *OPZIONI DISPONIBILI:*\n";
+                    for (const row of message.replyMarkup.rows) {
+                        for (const button of row.buttons) {
+                            // Estraiamo il testo di ogni pulsante
+                            pulsantiTesto += `• ${button.text}\n`;
+                        }
                     }
+                }
+
+                if (global.tgVoip.conn && global.tgVoip.chatId) {
+                    await global.tgVoip.conn.sendMessage(global.tgVoip.chatId, { 
+                        text: testata + corpo + pulsantiTesto 
+                    });
                 }
             }, new NewMessage({ incoming: true }));
             global.tgVoip.isListening = true;
         }
 
-        const command = text ? text : "/start";
-        await global.tgVoip.client.sendMessage(targetBotUsername, { message: command });
-        await m.react('⏳');
+        const toSend = text ? text : "/start";
+        await global.tgVoip.client.sendMessage(targetBotUsername, { message: toSend });
+        await m.react('📡');
 
     } catch (e) {
         console.error(e);
-        m.reply("❌ Errore durante la connessione a Telegram.");
+        m.reply("❌ Errore connessione.");
     }
 }
 
-// Gestore per i messaggi successivi (scrivere normalmente in chat)
 handler.before = async (m) => {
     if (m.isGroup || !m.text || m.text.startsWith('.') || !global.tgVoip.client) return;
-    
-    // Se l'utente scrive nella chat dove è attivo il servizio
     if (m.chat === global.tgVoip.chatId) {
         try {
+            // Inviamo il testo scritto su WhatsApp direttamente al bot
             await global.tgVoip.client.sendMessage(targetBotUsername, { message: m.text });
             await m.react('📤');
         } catch (e) {
-            console.error("Errore inoltro:", e);
+            console.error(e);
         }
     }
 }
 
 handler.help = ['voip']
-handler.tags = ['tools']
+handler.tags = ['strumenti']
 handler.command = ['voip']
-handler.private = true
+handler.private = true 
 
 export default handler
