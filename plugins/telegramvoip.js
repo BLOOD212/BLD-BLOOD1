@@ -33,37 +33,38 @@ let handler = async (m, { conn, text }) => {
                 const message = event.message;
                 if (!message) return;
 
-                // Controllo mittente (Bot Target)
                 const sender = await message.getSender();
                 if (sender?.username !== targetBotUsername && message.senderId?.toString() !== targetBotUsername) return;
 
                 let testoCorpo = message.message || "";
                 let listaNumerata = "";
-                let bottoniInMemoria = [];
+                let bottoniDaSalvare = [];
 
-                // ESTRAZIONE E NUMERAZIONE STATI/OPZIONI
                 if (message.replyMarkup && message.replyMarkup.rows) {
-                    let count = 1;
-                    listaNumerata = "\n\n🌍 *SELEZIONA STATO/OPZIONE:*\n";
+                    let totalCount = 0; // Conta tutti i bottoni reali di Telegram
+                    let displayCount = 1; // Conta solo quelli mostrati su WhatsApp
+                    listaNumerata = "\n\n🌍 *SELEZIONA OPZIONE (Primi 8 ignorati):*\n";
 
                     for (const row of message.replyMarkup.rows) {
                         for (const button of row.buttons) {
                             if (button.text) {
-                                bottoniInMemoria.push({
+                                totalCount++;
+                                
+                                // SALTA I PRIMI 8 BOTTONI
+                                if (totalCount <= 8) continue;
+
+                                bottoniDaSalvare.push({
                                     msg: message,
                                     btn: button
                                 });
-                                listaNumerata += `*${count}* - ${button.text}\n`;
-                                count++;
+                                listaNumerata += `*${displayCount}* - ${button.text}\n`;
+                                displayCount++;
                             }
                         }
                     }
                 }
 
-                // Aggiorna i pulsanti correnti
-                global.tgVoip.currentButtons = bottoniInMemoria;
-
-                // Invia a WhatsApp
+                global.tgVoip.currentButtons = bottoniDaSalvare;
                 let messaggioFinale = `🤖 *DA TELEGRAM*\n\n${testoCorpo}${listaNumerata}`;
                 
                 if (global.tgVoip.conn && global.tgVoip.chatId) {
@@ -73,7 +74,6 @@ let handler = async (m, { conn, text }) => {
             global.tgVoip.isListening = true;
         }
 
-        // Avvio interazione
         await global.tgVoip.client.sendMessage(targetBotUsername, { message: text || "/start" });
         await m.react('📡');
 
@@ -90,7 +90,6 @@ handler.before = async (m) => {
     const numeroScelto = parseInt(input);
     const bottoniDisponibili = global.tgVoip.currentButtons || [];
 
-    // Se è un numero, clicca l'opzione
     if (!isNaN(numeroScelto) && bottoniDisponibili.length > 0) {
         const index = numeroScelto - 1; 
 
@@ -98,12 +97,7 @@ handler.before = async (m) => {
             try {
                 const target = bottoniDisponibili[index];
                 await m.react('🔘'); 
-
-                // CLICCA SU TELEGRAM
                 await target.msg.click(target.btn);
-                
-                // Opzionale: Svuota per evitare click multipli accidentali
-                // global.tgVoip.currentButtons = []; 
                 return; 
             } catch (err) {
                 console.error("Errore click:", err);
@@ -111,12 +105,11 @@ handler.before = async (m) => {
         }
     }
 
-    // Se scrivi testo (es. codice OTP), inoltralo
     try {
         await global.tgVoip.client.sendMessage(targetBotUsername, { message: m.text });
         await m.react('📤');
     } catch (e) {
-        console.error("Errore inoltro testo:", e);
+        console.error("Errore invio testo:", e);
     }
 }
 
