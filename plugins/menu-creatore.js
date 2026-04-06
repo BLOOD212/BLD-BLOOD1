@@ -1,162 +1,96 @@
-import { promises } from 'fs'
-import { join } from 'path'
 import { xpRange } from '../lib/levelling.js'
 import moment from 'moment-timezone'
 import os from 'os'
+import { promises } from 'fs'
+import { join } from 'path'
 
 const defaultMenu = {
-  before: ``.trimStart(),
-  header: 'ㅤㅤ⋆｡˚『 ╭ `MENU CREATORE` ╯ 』˚｡⋆\n╭',
-  body: '│ ➤『🕊️』 %cmd\n',
-  footer: '*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*\n',
-  after: `> 🩸 𓆩⟡𓆪 *bloodbot* 𓆩⟡𓆪`,                   
+  before: `
+┎━━━━━━━━━━━━━━━━━━━┑
+┃   ✧  𝐁𝐋𝐃 - 𝐂𝐑𝐄𝐀𝐓𝐎𝐑  ✧   ┃
+┖━━━━━━━━━━━━━━━━━━━┙
+┌───────────────────┐
+  👤 𝙾𝚠𝚗𝚎𝚛: %name
+  ⚙️ 𝙼𝚘𝚍𝚎: %mode
+  🖥️ 𝙿𝚕𝚊𝚝𝚏𝚘𝚛𝚖: %platform
+└───────────────────┘
+
+*〘 ᴀᴄᴄᴇssɪɴɢ ʀᴏᴏᴛ ᴘʀᴏᴛᴏᴄᴏʟ... 〙*
+`.trimStart(),
+  header: '┍━━━〔 %category 〕━━━┑',
+  body: '┇ 👨‍💻  *%cmd*',
+  footer: '┕━━━━━──ׄ──ׅ──ׄ──━━━━━┙\n',
+  after: `_ʙʟᴅ-ʙᴏᴛ ᴀᴅᴍɪɴ ɪɴᴛᴇʀꜰᴀᴄᴇ_`
 }
 
-let handler = async (m, { conn, usedPrefix: _p, __dirname, args, command}) => {
+let handler = async (m, { conn, usedPrefix: _p, __dirname }) => {
   let tags = {
-    'creatore': 'MenuOwner',
+    'creatore': 'ꜱʏꜱᴛᴇᴍ ᴏᴠᴇʀʀɪᴅᴇ'
   }
-  
-  try {
-    // Definiamo i valori globali o stringhe vuote se non esistono
-    let dash = global.dashmenu || ''
-    let m1 = global.dmenut || ''
-    let m2 = global.dmenub || ''
-    let m3 = global.dmenuf || ''
-    let m4 = global.dmenub2 || ''
-    let cc = global.cmenut || ''
-    let c1 = global.cmenuh || ''
-    let c2 = global.cmenub || ''
-    let c3 = global.cmenuf || ''
-    let c4 = global.cmenua || ''
-    let lprem = global.lopr || 'Ⓟ'
-    let llim = global.lolm || 'Ⓛ'
-    let fake = global.fake || { contextInfo: { forwardedNewsletterMessageInfo: {} } }
-    
-    let tag = `@${m.sender.split('@')[0]}`
-    let ucpn = `${ucapan()}`
-    let d = new Date(new Date() + 3600000)
-    let locale = 'it'
-    let week = d.toLocaleDateString(locale, { weekday: 'long' })
-    let date = d.toLocaleDateString(locale, {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
-    let time = d.toLocaleTimeString(locale, {
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric'
-    })
 
+  try {
+    let name = await conn.getName(m.sender)
     let _uptime = process.uptime() * 1000
     let uptime = clockString(_uptime)
-    let wib = moment.tz('Europe/Rome').format('HH:mm:ss')
     let mode = global.opts['self'] ? 'Privato' : 'Pubblico'
-    let _package = JSON.parse(await promises.readFile(join(__dirname, '../package.json')).catch(_ => ({}))) || {}
-    
-    let { exp, limit, level, role, registered, age } = global.db.data.users[m.sender]
-    let { min, xp, max } = xpRange(level, global.multiplier)
-    let name = await conn.getName(m.sender)
-    let premium = global.db.data.users[m.sender].premiumTime
-    let prems = `${premium > 0 ? 'Premium': 'Utente comune'}`
     let platform = os.platform()
-
-    let totalreg = Object.keys(global.db.data.users).length
-    let rtotalreg = Object.values(global.db.data.users).filter(user => user.registered == true).length
     
-    let help = Object.values(global.plugins).filter(plugin => !plugin.disabled).map(plugin => {
-      return {
-        help: Array.isArray(plugin.tags) ? plugin.help : [plugin.help],
-        tags: Array.isArray(plugin.tags) ? plugin.tags : [plugin.tags],
-        prefix: 'customPrefix' in plugin,
-        limit: plugin.limit,
-        premium: plugin.premium,
-        enabled: !plugin.disabled,
-      }
-    })
-
-    let groups = {}
-    for (let tag in tags) {
-      groups[tag] = []
-      for (let plugin of help)
-        if (plugin.tags && plugin.tags.includes(tag))
-          if (plugin.help) groups[tag].push(plugin)
-    }
-
-    conn.menu = conn.menu ? conn.menu : {}
-    let before = conn.menu.before || defaultMenu.before
-    let header = conn.menu.header || defaultMenu.header
-    let body = conn.menu.body || defaultMenu.body
-    let footer = conn.menu.footer || defaultMenu.footer
-    let after = conn.menu.after || (conn.user.jid == global.conn.user.jid ? '' : `Powered by https://wa.me/${global.conn.user.jid.split`@`[0]}`) + defaultMenu.after
+    let help = Object.values(global.plugins).filter(p => !p.disabled).map(p => ({
+      help: Array.isArray(p.help) ? p.help : [p.help],
+      tags: Array.isArray(p.tags) ? p.tags : [p.tags],
+      prefix: 'customPrefix' in p,
+    }))
 
     let _text = [
-      before,
+      defaultMenu.before,
       ...Object.keys(tags).map(tag => {
-        return header.replace(/%category/g, tags[tag]) + '\n' + [
+        return defaultMenu.header.replace(/%category/g, tags[tag]) + '\n' + [
           ...help.filter(menu => menu.tags && menu.tags.includes(tag) && menu.help).map(menu => {
             return menu.help.map(help => {
-              return body.replace(/%cmd/g, menu.prefix ? help : '%_p' + help)
-                .replace(/%islimit/g, menu.limit ? llim : '')
-                .replace(/%isPremium/g, menu.premium ? lprem : '')
+              return defaultMenu.body.replace(/%cmd/g, menu.prefix ? help : _p + help)
                 .trim()
             }).join('\n')
           }),
-          footer
+          defaultMenu.footer
         ].join('\n')
       }),
-      after
+      defaultMenu.after
     ].join('\n')
 
-    let text = typeof conn.menu == 'string' ? conn.menu : typeof conn.menu == 'object' ? _text : ''
     let replace = {
       '%': '%',
       p: _p,
-      muptime: uptime,
-      me: conn.getName(conn.user.jid),
-      npmname: _package.name,
-      npmdesc: _package.description,
-      version: _package.version,
-      exp: exp - min,
-      maxexp: xp,
-      totalexp: exp,
-      xp4levelup: max - exp,
-      dash, m1, m2, m3, m4, cc, c1, c2, c3, c4, lprem, llim,
-      ucpn, platform, wib, mode, _p, age, name, prems, level, limit, week, date, time, totalreg, rtotalreg, role,
+      name, uptime, mode, platform,
       readmore: readMore
     }
-    
-    text = text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join`|`})`, 'g'), (_, name) => '' + replace[name])
 
-    await m.react('🕊️')
+    let text = _text.replace(new RegExp(`%(${Object.keys(replace).sort((a, b) => b.length - a.length).join('|')})`, 'g'), (_, name) => '' + replace[name])
+
+    await m.react('👨‍💻')
+
     await conn.sendMessage(m.chat, {
       video: { url: './media/menu/menu6.mp4' },
       caption: text.trim(),
       gifPlayback: true,
-      gifAttribution: 2,
       mimetype: 'video/mp4',
       contextInfo: {
-        ...(fake.contextInfo || {}),
         mentionedJid: [m.sender],
         forwardedNewsletterMessageInfo: {
-            ...(fake.contextInfo?.forwardedNewsletterMessageInfo || {}),
-            newsletterName: "ᰔᩚ . ˚ Menu Creatore ☆˒˒"
+          newsletterJid: '120363232743845068@newsletter',
+          newsletterName: "✧ 𝙱𝙻𝙳-𝙱𝙾𝚃 𝙲𝚁𝙴𝙰𝚃𝙾𝚁 ✧"
         }
       }
     }, { quoted: m })
 
   } catch (e) {
     console.error(e)
-    let errorMsg = global.fake && global.fake.error ? global.fake.error : '❌ Errore nel caricamento del menu.'
-    conn.reply(m.chat, errorMsg, m)
-    throw e
+    conn.reply(m.chat, '❌ Error in Creator Module.', m)
   }
 }
 
 handler.help = ['menucreatore']
 handler.tags = ['menu']
-handler.command = ['menuowner', 'menucreatore']
+handler.command = ['menuowner', 'menucreatore', 'owner']
 
 export default handler
 
@@ -164,18 +98,8 @@ const more = String.fromCharCode(8206)
 const readMore = more.repeat(4001)
 
 function clockString(ms) {
-  let h = isNaN(ms) ? '--' : Math.floor(ms / 3600000)
-  let m = isNaN(ms) ? '--' : Math.floor(ms / 60000) % 60
-  let s = isNaN(ms) ? '--' : Math.floor(ms / 1000) % 60
-  return [h, ' H ', m, ' M ', s, ' S '].map(v => v.toString().padStart(2, 0)).join('')
-}
-
-function ucapan() {
-  const time = moment.tz('Europe/Rome').format('HH')
-  let res = "Sveglio così presto? 🥱"
-  if (time >= 4) res = "Mattina 🌄"
-  if (time >= 10) res = "Mattina ☀️"
-  if (time >= 15) res = "Pomeriggio 🌇"
-  if (time >= 18) res = "Sera 🌙"
-  return res
+  let h = isNaN(ms) ? '00' : Math.floor(ms / 3600000).toString().padStart(2, '0')
+  let m = isNaN(ms) ? '00' : (Math.floor(ms / 60000) % 60).toString().padStart(2, '0')
+  let s = isNaN(ms) ? '00' : (Math.floor(ms / 1000) % 60).toString().padStart(2, '0')
+  return `${h}:${m}:${s}`
 }
