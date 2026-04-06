@@ -411,17 +411,16 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
         let normalizedParticipants = null
         let isBotAdmin = false
         let isAdmin = false
+        let isRealAdmin = false // Per tracciare gli admin effettivi di WA
         let isRAdmin = false
         let isSam = global.owner.some(([num]) => num + '@s.whatsapp.net' === normalizedSender)
         let isROwner = isSam || global.owner.some(([num]) => num + '@s.whatsapp.net' === normalizedSender)
         let isOwner = isROwner || m.fromMe
         let isMods = isOwner || global.mods?.map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(normalizedSender) || false
         let isPrems = isROwner || global.prems?.map(v => v.replace(/[^0-9]/g, '') + '@s.whatsapp.net').includes(normalizedSender) || false
-        
-        // --- LOGICA MODERATORI (BLOOD) ---
+
         let modsList = global.db.data.chats[m.chat]?.moderatori || []
         let isMod = modsList.includes(normalizedSender)
-        // ---------------------------------
 
         if (m.isGroup) {
             if (!groupMetadata) {
@@ -439,63 +438,22 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                 })
                 const normalizedOwner = groupMetadata.owner ? this.decodeJid(groupMetadata.owner) : null
                 const normalizedOwnerLid = groupMetadata.ownerLid ? this.decodeJid(groupMetadata.ownerLid) : null
-                
-                // MODIFICATO: Controllo isMod aggiunto qui
-                isAdmin = (participants.some(u => {
-                    const participantIds = [
-                        this.decodeJid(u.id),
-                        u.jid ? this.decodeJid(u.jid) : null,
-                        u.lid ? this.decodeJid(u.lid) : null
-                    ].filter(Boolean)
-                    const isMatch = participantIds.includes(normalizedSender)
-                    return isMatch && (u.admin === 'admin' || u.admin === 'superadmin' || u.isAdmin === true || u.admin === true)
-                }) || isMod)
+
+                // Controllo se è Admin reale di WhatsApp
+                isRealAdmin = participants.some(u => {
+                    const participantIds = [this.decodeJid(u.id), u.jid ? this.decodeJid(u.jid) : null].filter(Boolean)
+                    return participantIds.includes(normalizedSender) && (u.admin === 'admin' || u.admin === 'superadmin')
+                })
+
+                // isAdmin per il bot = Admin reale OPPURE Moderatore
+                isAdmin = isRealAdmin || isMod
 
                 isBotAdmin = participants.some(u => {
-                    const participantIds = [
-                        this.decodeJid(u.id),
-                        u.jid ? this.decodeJid(u.jid) : null,
-                        u.lid ? this.decodeJid(u.lid) : null
-                    ].filter(Boolean)
-                    const isMatch = participantIds.includes(normalizedBot)
-                    return isMatch && (u.admin === 'admin' || u.admin === 'superadmin' || u.isAdmin === true || u.admin === true)
+                    const participantIds = [this.decodeJid(u.id), u.jid ? this.decodeJid(u.jid) : null].filter(Boolean)
+                    return participantIds.includes(normalizedBot) && (u.admin === 'admin' || u.admin === 'superadmin')
                 }) || (normalizedBot === normalizedOwner || normalizedBot === normalizedOwnerLid)
 
-                isRAdmin = isAdmin && (normalizedSender === normalizedOwner || normalizedSender === normalizedOwnerLid)
-
-                if (m.isGroup && !isAdmin) {
-                    const secondMetadata = await fetchGroupMetadataWithRetry(this, m.chat)
-                    if (secondMetadata) {
-                        secondMetadata.fetchTime = Date.now()
-                        global.groupCache.set(m.chat, secondMetadata, { ttl: 300 })
-                        participants = secondMetadata.participants
-                        normalizedParticipants = participants.map(u => {
-                            const normalizedId = this.decodeJid(u.id)
-                            return { ...u, id: normalizedId, jid: u.jid || normalizedId }
-                        })
-
-                        // MODIFICATO: Controllo isMod aggiunto anche nel fallback
-                        isAdmin = (participants.some(u => {
-                            const participantIds = [
-                                this.decodeJid(u.id),
-                                u.jid ? this.decodeJid(u.jid) : null,
-                                u.lid ? this.decodeJid(u.lid) : null
-                            ].filter(Boolean)
-                            const isMatch = participantIds.includes(normalizedSender)
-                            return isMatch && (u.admin === 'admin' || u.admin === 'superadmin' || u.isAdmin === true || u.admin === true)
-                        }) || isMod)
-
-                        isBotAdmin = participants.some(u => {
-                            const participantIds = [
-                                this.decodeJid(u.id),
-                                u.jid ? this.decodeJid(u.jid) : null,
-                                u.lid ? this.decodeJid(u.lid) : null
-                            ].filter(Boolean)
-                            const isMatch = participantIds.includes(normalizedBot)
-                            return isMatch && (u.admin === 'admin' || u.admin === 'superadmin' || u.isAdmin === true || u.admin === true)
-                        }) || (normalizedBot === normalizedOwner || normalizedBot === normalizedOwnerLid)
-                    }
-                }
+                isRAdmin = isRealAdmin && (normalizedSender === normalizedOwner || normalizedSender === normalizedOwnerLid)
             }
         }
 
@@ -564,6 +522,13 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
 
                 if (!isAccept) continue
 
+                // MODIFICA: Blocca moderatori bot dal dare/togliere admin reale
+                const blockAdminCmds = ['promuovi', 'retrocedi', 'promote', 'demote']
+                if (blockAdminCmds.includes(command) && isMod && !isRealAdmin && !isOwner) {
+                    await this.reply(m.chat, `🚫 Mbàre, sei un moderatore del bot ma non hai il potere di gestire gli amministratori del gruppo.`, m)
+                    return
+                }
+
                 if (m.isGroup && (plugin.admin || plugin.botAdmin)) {
                     const freshMetadata = global.groupCache.get(m.chat) || await fetchGroupMetadataWithRetry(this, m.chat)
                     if (freshMetadata) {
@@ -576,31 +541,11 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                             return { ...u, id: normalizedId, jid: u.jid || normalizedId }
                         })
 
-                        const normalizedOwner = groupMetadata.owner ? this.decodeJid(groupMetadata.owner) : null
-                        const normalizedOwnerLid = groupMetadata.ownerLid ? this.decodeJid(groupMetadata.ownerLid) : null
-
-                        // MODIFICATO: Controllo isMod anche nel ricalcolo plugin
-                        isAdmin = (participants.some(u => {
-                            const participantIds = [
-                                this.decodeJid(u.id),
-                                u.jid ? this.decodeJid(u.jid) : null,
-                                u.lid ? this.decodeJid(u.lid) : null
-                            ].filter(Boolean)
-                            const isMatch = participantIds.includes(normalizedSender)
-                            return isMatch && (u.admin === 'admin' || u.admin === 'superadmin' || u.isAdmin === true || u.admin === true)
-                        }) || isMod)
-
-                        isBotAdmin = participants.some(u => {
-                            const participantIds = [
-                                this.decodeJid(u.id),
-                                u.jid ? this.decodeJid(u.jid) : null,
-                                u.lid ? this.decodeJid(u.lid) : null
-                            ].filter(Boolean)
-                            const isMatch = participantIds.includes(normalizedBot)
-                            return isMatch && (u.admin === 'admin' || u.admin === 'superadmin' || u.isAdmin === true || u.admin === true)
-                        }) || (normalizedBot === normalizedOwner || normalizedBot === normalizedOwnerLid)
-
-                        isRAdmin = isAdmin && (normalizedSender === normalizedOwner || normalizedSender === normalizedOwnerLid)
+                        isRealAdmin = participants.some(u => {
+                            const participantIds = [this.decodeJid(u.id), u.jid ? this.decodeJid(u.jid) : null].filter(Boolean)
+                            return participantIds.includes(normalizedSender) && (u.admin === 'admin' || u.admin === 'superadmin')
+                        })
+                        isAdmin = isRealAdmin || isMod
                     }
                 }
 
@@ -746,11 +691,7 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
                     if (!isPrems) m.euro = plugin.euro || false
                 } catch (e) {
                     m.error = e
-                    console.error(`[ERRORE] Errore nell'esecuzione del plugin per la chat ${m.chat}, mittente ${m.sender}:`, e)
-                    if (e.message.includes('rate-overlimit')) {
-                        console.warn('[AVVISO] Rate limit raggiunto, ritento dopo 2 secondi...')
-                        await delay(2000)
-                    }
+                    console.error(`[ERRORE] Errore nell'esecuzione del plugin:`, e)
                     let text = format(e)
                     await this.reply(m.chat, text, m).catch(e => console.error('[ERRORE] Errore nella risposta:', e))
                 } finally {
@@ -769,7 +710,7 @@ if (m.message?.protocolMessage?.type === 'MESSAGE_EDIT') {
             }
         }
     } catch (e) {
-        console.error(`[ERRORE] Errore nel handler per la chat ${m.chat}, mittente ${m.sender}:`, e)
+        console.error(`[ERRORE] Errore generale:`, e)
     } finally {
         if (m && user && user.muto && !m.fromMe) {
             await this.sendMessage(m.chat, { delete: m.key }).catch(e => console.error('[ERRORE] Errore nell\'eliminazione del messaggio:', e))
