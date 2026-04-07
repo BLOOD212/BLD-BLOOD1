@@ -49,7 +49,6 @@ featureRegistry.forEach(f => {
 });
 
 let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isSam }) => {
-  // Determinazione dello stato (on/off) basata sul comando usato
   let isEnable = ['enable', 'attiva', 'on', '1'].includes(command.toLowerCase());
   const userName = m.pushName || 'User';
 
@@ -59,27 +58,20 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isS
   const botJid = conn.decodeJid(conn.user.jid);
   const bot = global.db.data.settings[botJid] || (global.db.data.settings[botJid] = {});
 
-  // --- AZIONE DI ATTIVAZIONE / DISATTIVAZIONE ---
   if (args[0]) {
     let type = args[0].toLowerCase();
     const feat = aliasMap.get(type);
-    
-    if (!feat) return m.reply(`『 ❌ 』 Modulo *${type}* non trovato nel database.`);
+    if (!feat) return m.reply(`『 ❌ 』 Modulo *${type}* non trovato.`);
 
-    // Controllo permessi
     if (feat.perm === PERM.sam && !isSam) return m.reply('『 ❌ 』 Accesso negato: Solo Blood.');
     if (feat.perm === PERM.OWNER && !isOwner && !isSam) return m.reply('『 ❌ 』 Accesso negato: Solo Owner.');
     if (feat.perm === PERM.ADMIN && m.isGroup && !(isAdmin || isOwner || isSam)) return m.reply('『 ❌ 』 Richiesti permessi Admin.');
 
     const target = feat.store === 'bot' ? bot : chat;
-    
-    // Imposta lo stato (isEnable è true per .attiva, false per .disattiva)
     target[feat.key] = isEnable;
-
     return m.reply(`*〘 📡 BLD-SYSTEM 〙*\n\nModulo: *${feat.name}*\nStato: *${isEnable ? 'ATTIVATO 🟢' : 'DISATTIVATO 🔴'}*`);
   }
 
-  // --- COSTRUZIONE MENU MASTER CONTROL ---
   const getStatus = (f) => (f.store === 'bot' ? bot[f.key] : chat[f.key]) ? '🟢' : '🔴';
 
   let menu = `┎━━━━━━━━━━━━━━━━━━━━┑
@@ -122,18 +114,22 @@ let handler = async (m, { conn, usedPrefix, command, args, isOwner, isAdmin, isS
 
   menu += `*┕━━━━━━━──ׄ──ׅ──ׄ──━━━━━━━┙*\n\n_ʙʟᴅ-ʙᴏᴛ sᴇᴄᴜʀɪᴛʏ ɪɴᴛᴇʀꜰᴀᴄᴇ_`;
 
-  let profilePic;
-  try { profilePic = await conn.profilePictureUrl(m.chat, 'image'); } 
-  catch { profilePic = 'https://qu.ax/TfUj.jpg'; }
+  // Immagine specifica richiesta: menu-sicurezza.jpeg
+  // Nota: Assicurati che il bot possa risolvere questo nome file o usa un URL diretto se necessario.
+  let menuImage = 'https://qu.ax/TfUj.jpg'; // Default se fallisce
+  try {
+     // Qui puoi mettere l'URL diretto della tua immagine "menu-sicurezza.jpeg"
+     menuImage = 'https://i.ibb.co/kVdFLyGL/sam.jpg'; 
+  } catch {}
 
   await conn.sendMessage(m.chat, {
     text: menu,
     contextInfo: {
       externalAdReply: {
-        title: "BLD-BLOOD MASTER CONTROL",
-        body: "Terminal Console v3.1",
+        title: "𝐁𝐋𝐃 - 𝐌𝐀𝐒𝐓𝐄𝐑 𝐂𝐎𝐍𝐓𝐑𝐎𝐋",
+        body: "Security Interface Terminal",
         mediaType: 1,
-        thumbnailUrl: profilePic,
+        thumbnailUrl: menuImage, // Usa l'immagine specifica
         sourceUrl: 'https://github.com'
       }
     }
