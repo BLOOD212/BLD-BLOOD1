@@ -1,7 +1,7 @@
 let handler = async (m, { conn, text, usedPrefix }) => {
     let user = global.db.data.users[m.sender]
-    
-    // Create dynamic fkontak with user's name
+
+    // Fkontak dinamico con il nome utente
     let userName = user?.name || 'Utente'
     let fkontak = {
         key: {
@@ -17,55 +17,55 @@ let handler = async (m, { conn, text, usedPrefix }) => {
         },
         participant: "0@s.whatsapp.net"
     }
-    
+
     if (!user.registered) {
         return conn.sendMessage(m.chat, {
-            text: `
-『 ⚠️ 』 *\`Non sei registrato!\`*
-『 📝 』 \`Usa ${usedPrefix}reg per registrarti.\``
+            text: `『 ⚠️ 』 *ACCESSO NEGATO*\n\nNon risulti ancora schedato nel sistema.\n『 📝 』 _Usa ${usedPrefix}reg per registrarti._`
         }, { quoted: fkontak })
     }
-    
+
     if (!text || text.toLowerCase() !== 'conferma') {
         return conn.sendMessage(m.chat, {
             text: `
-ㅤㅤ⋆｡˚『 ╭ \`ATTENZIONE\` ╯ 』˚｡⋆\n╭\n│
-│『 ❗ 』 *Questa azione resetterà*
-│『 📊 』 *I tuoi dati attuali:*
-│  • \`Nome:\` *${user.name || 'Non impostato'}*
-│  • \`Età:\` *${user.age || 0}*
-│  • \`Livello:\` *${user.level || 0}*
-│  • \`EXP:\` *${user.exp || 0}*
-│  • \`Euro:\` *${user.euro || 0}*
-│  • \`Registrato il:\` *${user.regTime ? new Date(user.regTime).toLocaleDateString('it-IT') : 'Data non disponibile'}*
-│
-│『 ⁉️ 』 *Per confermare scrivi:*
-│              *${usedPrefix}unreg conferma*
-│
-*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*`
+   ┏━━━━━━━━━━━━━━━━━━━━━━━━┓
+   ┃   ⚠️  *PËRÏCÖLÖ RËSËT* ⚠️   ┃
+   ┗━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+   『 ❗ 』 *Questa azione distruggerà*
+   『 📊 』 *Tutti i tuoi progressi:*
+
+   • 👤 **Nome:** ${user.name}
+   • 🎂 **Età:** ${user.age}
+   • 📈 **Livello:** ${user.level}
+   • 🌟 **EXP:** ${user.exp}
+   • 🪙 **Euro:** ${user.euro}
+   • 📅 **Data:** ${user.regTime ? new Date(user.regTime).toLocaleDateString('it-IT') : '---'}
+
+   ┈──────────────────┈
+   『 ⁉️ 』 *Per confermare scrivi:*
+   👉 \`${usedPrefix}unreg conferma\`
+   ┈──────────────────┈
+`
         }, { quoted: fkontak })
     }
-    
-    // Create backup with safe property access
+
+    // Backup dati prima del reset
     let backup = {
-        name: user.name || 'Non impostato',
+        name: user.name || 'Sconosciuto',
         age: user.age || 0,
         regTime: user.regTime || 0,
         exp: user.exp || 0,
         level: user.level || 0,
-        euro: user.euro || 0,
-        banned: user.banned || false
+        euro: user.euro || 0
     }
-    
+
     let regDate = backup.regTime ? new Date(backup.regTime).toLocaleDateString('it-IT', {
         year: 'numeric',
         month: 'long',
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-    }) : 'Data non disponibile'
-    
-    // Reset user data
+        day: 'numeric'
+    }) : 'Data ignota'
+
+    // Reset totale dei dati
     user.registered = false
     user.name = ''
     user.age = 0
@@ -73,30 +73,35 @@ let handler = async (m, { conn, text, usedPrefix }) => {
     user.exp = 0
     user.level = 0
     user.euro = 0
-    
-    await global.db.write();  // Salvataggio persistente
+
+    await global.db.write();
 
     return conn.sendMessage(m.chat, {
-        text: `ㅤㅤ⋆｡˚『 ╭ \`RESETTATO\` ╯ 』˚｡⋆\n╭\n│
-│ 『 📊 』 *Riepilogo dati eliminati:*
-│ 『 👤 』 *Profilo:*
-│   • \`Nome:\` *${backup.name}*
-│   • \`Età:\` *${backup.age} anni*
-│   • \`Registrato:\` *${regDate}*
-│
-│ 『 🎮 』 *Statistiche:*
-│   • \`Livello:\` *${backup.level}*
-│   • \`Esperienza:\` *${backup.exp.toLocaleString()} XP*
-│   • \`Euro:\` *${backup.euro.toLocaleString()}* 💶
-*╰⭒─ׄ─ׅ─ׄ─⭒─ׄ─ׅ─ׄ─*
-> Usa *${usedPrefix}reg* per registrarti di nuovo
-> *Data eliminazione: ${new Date().toLocaleString('it-IT')}*`
+        text: `
+   ┏━━━━━━━━━━━━━━━━━━━━━━━━┓
+   ┃   🗑️  *DÖSSÏËR ËLÏMÏNÄTÖ* ┃
+   ┗━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+   『 📊 』 *RIEPILOGO CANCELLAZIONE:*
+   
+   『 👤 』 **Profilo:** ${backup.name}
+   『 📅 』 **Anzianità:** dal ${regDate}
+
+   『 🎮 』 **Statistiche Perse:**
+   • Livello: ${backup.level}
+   • Esperienza: ${backup.exp.toLocaleString()} XP
+   • Euro: ${backup.euro.toLocaleString()}
+
+   ┈──────────────────┈
+   _Identità ripulita. Sei fuori dal giro._
+   > *Data: ${new Date().toLocaleString('it-IT')}*
+   ┈──────────────────┈
+`
     }, { quoted: fkontak })
 }
 
 handler.help = ['unreg']
 handler.tags = ['profilo']
 handler.command = /^unreg(ister)?$/i
-handler.register = true
 
 export default handler
