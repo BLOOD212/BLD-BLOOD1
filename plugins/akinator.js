@@ -1,82 +1,60 @@
-import { Aki } from 'aki-api'
-
-// FIX SSL per server Linux/VPS
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 let handler = async (m, { conn, text, usedPrefix, command }) => {
   let nomeDelBot = global.db.data.nomedelbot || `𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙`
   
-  conn.akinator = conn.akinator ? conn.akinator : {}
+  // Inizializziamo la sessione di gioco
+  conn.akinatorIA = conn.akinatorIA ? conn.akinatorIA : {}
 
-  // Comando per resettare in caso di blocco
-  if (text === 'reset') {
-    delete conn.akinator[m.sender]
-    return m.reply("🔄 Sessione di Akinator resettata.")
+  // Comando per fermare il gioco
+  if (text === 'stop' || text === 'reset') {
+    delete conn.akinatorIA[m.sender]
+    return m.reply("🎮 Partita terminata. Ho perso?")
   }
+
+  // Messaggio di sistema per istruire l'IA
+  const promptSistema = `Sei Akinator, il genio del web. Il tuo obiettivo è indovinare il personaggio a cui l'utente sta pensando facendo una domanda alla volta. 
+  REGOLE:
+  1. Fai una domanda alla volta.
+  2. Aspetta la risposta dell'utente (Sì, No, Forse, ecc.).
+  3. Quando sei sicuro al 90%, scrivi: "IL PERSONAGGIO È: [Nome]".
+  4. Sii misterioso e divertente.`
 
   // 1. GESTIONE PARTITA IN CORSO
-  if (conn.akinator[m.sender]) {
-    let { aki, msg } = conn.akinator[m.sender]
+  if (conn.akinatorIA[m.sender]) {
+    let sessione = conn.akinatorIA[m.sender]
     
-    if (!text || isNaN(text) || text < 0 || text > 4) {
-      return m.reply(`⚠ Rispondi con un numero!\n\n0: Sì\n1: No\n2: Non so\n3: Probabile\n4: Probabile No`)
-    }
+    // Aggiungiamo la risposta dell'utente alla cronologia
+    sessione.messaggi.push({ role: "user", content: text })
 
     try {
-      await aki.step(text.trim())
+      // Chiamata all'IA (adattala alla funzione che usa il tuo bot per ChatGPT)
+      // Esempio generico:
+      let rispostaIA = await global.openai.chat.completions.create({
+        model: "gpt-3.5-turbo",
+        messages: [{ role: "system", content: promptSistema }, ...sessione.messaggi]
+      })
 
-      if (aki.progress >= 80 || aki.currentStep >= 70) {
-        await aki.win()
-        let personaggio = aki.answers[0]
-        let txt = `✨ *L'HO INDOVINATO!* ✨\n\n`
-        txt += `👤 *Nome:* ${personaggio.name}\n`
-        txt += `📝 *Descrizione:* ${personaggio.description}\n\n`
-        txt += `*${nomeDelBot}*`
-        
-        await conn.sendMessage(m.chat, { 
-          image: { url: personaggio.absolute_picture_path }, 
-          caption: txt 
-        }, { quoted: m })
-        
-        delete conn.akinator[m.sender]
-        return
+      let testoIA = rispostaIA.choices[0].message.content
+      sessione.messaggi.push({ role: "assistant", content: testoIA })
+
+      // Se l'IA ha indovinato, chiudiamo la sessione
+      if (testoIA.includes("IL PERSONAGGIO È:")) {
+        delete conn.akinatorIA[m.sender]
+        return m.reply(testoIA + "\n\n✨ *Grazie per aver giocato!*")
       }
 
-      let domanda = `*🤖 AKINATOR - Domanda n. ${aki.currentStep + 1}*\n\n`
-      domanda += `> _${aki.question}_\n\n`
-      domanda += `0 (Sì), 1 (No), 2 (Boh), 3 (Sì+), 4 (No+)`
-
-      await conn.sendMessage(m.chat, { text: domanda, edit: msg }, { quoted: m })
+      return m.reply(`*🤖 AKINATOR AI*\n\n${testoIA}\n\n_(Rispondi a questo messaggio o usa ${usedPrefix + command} [risposta])_`)
 
     } catch (e) {
-      console.error("[ERRORE AKINATOR]:", e.message)
-      delete conn.akinator[m.sender]
-      return m.reply("❌ Errore critico: Il server ha chiuso la connessione. L'IP è probabilmente bannato.")
-    }
-
-  } else {
-    // 2. AVVIO NUOVA PARTITA
-    try {
-      let aki = new Aki({ region: 'it', childMode: false })
-      
-      // TENTATIVO DI BYPASS HEADER
-      aki.user_agent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36'
-      
-      await aki.start()
-      
-      let intro = `*🎮 AKINATOR È INIZIATO!*\n\n`
-      intro += `*Domanda n. 1:*\n> _${aki.question}_\n\n`
-      intro += `Rispondi con *${usedPrefix + command} [numero]*`
-
-      let { key } = await conn.sendMessage(m.chat, { text: intro }, { quoted: m })
-      
-      conn.akinator[m.sender] = { aki, msg: key }
-
-    } catch (e) {
-      console.error("[ERRORE AVVIO]:", e.message)
-      return m.reply("❌ *Errore 403 Forbidden*\n\nIl firewall di Akinator ha bloccato il tuo server. Prova a cambiare la regione del bot o attendi 1 ora.")
+      return m.reply("❌ Errore nell'IA. Assicurati che le API siano cariche.")
     }
   }
+
+  // 2. AVVIO NUOVA PARTITA
+  conn.akinatorIA[m.sender] = {
+    messaggi: []
+  }
+
+  return m.reply(`*🧞‍♂️ BENVENUTO SU AKINATOR AI!*\n\nPensa a un personaggio reale o immaginario. Io proverò a indovinarlo.\n\n*Iniziamo: il tuo personaggio è maschio?*`)
 }
 
 handler.help = ['akinator']
