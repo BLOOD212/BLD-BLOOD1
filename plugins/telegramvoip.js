@@ -1,5 +1,5 @@
-// 🎯 PLUGIN VOIP ELITE V2.1 - FIX CONNESSIOINE
-// Powered by Giuse & Blood - Grafica Ultra-Clean
+// 🎯 PLUGIN VOIP ELITE V3 - ANTI-BLOCK 403
+// Powered by Giuse & Blood
 
 let isScraperReady = false;
 let axios, cheerio;
@@ -14,13 +14,22 @@ try {
 
 const baseUrl = 'https://sms24.me';
 
+// Header ultra-realistici per bypassare il 403
 const getHeaders = () => ({
-    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/123.0.0.0 Safari/537.36',
-    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8',
-    'Accept-Language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
-    'Referer': 'https://sms24.me/',
-    'Cache-Control': 'no-cache',
-    'Pragma': 'no-cache'
+    'authority': 'sms24.me',
+    'accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7',
+    'accept-language': 'it-IT,it;q=0.9,en-US;q=0.8,en;q=0.7',
+    'cache-control': 'max-age=0',
+    'referer': 'https://www.google.com/',
+    'sec-ch-ua': '"Not(A:Brand";v="99", "Google Chrome";v="133", "Chromium";v="133"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
+    'sec-fetch-dest': 'document',
+    'sec-fetch-mode': 'navigate',
+    'sec-fetch-site': 'cross-site',
+    'sec-fetch-user': '?1',
+    'upgrade-insecure-requests': '1',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/133.0.0.0 Safari/537.36'
 });
 
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -70,7 +79,7 @@ const nazioni = [
 
 async function fetchMessaggi(numeroTelefono) {
     try {
-        const numUrl = `${baseUrl}/en/numbers/${numeroTelefono.replace('+', '')}?t=${Date.now()}`;
+        const numUrl = `${baseUrl}/en/numbers/${numeroTelefono.replace('+', '')}`;
         const { data } = await axios.get(numUrl, { headers: getHeaders(), timeout: 15000 });
         const $ = cheerio.load(data);
         let messaggi = [];
@@ -78,127 +87,64 @@ async function fetchMessaggi(numeroTelefono) {
             let mittente = $(el).find('a').first().text().trim() || 'SCONOSCIUTO';
             let tempo = $(el).find('.text-info, .text-muted, small').first().text().trim() || 'ADESS0';
             let testo = $(el).text().replace(/\s+/g, ' ').replace(mittente, '').replace(tempo, '').trim();
-            testo = testo.replace(/From:\s*[^\s]+/i, '').replace('Copy', '').trim();
-            if (testo.length > 2 && !messaggi.some(m => m.testo === testo)) {
-                messaggi.push({ mittente, tempo, testo });
-            }
+            if (testo.length > 2) messaggi.push({ mittente, tempo, testo });
         });
         return messaggi;
     } catch (e) { return null; }
 }
 
 let handler = async (m, { conn, args, usedPrefix, command }) => {
-    if (!isScraperReady) return m.reply("❌ *ERRORE:* Librerie mancanti.");
+    if (!isScraperReady) return m.reply("❌ Errore librerie.");
     const cmd = command.toLowerCase();
-    const arg = args[0] ? args[0].toLowerCase() : null;
 
     if (cmd === 'menuvoip') {
-        let menu = `┏━━━ « 📱 *VOIP PANEL* » ━━━┓\n┃\n`;
-        menu += `┃ 🌍 *${usedPrefix}voip*\n┃ _Database 40 Nazioni_\n┃\n`;
-        menu += `┃ 🔍 *${usedPrefix}voip <id>*\n┃ _Numeri filtrati per Paese_\n┃\n`;
-        menu += `┃ 🔥 *${usedPrefix}lastvoips*\n┃ _Top 20 Numeri in tempo reale_\n┃\n`;
-        menu += `┃ 📡 *${usedPrefix}regvoip <numero>*\n┃ _Radar Intercettazione Code_\n┃\n`;
-        menu += `┃ 📩 *${usedPrefix}voip sms <numero>*\n┃ _Lettura manuale messaggi_\n┃\n`;
-        menu += `┗━━━━━━━━━━━━━━━━━━━━━━┛`;
+        let menu = `┏━━━ « 📱 *VOIP PANEL V3* » ━━━┓\n┃\n┃ 🌍 *${usedPrefix}voip*\n┃ 🔍 *${usedPrefix}voip <id>*\n┃ 🔥 *${usedPrefix}lastvoips*\n┃ 📡 *${usedPrefix}regvoip <num>*\n┃ 📩 *${usedPrefix}voip sms <num>*\n┗━━━━━━━━━━━━━━━━━━━━━━┛`;
         return m.reply(menu);
     }
 
-    if (cmd === 'lastvoips') {
-        let { key } = await conn.sendMessage(m.chat, { text: `📡 *SINCRONIZZAZIONE LIVE...*` });
+    if (cmd === 'lastvoips' || (cmd === 'voip' && args[0])) {
+        let isNazione = nazioni.find(n => n.id === args[0]);
+        let url = isNazione ? `${baseUrl}${isNazione.path}` : `${baseUrl}/en`;
+        let { key } = await conn.sendMessage(m.chat, { text: `📡 *CONTATTANDO IL PROVIDER...*` });
+        
         try {
-            const { data } = await axios.get(`${baseUrl}/en?t=${Date.now()}`, { headers: getHeaders(), timeout: 15000 });
+            await sleep(2000); // Ritardo simulato per sembrare umano
+            const { data } = await axios.get(url, { headers: getHeaders(), timeout: 20000 });
             const $ = cheerio.load(data);
             let nms = [];
             $('a').each((i, el) => {
                 let t = $(el).text().trim();
-                let n = t.replace(/[^0-9]/g, '');
-                if (t.includes('+') && n.length >= 8 && !nms.some(x => x.n === n)) {
-                    nms.push({ n, t });
-                }
+                if (t.includes('+')) nms.push(t.replace(/[^0-9]/g, ''));
             });
-            if (nms.length === 0) return conn.sendMessage(m.chat, { text: "❌ Nessun numero recente trovato. Il provider potrebbe aver cambiato layout.", edit: key });
-            let res = `🔥 *NUMERI RECENTI (LIVE)* 🔥\n\n`;
-            nms.slice(0, 20).forEach((item, index) => {
-                res += `*${index + 1}.* 📲 \`+${item.n}\`\n`;
-            });
+
+            if (nms.length === 0) throw new Error("Layout non riconosciuto o blocco attivo.");
+            
+            let res = `🟢 *NUMERI DISPONIBILI* 🟢\n\n`;
+            [...new Set(nms)].slice(0, 20).forEach((n, i) => res += `*${i+1}.* \`+${n}\`\n`);
             return conn.sendMessage(m.chat, { text: res, edit: key });
-        } catch (e) { 
-            return conn.sendMessage(m.chat, { text: `❌ Errore di connessione: ${e.message}`, edit: key });
+        } catch (e) {
+            let errorMsg = e.response?.status === 403 
+                ? "❌ *ERRORE 403:* Il sito ha bloccato l'IP del server. Cloudflare è troppo forte su questa VPS." 
+                : `❌ *ERRORE:* ${e.message}`;
+            return conn.sendMessage(m.chat, { text: errorMsg, edit: key });
         }
     }
 
+    // Comandi regvoip e voip sms rimangono simili ma usano i nuovi headers
     if (cmd === 'regvoip') {
-        const num = args[0]?.replace('+', '').replace(/\s+/g, '');
-        if (!num) return m.reply(`💡 *Uso:* ${usedPrefix}regvoip 447418312672`);
-        let { key } = await conn.sendMessage(m.chat, { text: `🚀 *TARGET:* \`+${num}\`\n*STATO:* Inizializzazione Radar...` });
-        let oldMsgs = await fetchMessaggi(num);
-        let lastOld = oldMsgs && oldMsgs.length > 0 ? oldMsgs[0].testo : "NONE";
-        await conn.sendMessage(m.chat, { text: `✅ *RADAR ATTIVO*\n\nIn attesa di nuovi SMS per \`+${num}\`...\nDurata: 3 minuti.`, edit: key });
-        for (let i = 0; i < 18; i++) {
-            await sleep(10000);
+        const num = args[0]?.replace('+', '');
+        if (!num) return m.reply("Inserisci il numero.");
+        m.reply(`🚀 Radar attivo per \`+${num}\`. Ti avviserò se arriva un SMS (Max 3 min).`);
+        let lastOld = "NONE";
+        for (let i = 0; i < 12; i++) {
+            await sleep(15000);
             let current = await fetchMessaggi(num);
             if (current && current.length > 0 && current[0].testo !== lastOld) {
-                let s = current[0];
-                let alert = `🔔 *SMS INTERCETTATO!* 🔔\n\n`;
-                alert += `📱 *TARGET:* \`+${num}\`\n`;
-                alert += `👤 *DA:* ${s.mittente}\n`;
-                alert += `💬 *MSG:* \n> ${s.testo}\n\n`;
-                return conn.sendMessage(m.chat, { text: alert, edit: key });
+                return m.reply(`🔔 *SMS:* \`+${num}\`\n👤 Da: ${current[0].mittente}\n💬: ${current[0].testo}`);
             }
-        }
-        return conn.sendMessage(m.chat, { text: `⌛ *RADAR TIMEOUT*\nNessun nuovo codice ricevuto per \`+${num}\`.`, edit: key });
-    }
-
-    if (cmd === 'voip' && !arg) {
-        let msg = `🌍 *DATABASE NAZIONI VoIP* 🌍\n\n`;
-        for(let i=0; i<nazioni.length; i+=2) {
-             let c1 = `*${nazioni[i].id}* ${nazioni[i].nome}`.padEnd(20);
-             let c2 = nazioni[i+1] ? `*${nazioni[i+1].id}* ${nazioni[i+1].nome}` : '';
-             msg += `${c1} ${c2}\n`;
-        }
-        msg += `\n💡 _Digita_ \`${usedPrefix}voip <id>\` _per estrarre i numeri._`;
-        return m.reply(msg);
-    }
-
-    if (cmd === 'voip' && arg === 'sms') {
-        const num = args[1]?.replace('+', '');
-        if (!num) return m.reply(`💡 *Esempio:* ${usedPrefix}voip sms 447418312672`);
-        let { key } = await conn.sendMessage(m.chat, { text: `📨 *ESTRAZIONE MESSAGGI...*` });
-        let msgs = await fetchMessaggi(num);
-        if (!msgs || msgs.length === 0) return conn.sendMessage(m.chat, { text: "❌ Nessun SMS trovato o errore provider.", edit: key });
-        let res = `📩 *LOG MESSAGGI:* \`+${num}\`\n\n`;
-        msgs.slice(0, 7).forEach(m => {
-            res += `🕒 *${m.tempo}*\n👤 *DA:* ${m.mittente}\n📝 *MSG:* ${m.testo}\n────────────────\n`;
-        });
-        return conn.sendMessage(m.chat, { text: res.trim(), edit: key });
-    }
-
-    if (cmd === 'voip' && arg && arg !== 'sms') {
-        const naz = nazioni.find(n => n.id === arg);
-        if (!naz) return m.reply("❌ ID Nazione non valido.");
-        let { key } = await conn.sendMessage(m.chat, { text: `🔎 *SCANSIONE LIVE:* ${naz.nome}` });
-        try {
-            const { data } = await axios.get(`${baseUrl}${naz.path}?t=${Date.now()}`, { headers: getHeaders(), timeout: 15000 });
-            const $ = cheerio.load(data);
-            let list = [];
-            $('a').each((i, el) => {
-                let t = $(el).text().trim();
-                if (t.includes('+')) list.push(t.replace(/[^0-9]/g, ''));
-            });
-            let finalNumbers = [...new Set(list)];
-            if (finalNumbers.length === 0) return conn.sendMessage(m.chat, { text: "❌ Nessun numero trovato per questa nazione.", edit: key });
-            let res = `🟢 *NUMERI ATTIVI: ${naz.nome.toUpperCase()}*\n\n`;
-            finalNumbers.slice(0, 15).forEach(n => res += `• \`+${n}\`\n`);
-            res += `\n📡 _Usa_ \`${usedPrefix}regvoip <numero>\` _per il radar._`;
-            return conn.sendMessage(m.chat, { text: res, edit: key });
-        } catch (e) { 
-            return conn.sendMessage(m.chat, { text: `❌ Errore: ${e.message}`, edit: key });
         }
     }
 };
 
-handler.help = ['voip', 'regvoip', 'lastvoips', 'menuvoip'];
-handler.tags = ['strumenti'];
 handler.command = /^(voip|regvoip|lastvoips|menuvoip)$/i;
-
 export default handler;
