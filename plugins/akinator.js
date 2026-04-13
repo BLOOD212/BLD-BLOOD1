@@ -1,84 +1,64 @@
+import { Aki } from 'aki-api'
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
+
 let handler = async (m, { conn, text, usedPrefix, command }) => {
-  let nomeDelBot = global.db.data.nomedelbot || `𝖇𝖑𝖔𝖔𝖉𝖇𝖔𝖙`
+  conn.akinator = conn.akinator ? conn.akinator : {}
   
-  // Inizializziamo la sessione di gioco
-  conn.akinatorIA = conn.akinatorIA ? conn.akinatorIA : {}
-
-  // Gestione dell'input (da bottone o da testo)
-  let scelta = m.quoted?.buttonsMessage?.buttons[0]?.buttonId || m.msg?.selectedButtonId || text?.trim()
-
-  // Reset della partita
-  if (scelta === 'stop' || scelta === 'reset') {
-    delete conn.akinatorIA[m.sender]
-    return m.reply("🎮 Partita terminata. Ho perso? 🧞‍♂️")
+  // Rileva input da bottoni o testo
+  let scelta = m.msg?.selectedButtonId || m.msg?.contextInfo?.externalAdReply?.title || text?.trim()
+  if (scelta && scelta.includes(usedPrefix + command)) {
+      scelta = scelta.replace(usedPrefix + command, '').trim()
   }
 
-  const promptSistema = `Sei Akinator, il genio del web. Il tuo obiettivo è indovinare il personaggio a cui l'utente sta pensando facendo una domanda alla volta. 
-  REGOLE:
-  1. Fai una domanda alla volta (massimo 15 parole per domanda).
-  2. Aspetta la risposta dell'utente.
-  3. Quando sei sicuro, scrivi: "IL PERSONAGGIO È: [Nome]".
-  4. Sii breve, misterioso e divertente.`
-
-  // 1. GESTIONE PARTITA IN CORSO
-  if (conn.akinatorIA[m.sender]) {
-    let sessione = conn.akinatorIA[m.sender]
-    
-    // Aggiungiamo la risposta alla cronologia
-    sessione.messaggi.push({ role: "user", content: scelta })
+  if (conn.akinator[m.sender]) {
+    let { aki, msg } = conn.akinator[m.sender]
+    if (scelta === 'stop') {
+        delete conn.akinator[m.sender]
+        return m.reply("Partita annullata.")
+    }
 
     try {
-      // CHIAMATA ALL'IA (Sostituisci con la tua funzione specifica se necessario)
-      let rispostaIA = await global.openai.chat.completions.create({
-        model: "gpt-3.5-turbo",
-        messages: [{ role: "system", content: promptSistema }, ...sessione.messaggi]
-      })
-
-      let testoIA = rispostaIA.choices[0].message.content
-      sessione.messaggi.push({ role: "assistant", content: testoIA })
-
-      // Se l'IA ha indovinato
-      if (testoIA.includes("IL PERSONAGGIO È:")) {
-        delete conn.akinatorIA[m.sender]
-        return m.reply(`${testoIA}\n\n✨ *Grazie per aver giocato con ${nomeDelBot}!*`)
+      await aki.step(scelta)
+      if (aki.progress >= 80) {
+        await aki.win()
+        let p = aki.answers[0]
+        let txt = `🧞‍♂️ *L'HO PRESO!*\n\n👤 *Nome:* ${p.name}\n📝 *Desc:* ${p.description}`
+        await conn.sendMessage(m.chat, { image: { url: p.absolute_picture_path }, caption: txt }, { quoted: m })
+        delete conn.akinator[m.sender]
+        return
       }
-
-      return inviaBottoni(conn, m, testoIA, usedPrefix, command)
-
+      await inviaAki(conn, m, aki, usedPrefix, command)
     } catch (e) {
-      console.error(e)
-      return m.reply("❌ Errore nell'IA. Controlla le tue API Key.")
+      delete conn.akinator[m.sender]
+      return m.reply("❌ Errore: Il server Akinator ha rifiutato la connessione.")
     }
+  } else {
+    let aki = new Aki({ region: 'it' })
+    await aki.start()
+    conn.akinator[m.sender] = { aki }
+    await inviaAki(conn, m, aki, usedPrefix, command)
   }
-
-  // 2. AVVIO NUOVA PARTITA
-  conn.akinatorIA[m.sender] = { messaggi: [] }
-  let domandaIniziale = "🧞‍♂️ *BENVENUTO SU AKINATOR AI!*\n\nPensa a un personaggio. Io proverò a indovinarlo.\n\n*Iniziamo: il tuo personaggio è reale?*"
-  
-  return inviaBottoni(conn, m, domandaIniziale, usedPrefix, command)
 }
 
-// Funzione per inviare il messaggio con i tasti
-async function inviaBottoni(conn, m, testo, usedPrefix, command) {
-  const buttons = [
-    { index: 1, quickReplyButton: { displayText: 'Sì ✅', id: `si` } },
-    { index: 2, quickReplyButton: { displayText: 'No ❌', id: `no` } },
-    { index: 3, quickReplyButton: { displayText: 'Boh 🤷‍♂️', id: `non lo so` } },
-    { index: 4, quickReplyButton: { displayText: 'Esci 🚪', id: `stop` } }
+async function inviaAki(conn, m, aki, usedPrefix, command) {
+  let sections = [
+    { title: "Rispondi", rows: [
+        {title: "Sì", rowId: `${usedPrefix + command} 0`},
+        {title: "No", rowId: `${usedPrefix + command} 1`},
+        {title: "Non so", rowId: `${usedPrefix + command} 2`},
+        {title: "Probabile", rowId: `${usedPrefix + command} 3`},
+        {title: "Probabile No", rowId: `${usedPrefix + command} 4`},
+        {title: "STOP", rowId: `${usedPrefix + command} stop`}
+    ]}
   ]
-
-  const templateMessage = {
-    text: testo,
-    footer: "Rispondi cliccando sui tasti qui sotto",
-    templateButtons: buttons,
-    viewOnce: true
+  const listMessage = {
+    text: `*🤖 AKINATOR*\n\n*Domanda:* ${aki.question}\n*Progresso:* ${Math.round(aki.progress)}%`,
+    footer: "Seleziona una risposta",
+    buttonText: "Scegli 🧞‍♂️",
+    sections
   }
-
-  return await conn.sendMessage(m.chat, templateMessage, { quoted: m })
+  return await conn.sendMessage(m.chat, listMessage, { quoted: m })
 }
 
-handler.help = ['akinator']
-handler.tags = ['giochi']
 handler.command = /^(akinator|aki)$/i
-
 export default handler
