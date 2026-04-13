@@ -1,6 +1,6 @@
 import { Aki } from 'aki-api'
 
-// FIX: Risolve l'errore AxiosError: unable to get local issuer certificate
+// FIX SSL: Necessario per molti server Linux
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 let handler = async (m, { conn, text, usedPrefix, command }) => {
@@ -11,7 +11,6 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 
   // Se l'utente vuole resettare la partita
   if (text === 'reset') {
-    if (!conn.akinator[m.sender]) return m.reply("Non hai nessuna partita attiva.")
     delete conn.akinator[m.sender]
     return m.reply("🔄 Sessione di Akinator resettata.")
   }
@@ -22,20 +21,18 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
     
     // Controlla che l'input sia un numero valido
     if (!text || isNaN(text) || text < 0 || text > 4) {
-      return m.reply(`⚠ Risposta non valida! Invia un numero da 0 a 4.\n\n0 = Sì\n1 = No\n2 = Non so\n3 = Probabilmente sì\n4 = Probabilmente no\n\n_Esempio: ${usedPrefix + command} 0_`)
+      return m.reply(`⚠ Rispondi con un numero da 0 a 4!\n\n0 = Sì\n1 = No\n2 = Non so\n3 = Probabilmente sì\n4 = Probabilmente no`)
     }
 
     try {
       await aki.step(text.trim())
 
-      // Se Akinator è pronto a dare una risposta
       if (aki.progress >= 80 || aki.currentStep >= 70) {
         await aki.win()
         let personaggio = aki.answers[0]
         let txt = `✨ *L'HO INDOVINATO!* ✨\n\n`
         txt += `👤 *Nome:* ${personaggio.name}\n`
-        txt += `📝 *Descrizione:* ${personaggio.description}\n`
-        txt += `🎯 *Ranking:* ${personaggio.ranking}\n\n`
+        txt += `📝 *Descrizione:* ${personaggio.description}\n\n`
         txt += `*${nomeDelBot}*`
         
         await conn.sendMessage(m.chat, { 
@@ -47,52 +44,41 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
         return
       }
 
-      // Prossima domanda (con bottoni o testo)
-      let domanda = `*🤖 AKINATOR*\n\n`
-      domanda += `*Domanda n. ${aki.currentStep + 1}:*\n`
+      let domanda = `*🤖 AKINATOR - Domanda n. ${aki.currentStep + 1}*\n\n`
       domanda += `> _${aki.question}_\n\n`
-      domanda += `0️⃣ - Sì\n`
-      domanda += `1️⃣ - No\n`
-      domanda += `2️⃣ - Non so\n`
-      domanda += `3️⃣ - Probabilmente sì\n`
-      domanda += `4️⃣ - Probabilmente no\n\n`
-      domanda += `*Rispondi con ${usedPrefix + command} [numero]*`
+      domanda += `0 (Sì), 1 (No), 2 (Boh), 3 (Probabile), 4 (Probabile No)`
 
-      // Usiamo l'edit per non intasare la chat
       await conn.sendMessage(m.chat, { text: domanda, edit: msg }, { quoted: m })
 
     } catch (e) {
-      console.error(e)
+      console.error("[ERRORE AKINATOR]:", e.message)
       delete conn.akinator[m.sender]
-      return m.reply("❌ Errore durante la partita. Sessione chiusa.")
+      return m.reply("❌ Akinator mi ha bloccato (Cloudflare 403). Riprova tra un po'.")
     }
 
   } else {
     // 2. AVVIO NUOVA PARTITA
     try {
-      let aki = new Aki({ region: 'it' })
+      // Tentativo di avvio con parametri IT
+      let aki = new Aki({ 
+        region: 'it', 
+        childMode: false 
+      })
+      
       await aki.start()
       
       let intro = `*🎮 AKINATOR È INIZIATO!*\n\n`
       intro += `*Domanda n. 1:*\n> _${aki.question}_\n\n`
-      intro += `Rispondi usando il numero:\n`
-      intro += `*${usedPrefix + command} 0* (Sì)\n`
-      intro += `*${usedPrefix + command} 1* (No)\n`
-      intro += `*${usedPrefix + command} 2* (Non so)\n`
-      intro += `*${usedPrefix + command} 3* (Sì+)\n`
-      intro += `*${usedPrefix + command} 4* (No+)`
+      intro += `Rispondi con *${usedPrefix + command} [numero]*`
 
       let { key } = await conn.sendMessage(m.chat, { text: intro }, { quoted: m })
       
-      // Salviamo la sessione con la chiave del messaggio per l'edit
-      conn.akinator[m.sender] = {
-        aki,
-        msg: key
-      }
+      conn.akinator[m.sender] = { aki, msg: key }
 
     } catch (e) {
-      console.error(e)
-      return m.reply("❌ Impossibile avviare Akinator. Riprova più tardi.")
+      console.error("[ERRORE AVVIO]:", e.message)
+      // Se fallisce qui, l'IP è bannato
+      return m.reply("❌ Errore 403: Il server di Akinator ha bloccato il bot. L'IP del tuo server è segnalato come bot.")
     }
   }
 }
@@ -100,10 +86,5 @@ let handler = async (m, { conn, text, usedPrefix, command }) => {
 handler.help = ['akinator']
 handler.tags = ['giochi']
 handler.command = /^(akinator|aki)$/i
-
-handler.owner = false
-handler.admin = false
-handler.group = false
-handler.private = false
 
 export default handler
