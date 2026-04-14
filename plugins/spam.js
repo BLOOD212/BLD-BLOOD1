@@ -1,33 +1,42 @@
-let handler = async (m, { conn, text, usedPrefix, command }) => {
+let handler = async (m, { conn, text, usedPrefix, command, participants }) => {
     try {
-        if (!text) throw `『 📎 』 \`Inserisci il testo da spammare\`\n\n\`Esempio:\`\n*${usedPrefix + command} messaggio*`
+        // Controllo se il comando viene usato in un gruppo
+        if (!m.isGroup) throw `『 📎 』 \`Questo comando può essere usato solo nei gruppi per menzionare tutti.\``
+        
+        if (!text) throw `『 📎 』 \`Inserisci il testo da spammare\`\n\n\`Esempio:\`\n*${usedPrefix + command} sveglia!*`
 
         const spamCount = 40 
         const messageToSpam = text.trim()
         
-        // Funzione di attesa
+        // Estraiamo tutti gli ID dei partecipanti per il tag
+        const users = participants.map(u => u.id)
+        
         const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms))
 
         for (let i = 0; i < spamCount; i++) {
-            // Invio senza citazione (quoted) per rendere l'invio leggermente più fluido
-            await conn.sendMessage(m.chat, { text: messageToSpam })
+            // Invio il messaggio con l'array di tutte le menzioni
+            await conn.sendMessage(m.chat, { 
+                text: messageToSpam, 
+                mentions: users 
+            })
             
-            // 100ms è il limite di sicurezza per uno spam "veloce"
+            // Intervallo di sicurezza di 100ms
             await delay(100)
         }
 
-        return m.reply(`✅ Inviati 40 messaggi con intervallo di sicurezza (100ms).`)
+        return m.reply(`✅ Spam di 40 messaggi con menzione globale completato.`)
 
     } catch (error) {
         console.error('Errore nel comando spam:', error)
         if (typeof error === 'string') return m.reply(error)
-        return m.reply(`⚠️ Errore durante l'invio.`)
+        return m.reply(`⚠️ Errore durante l'invio dello spam.`)
     }
 }
 
 handler.help = ['spam [testo]']
 handler.tags = ['strumenti']
 handler.command = /^spam$/i
+handler.group = true // Forza l'uso solo nei gruppi
 handler.register = true 
 
 export default handler
