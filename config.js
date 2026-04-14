@@ -33,7 +33,7 @@ global.autore = 'BLOOD'
 global.dev = 'BLOOD'
 global.testobot = `BLD-BLOOD`
 global.versione = pkg.version
-global.errore = '⚠️ *Errore inatteso!* Usa il comando `.segnala _errore_` per avvisare lo sviluppatore.'
+global.errore = '*ERRORE INATTESO, UTILIZZA IL COMANDO .segnala (errore) per contattare lo sviluppatore. contatto diretto:+39 370 133 0693'
 
 /*⭑⭒━━━✦❘༻🌐 LINK 🌐༺❘✦━━━⭒⭑*/
 
