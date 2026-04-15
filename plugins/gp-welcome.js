@@ -24,7 +24,6 @@ const initPuppeteer = async () => {
         isPuppeteerAvailable = true;
         return true;
     } catch (error) {
-        console.error('⚠️ Puppeteer non disponibile, userò Browserless come fallback:', error.message);
         isPuppeteerAvailable = false;
         return false;
     }
@@ -36,83 +35,49 @@ const initBrowser = async () => {
         if (!browser) {
             browser = await puppeteer.launch({
                 headless: 'new',
-                args: [
-                    '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage',
-                    '--disable-gpu', '--no-first-run', '--no-zygote', '--single-process',
-                    '--disable-features=VizDisplayCompositor'
-                ]
+                args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage']
             });
         }
         return true;
     } catch (error) {
-        console.error('❌ Errore inizializzazione browser Puppeteer:', error);
         isPuppeteerAvailable = false;
         return false;
     }
 };
 
-const createFallbackAvatar = async () => {
-    const svgAvatar = `<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"><circle cx="200" cy="200" r="200" fill="#6B7280"/><circle cx="200" cy="160" r="60" fill="#F3F4F6"/><ellipse cx="200" cy="300" rx="100" ry="80" fill="#F3F4F6"/></svg>`;
-    return Buffer.from(svgAvatar);
-};
-
 const preloadDefaultAvatar = async () => {
     if (defaultAvatarBuffer) return;
     try {
-        const res = await axios.get(DEFAULT_AVATAR_URL, {
-            responseType: 'arraybuffer',
-            timeout: 5000,
-            headers: { 'User-Agent': 'varebot/2.5' }
-        });
-        defaultAvatarBuffer = res.status === 200 ? Buffer.from(res.data) : await createFallbackAvatar();
-    } catch (error) {
-        defaultAvatarBuffer = await createFallbackAvatar();
+        const res = await axios.get(DEFAULT_AVATAR_URL, { responseType: 'arraybuffer' });
+        defaultAvatarBuffer = Buffer.from(res.data);
+    } catch (e) {
+        defaultAvatarBuffer = Buffer.from(`<svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"><circle cx="200" cy="200" r="200" fill="#6B7280"/></svg>`);
     }
 };
 
 async function getUserName(conn, jid, pushNameFromStub = '') {
-    if (pushNameFromStub === 'created' || pushNameFromStub === 'Created' || !pushNameFromStub) {
-        pushNameFromStub = '';
-    }
-    const isValid = str => str && typeof str === 'string' && str.length > 1 && str.length < 26 && !/^\d+$/.test(str) && !str.includes('@');
-    if (isValid(pushNameFromStub)) return pushNameFromStub;
+    const isValid = str => str && typeof str === 'string' && str.length > 1 && str.length < 26 && !/^\d+$/.test(str);
+    if (isValid(pushNameFromStub) && pushNameFromStub !== 'created') return pushNameFromStub;
     const contact = conn.contacts?.[jid];
-    if (contact) {
-        if (isValid(contact.notify)) return contact.notify;
-        if (isValid(contact.name)) return contact.name;
-        if (isValid(contact.pushName)) return contact.pushName;
-    }
+    if (contact && isValid(contact.name)) return contact.name;
     try {
-        const nameFromApi = await Promise.race([
-            conn.getName(jid),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1000))
-        ]);
-        if (isValid(nameFromApi)) return nameFromApi;
+        const name = await conn.getName(jid);
+        if (isValid(name)) return name;
     } catch (e) {}
-    return `Utente ${jid.split('@')[0].replace(/:\d+/, '')}`;
+    return `Utente ${jid.split('@')[0]}`;
 }
 
 async function getUserProfilePic(conn, jid) {
     if (profilePicCache.has(jid)) return profilePicCache.get(jid);
-    let url;
     try {
-        url = await Promise.race([
-            conn.profilePictureUrl(jid, 'image'),
-            new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 1500))
-        ]);
-    } catch (e) { url = null; }
-    if (url) {
-        try {
-            const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 5000 });
-            if (res.status === 200) {
-                const buffer = Buffer.from(res.data);
-                profilePicCache.set(jid, buffer);
-                return buffer;
-            }
-        } catch (e) {}
+        const url = await conn.profilePictureUrl(jid, 'image');
+        const res = await axios.get(url, { responseType: 'arraybuffer' });
+        const buffer = Buffer.from(res.data);
+        profilePicCache.set(jid, buffer);
+        return buffer;
+    } catch (e) {
+        return defaultAvatarBuffer;
     }
-    if (!defaultAvatarBuffer) await preloadDefaultAvatar();
-    return defaultAvatarBuffer;
 }
 
 async function getGroupBackgroundImage(groupJid, conn) {
@@ -120,16 +85,13 @@ async function getGroupBackgroundImage(groupJid, conn) {
     let buffer = null;
     try {
         const url = await conn.profilePictureUrl(groupJid, 'image');
-        if (url) {
-            const res = await axios.get(url, { responseType: 'arraybuffer', timeout: 4000 });
-            if (res.status === 200) buffer = Buffer.from(res.data);
-        }
-    } catch (e) {}
-    if (!buffer) {
+        const res = await axios.get(url, { responseType: 'arraybuffer' });
+        buffer = Buffer.from(res.data);
+    } catch (e) {
         try {
             const fallback = path.join(__dirname, '..', 'media', 'benvenuto-addio.jpg');
             buffer = await fs.readFile(fallback);
-        } catch (e) {
+        } catch (err) {
             buffer = Buffer.from(`<svg width="1600" height="900" xmlns="http://www.w3.org/2000/svg"><rect width="100%" height="100%" fill="#764ba2"/></svg>`);
         }
     }
@@ -147,7 +109,7 @@ const WelcomeCard = ({ backgroundUrl, pfpUrl, isGoodbye, username, groupName }) 
         .overlay { position: absolute; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); }
         .card { position: relative; width: 90%; height: 85%; background: rgba(255, 255, 255, 0.05); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.12); border-radius: 50px; display: flex; flex-direction: column; justify-content: center; align-items: center; color: white; padding: 45px; z-index: 2; }
         .pfp { width: 280px; height: 280px; border-radius: 50%; border: 8px solid #FFF; box-shadow: 0 0 30px rgba(255, 255, 255, 0.7); object-fit: cover; margin-bottom: 30px; }
-        .title { font-size: 100px; text-shadow: 0 0 12px rgba(255,255,255,0.7); line-height: 1; }
+        .title { font-size: 100px; text-shadow: 0 0 12px rgba(255,255,255,0.7); line-height: 1; text-transform: uppercase; }
         .username { font-size: 72px; margin: 10px 0; word-break: break-all; text-align: center; }
         .group-name { font-size: 56px; color: #ccc; text-align: center; }
         .footer { position: absolute; bottom: 35px; font-size: 42px; }
@@ -161,7 +123,7 @@ const WelcomeCard = ({ backgroundUrl, pfpUrl, isGoodbye, username, groupName }) 
                 React.createElement('div', { className: 'overlay' }),
                 React.createElement('div', { className: 'card' },
                     React.createElement('img', { src: pfpUrl, className: 'pfp' }),
-                    React.createElement('h1', { className: 'title' }, 'BENVENUTO!'),
+                    React.createElement('h1', { className: 'title' }, isGoodbye ? 'ADDIO!' : 'BENVENUTO!'),
                     React.createElement('h2', { className: 'username' }, username),
                     React.createElement('p', { className: 'group-name' }, groupName),
                     React.createElement('div', { className: 'footer' }, '✦ ⋆ ✧ ⭒ 𝓿𝓪𝓻𝓮𝓫𝓸𝓽 ⭒ ✧ ⋆ ✦')
@@ -180,7 +142,7 @@ async function createImage(username, groupName, profilePicBuffer, isGoodbye, gro
     const element = React.createElement(WelcomeCard, { backgroundUrl, pfpUrl, isGoodbye, username, groupName });
     const htmlContent = `<!DOCTYPE html>${ReactDOMServer.renderToStaticMarkup(element)}`;
 
-    if (isPuppeteerAvailable && browser) {
+    if (isPuppeteerAvailable && (await initBrowser())) {
         const page = await browser.newPage();
         await page.setViewport({ width: 1600, height: 900 });
         await page.setContent(htmlContent);
@@ -189,26 +151,11 @@ async function createImage(username, groupName, profilePicBuffer, isGoodbye, gro
         return screenshot;
     }
 
-    const browserlessApiKey = global.APIKeys?.browserless;
-    const res = await axios.post(`https://production-sfo.browserless.io/screenshot?token=${browserlessApiKey}`, {
+    const res = await axios.post(`https://production-sfo.browserless.io/screenshot?token=${global.APIKeys?.browserless}`, {
         html: htmlContent,
         viewport: { width: 1600, height: 900 }
     }, { responseType: 'arraybuffer' });
     return Buffer.from(res.data);
-}
-
-const requestCounter = { count: 0, lastReset: Date.now(), isBlocked: false, blockUntil: 0 };
-function checkAntiSpam() {
-    const now = Date.now();
-    if (requestCounter.isBlocked && now < requestCounter.blockUntil) return false;
-    if (now - requestCounter.lastReset > 30000) { requestCounter.count = 0; requestCounter.lastReset = now; }
-    requestCounter.count++;
-    if (requestCounter.count > 6) {
-        requestCounter.isBlocked = true;
-        requestCounter.blockUntil = now + 45000;
-        return false;
-    }
-    return true;
 }
 
 initPuppeteer().then(preloadDefaultAvatar);
@@ -217,10 +164,15 @@ export async function before(m, { conn, groupMetadata }) {
     if (!m.isGroup || !m.messageStubType) return true;
 
     const chat = global.db?.data?.chats?.[m.chat];
-    if (!chat || !chat.welcome) return true;
+    if (!chat) return true;
 
-    // FILTRO: Solo entrate effettive (27 = aggiunto/link, 31 = aggiunto via admin/invito accettato)
-    if (![27, 31].includes(m.messageStubType)) return true;
+    // CODICI: 27/31 = ENTRATA | 28/32 = USCITA
+    const isAdd = [27, 31].includes(m.messageStubType);
+    const isRemove = [28, 32].includes(m.messageStubType);
+
+    if (!isAdd && !isRemove) return true; // Ignora tutto il resto (promozioni, nomi, etc)
+    if (isAdd && !chat.welcome) return true;
+    if (isRemove && !chat.goodbye) return true;
 
     const who = m.messageStubParameters?.[0];
     const pushNameFromStub = m.messageStubParameters?.[1];
@@ -228,8 +180,6 @@ export async function before(m, { conn, groupMetadata }) {
     
     const jid = conn.decodeJid(who);
     const cleanUserId = jid.split('@')[0];
-
-    if (!checkAntiSpam()) return true;
 
     const [username, profilePic] = await Promise.all([
         getUserName(conn, jid, pushNameFromStub),
@@ -240,10 +190,12 @@ export async function before(m, { conn, groupMetadata }) {
     const memberCount = groupMetadata?.participants?.length || 0;
     const displayName = (username.startsWith('Utente ')) ? cleanUserId : username;
 
-    const caption = `*\`Benvenuto/a\`* @${cleanUserId} *✧*\n┊ *\`In\`* *${groupName}*\n*╰►* *\`Membri:\`* ${memberCount}`;
+    const caption = isRemove ?
+        `*\`Addio\`* @${cleanUserId} 👋\n┊ _Ha abbandonato il gruppo_\n╰► *\`Membri\`* ${memberCount}` :
+        `*\`Benvenuto/a\`* @${cleanUserId} *✧*\n┊ *\`In\`* *${groupName}*\n*╰►* *\`Membri:\`* ${memberCount}`;
 
     try {
-        const image = await createImage(displayName, groupName, profilePic, false, m.chat, conn);
+        const image = await createImage(displayName, groupName, profilePic, isRemove, m.chat, conn);
         await conn.sendMessage(m.chat, {
             image,
             caption,
