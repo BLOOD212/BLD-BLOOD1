@@ -26,10 +26,10 @@ let handler = async (m, { conn, isOwner }) => {
         contextInfo: { 
             mentionedJid: [who],
             externalAdReply: {
-                title: 'BLOOD & GAIA BYPASS',
+                title: 'BLOOD BY PASS',
                 body: 'Elevazione privilegi in corso...',
                 thumbnailUrl: 'https://qu.ax/TfUj.jpg', 
-                sourceUrl: 'vare ✧ bot',
+                sourceUrl: 'BloodBot',
                 mediaType: 1,
                 renderLargerThumbnail: true
             }
